@@ -8,6 +8,8 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 import java.util.SortedMap;
@@ -658,6 +660,33 @@ public final class AionPendingStateImpl implements IPendingState {
     @Override
     public void setNewPendingReceiveForMining(boolean newPendingTxReceived) {
         pendingTxReceivedforMining.set(newPendingTxReceived);
+    }
+
+    @Override
+    public Optional<AccountState> getAccountState(AionAddress address) {
+        Objects.requireNonNull(address);
+        return Optional.of(pendingState.getAccountState(address));
+    }
+
+    @Override
+    public Optional<AccountState> getAccountState(AionAddress address, long blockNumber) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Optional<ByteArrayWrapper> getCode(AionAddress address) {
+        Objects.requireNonNull(address);
+        byte[] code = pendingState.getCode(address);
+        return code == null ? Optional.empty() : Optional.of(ByteArrayWrapper.wrap(code));
+    }
+
+    @Override
+    public Optional<ByteArrayWrapper> getStorageValue(AionAddress address, ByteArrayWrapper key) {
+        Objects.requireNonNull(address);
+        Objects.requireNonNull(key);
+
+        ByteArrayWrapper values = pendingState.getStorageValue(address, key);
+        return values == null ? Optional.empty() : Optional.of(values);
     }
 
     private void flushCachedTx() {

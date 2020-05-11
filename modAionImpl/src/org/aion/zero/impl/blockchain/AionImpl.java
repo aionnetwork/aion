@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.locks.ReentrantLock;
 import org.aion.base.AccountState;
@@ -421,10 +422,22 @@ public class AionImpl implements IAionChain {
         }
     }
 
+    @Override
     public Optional<ByteArrayWrapper> getCode(AionAddress address) {
+        Objects.requireNonNull(address);
+
         byte[] code = this.aionHub.getRepository().getCode(address);
         if (code == null) return Optional.empty();
         return Optional.of(ByteArrayWrapper.wrap(code));
+    }
+
+    @Override
+    public Optional<ByteArrayWrapper> getStorageValue(AionAddress address, ByteArrayWrapper key) {
+        Objects.requireNonNull(address);
+        Objects.requireNonNull(key);
+
+        ByteArrayWrapper values = aionHub.getRepository().getStorageValue(address, key);
+        return values == null ? Optional.empty() : Optional.of(values);
     }
 
     private static class Holder {
