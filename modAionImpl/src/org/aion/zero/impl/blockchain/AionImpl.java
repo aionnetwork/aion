@@ -94,13 +94,24 @@ public class AionImpl implements IAionChain {
         return aionHub.getBlockchain();
     }
 
+    /**
+     * @implNote import a new block from the api server or the internal PoW miner, the kernel will
+     * reject to import a new block has the same or less than the kernel block height to reduce the orphan
+     * block happens (AKI-707)
+     */
     public ImportResult addNewBlock(Block block) {
-        lock.lock();
+        getLock().lock();
         try {
-            ImportResult importResult =
-                this.aionHub
-                    .getBlockchain()
-                    .tryToConnect(new BlockWrapper(block, true, false, false, false));
+            Block bestBlock = getAionHub().getBlockchain().getBestBlock();
+            ImportResult importResult;
+            if (bestBlock.getNumber() >= block.getNumber()) {
+                importResult = ImportResult.INVALID_BLOCK;
+            } else {
+                importResult =
+                    this.aionHub
+                        .getBlockchain()
+                        .tryToConnect(new BlockWrapper(block, true, false, false, false));
+            }
 
             LOG_GEN.debug("ImportResult:{} new block:{}", importResult, block);
 
@@ -110,7 +121,7 @@ public class AionImpl implements IAionChain {
 
             return importResult;
         } finally{
-            lock.unlock();
+            getLock().unlock();
         }
     }
 
@@ -473,5 +484,13 @@ public class AionImpl implements IAionChain {
             Optional<Long> networkBest = chainInterface.getNetworkBestBlockNumber();
             return networkBest.isPresent() ? networkBest.get() : 0;
         }
+    }
+
+    /**
+     * return the chainImpl lock for the testing purpose
+     * @return the chainImpl lock
+     */
+    ReentrantLock getLock() {
+        return lock;
     }
 }
