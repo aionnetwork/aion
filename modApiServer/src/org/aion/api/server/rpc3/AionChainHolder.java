@@ -4,6 +4,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -17,14 +18,12 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.BlockHeader.Seal;
-import org.aion.mcf.db.Repository;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.zero.impl.blockchain.AionBlockchainImpl;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.blockchain.IAionChain;
 import org.aion.zero.impl.core.ImportResult;
-import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.keystore.Keystore;
 import org.aion.zero.impl.types.MiningBlock;
 import org.aion.zero.impl.types.AionTxInfo;
@@ -232,33 +231,49 @@ public class AionChainHolder implements ChainHolder {
 
     @Override
     public BigInteger getAccountBalance(AionAddress aionAddress, long blockNumber) {
-        return getRepoByBlockNumber(blockNumber).getBalance(aionAddress);
+        Optional<AccountState> accountState = chain.getAccountState(aionAddress, blockNumber);
+        if (accountState.isPresent()) {
+            return accountState.get().getBalance();
+        } else {
+            return BigInteger.ZERO;
+        }
     }
 
     @Override
     public BigInteger getAccountNonce(AionAddress aionAddress, long blockNumber) {
-        return getRepoByBlockNumber(blockNumber).getNonce(aionAddress);
+        Optional<AccountState> accountState = chain.getAccountState(aionAddress, blockNumber);
+        if (accountState.isPresent()) {
+            return accountState.get().getNonce();
+        } else {
+            return BigInteger.ZERO;
+        }
     }
 
     @Override
     public BigInteger getAccountBalance(AionAddress aionAddress) {
-        return this.chain.getRepository().getBalance(aionAddress);
+        Optional<AccountState> accountState = chain.getAccountState(aionAddress);
+
+        if (accountState.isPresent()) {
+            return accountState.get().getBalance();
+        } else {
+            return BigInteger.ZERO;
+        }
     }
 
     @Override
     public BigInteger getAccountNonce(AionAddress aionAddress) {
-        return this.chain.getRepository().getNonce(aionAddress);
+        Optional<AccountState> accountState = chain.getAccountState(aionAddress);
+        if (accountState.isPresent()) {
+            return accountState.get().getNonce();
+        } else {
+            return BigInteger.ZERO;
+        }
     }
 
     @Override
     public AccountState getAccountState(AionAddress aionAddress) {
-        final AccountState accountState = ((AionRepositoryImpl) this.chain.getRepository())
-            .getAccountState(aionAddress);
-        if (accountState == null) {
-            return new AccountState();//
-        }else {
-            return accountState;
-        }
+        Optional<AccountState> accountState = chain.getAccountState(aionAddress);
+        return accountState.orElseGet(AccountState::new);
     }
 
     @Override
@@ -328,13 +343,5 @@ public class AionChainHolder implements ChainHolder {
             block.getShortHash(), // LogUtil.toHexF8(newBlock.getHash()),
             block.getHeader().getDifficultyBI().toString(),
             block.getTransactionsList().size());
-    }
-
-    /*
-    Returns the blockchain state at the specified block number
-    */
-    private Repository getRepoByBlockNumber(long blockNumber){
-        return this.chain.getRepository()
-            .getSnapshotTo(getBlockByNumber(blockNumber).getStateRoot());
     }
 }
