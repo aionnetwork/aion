@@ -2,18 +2,16 @@ package org.aion.zero.impl.blockchain;
 
 import java.util.List;
 import java.util.Optional;
-import org.aion.base.AccountState;
 import org.aion.base.AionTransaction;
 import org.aion.equihash.EquihashMiner;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.db.Repository;
 import org.aion.base.AionTxReceipt;
-import org.aion.types.AionAddress;
 import org.aion.zero.impl.types.BlockContext;
 import org.aion.zero.impl.types.StakingBlock;
 
 /** Aion chain interface. */
-public interface IAionChain  {
+public interface IAionChain  extends RepoState {
 
     UnityChain getBlockchain();
 
@@ -51,8 +49,4 @@ public interface IAionChain  {
     void setApiServiceCallback(BlockchainCallbackInterface blockchainCallbackForApiServer);
 
     BlockContext getNewMiningBlockTemplate(BlockContext currentTemplate, long toSeconds);
-
-    Optional<AccountState> getAccountState(AionAddress address);
-
-    Optional<AccountState> getAccountState(AionAddress address, long blockNumber);
 }
