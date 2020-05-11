@@ -43,50 +43,48 @@ import org.aion.api.server.types.NumericalValue;
 import org.aion.api.server.types.SyncInfo;
 import org.aion.api.server.types.Tx;
 import org.aion.api.server.types.TxRecpt;
+import org.aion.base.AccountState;
 import org.aion.base.AionTransaction;
+import org.aion.base.AionTxReceipt;
 import org.aion.base.TransactionTypes;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.HashUtil;
 import org.aion.evtmgr.IEventMgr;
 import org.aion.evtmgr.IHandler;
 import org.aion.evtmgr.impl.callback.EventCallback;
-import org.aion.mcf.blockchain.BlockHeader.Seal;
-import org.aion.zero.impl.keystore.Keystore;
 import org.aion.mcf.blockchain.Block;
-import org.aion.zero.impl.config.CfgApi;
-import org.aion.zero.impl.config.CfgApiNrg;
-import org.aion.zero.impl.config.CfgApiRpc;
-import org.aion.zero.impl.config.CfgApiZmq;
-import org.aion.zero.impl.config.CfgNet;
-import org.aion.zero.impl.config.CfgNetP2p;
-import org.aion.zero.impl.config.CfgSsl;
-import org.aion.zero.impl.config.CfgSync;
-import org.aion.zero.impl.config.CfgTx;
-import org.aion.base.AccountState;
-import org.aion.zero.impl.core.ImportResult;
-import org.aion.mcf.db.Repository;
-import org.aion.util.types.DataWord;
+import org.aion.mcf.blockchain.BlockHeader.Seal;
 import org.aion.types.AionAddress;
 import org.aion.types.Log;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.string.StringUtils;
 import org.aion.util.types.AddressUtils;
 import org.aion.util.types.ByteArrayWrapper;
-import org.aion.zero.impl.blockchain.AionBlockchainImpl;
-import org.aion.zero.impl.types.MiningBlock;
-import org.aion.zero.impl.types.MiningBlockHeader;
-import org.aion.zero.impl.types.BlockContext;
+import org.aion.util.types.DataWord;
 import org.aion.zero.impl.Version;
+import org.aion.zero.impl.blockchain.AionBlockchainImpl;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.blockchain.IAionChain;
 import org.aion.zero.impl.config.CfgAion;
+import org.aion.zero.impl.config.CfgApi;
+import org.aion.zero.impl.config.CfgApiNrg;
+import org.aion.zero.impl.config.CfgApiRpc;
+import org.aion.zero.impl.config.CfgApiZmq;
 import org.aion.zero.impl.config.CfgConsensusUnity;
 import org.aion.zero.impl.config.CfgEnergyStrategy;
-import org.aion.zero.impl.db.AionRepositoryImpl;
+import org.aion.zero.impl.config.CfgNet;
+import org.aion.zero.impl.config.CfgNetP2p;
+import org.aion.zero.impl.config.CfgSsl;
+import org.aion.zero.impl.config.CfgSync;
+import org.aion.zero.impl.config.CfgTx;
+import org.aion.zero.impl.core.ImportResult;
+import org.aion.zero.impl.keystore.Keystore;
 import org.aion.zero.impl.sync.NodeWrapper;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.types.AionTxInfo;
-import org.aion.base.AionTxReceipt;
+import org.aion.zero.impl.types.BlockContext;
+import org.aion.zero.impl.types.MiningBlock;
+import org.aion.zero.impl.types.MiningBlockHeader;
 import org.aion.zero.impl.types.StakingBlock;
 import org.aion.zero.impl.types.StakingBlockHeader;
 import org.apache.commons.collections4.map.LRUMap;
@@ -431,27 +429,35 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
         }
 
-        AionAddress address = AddressUtils.wrapAddress(_address);
+        String bnOrId = formalizeBlockNumberOrId(_bnOrId);
+        Long bn = parseBnOrId(bnOrId);
+        if (bn == null) {
+            return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid block number");
+        } else {
+            AionAddress address = AddressUtils.wrapAddress(_address);
+            Optional<AccountState> accountState =
+                    (bn == BEST_PENDING_BLOCK
+                            ? pendingState.getAccountState(address)
+                            : ac.getAccountState(address, bn));
 
-        String bnOrId = "latest";
-        if (!JSONObject.NULL.equals(_bnOrId)) {
-            bnOrId = _bnOrId + "";
-        }
-
-        Repository repo = getRepoByJsonBlockId(bnOrId);
-        if (repo == null) // invalid bnOrId
-        {
-            return new RpcMsg(
+            return accountState.map(state -> new RpcMsg(StringUtils.toJsonHex(state.getBalance())))
+                .orElseGet(() -> new RpcMsg(
                     null,
                     RpcError.EXECUTION_ERROR,
-                    "Block not found for id / block number: "
-                            + bnOrId
-                            + ". "
-                            + "State may have been pruned; please check your db pruning settings in the configuration file.");
+                    "Cannot find the account state:"
+                        + address
+                        + "in the pendingState!"
+                        + "State may have been pruned; please check your db pruning settings in the configuration file."));
+        }
+    }
+
+    private String formalizeBlockNumberOrId(Object bnOrId) {
+        String result = "latest";
+        if (!JSONObject.NULL.equals(bnOrId)) {
+            result = bnOrId + "";
         }
 
-        BigInteger balance = repo.getBalance(address);
-        return new RpcMsg(StringUtils.toJsonHex(balance));
+        return result;
     }
 
     public RpcMsg eth_getStorageAt(Object _params) {
@@ -470,41 +476,31 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
         }
 
-        AionAddress address = AddressUtils.wrapAddress(_address);
-
-        String bnOrId = "latest";
-        if (!JSONObject.NULL.equals(_bnOrId)) {
-            bnOrId = _bnOrId + "";
-        }
-
-        DataWord key;
-
-        try {
-            key = new DataWord(ByteUtil.hexStringToBytes(_index));
-        } catch (Exception e) {
-            // invalid key
-            LOG.debug("eth_getStorageAt: invalid storageIndex. Must be <= 16 bytes.");
-            return new RpcMsg(
-                    null, RpcError.INVALID_PARAMS, "Invalid storageIndex. Must be <= 16 bytes.");
-        }
-
-        Repository repo = getRepoByJsonBlockId(bnOrId);
-        if (repo == null) // invalid bnOrId
-        {
-            return new RpcMsg(
-                    null,
-                    RpcError.EXECUTION_ERROR,
-                    "Block not found for id / block number: "
-                            + bnOrId
-                            + ". "
-                            + "State may have been pruned; please check your db pruning settings in the configuration file.");
-        }
-
-        ByteArrayWrapper storageValue = repo.getStorageValue(address, key.toWrapper());
-        if (storageValue != null) {
-            return new RpcMsg(StringUtils.toJsonHex(storageValue.toBytes()));
+        String bnOrId = formalizeBlockNumberOrId(_bnOrId);
+        Long bn = parseBnOrId(bnOrId);
+        if (bn == null) {
+            return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid block number");
         } else {
-            return new RpcMsg(null, RpcError.EXECUTION_ERROR, "Storage value not found");
+            DataWord key;
+            try {
+                key = new DataWord(ByteUtil.hexStringToBytes(_index));
+            } catch (Exception e) {
+                // invalid key
+                LOG.debug("eth_getStorageAt: invalid storageIndex. Must be <= 16 bytes.");
+                return new RpcMsg(
+                    null, RpcError.INVALID_PARAMS, "Invalid storageIndex. Must be <= 16 bytes.");
+            }
+
+            AionAddress address = AddressUtils.wrapAddress(_address);
+            Optional<ByteArrayWrapper> storageValue =
+                    (bn == BEST_PENDING_BLOCK
+                            ? pendingState.getStorageValue(address, key.toWrapper())
+                            : ac.getStorageValue(address, key.toWrapper()));
+
+            return storageValue.map(
+                byteArrayWrapper -> new RpcMsg(StringUtils.toJsonHex(byteArrayWrapper.toBytes())))
+                .orElseGet(
+                    () -> new RpcMsg(null, RpcError.EXECUTION_ERROR, "Storage value not found"));
         }
     }
 
@@ -521,26 +517,19 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
         }
 
-        AionAddress address = AddressUtils.wrapAddress(_address);
+        String bnOrId = formalizeBlockNumberOrId(_bnOrId);
+        Long bn = parseBnOrId(bnOrId);
+        if (bn == null) {
+            return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid block number");
+        } else {
+            AionAddress address = AddressUtils.wrapAddress(_address);
+            Optional<AccountState> accountState = (bn == BEST_PENDING_BLOCK ? pendingState.getAccountState(address) : ac.getAccountState(address));
 
-        String bnOrId = "latest";
-        if (!JSONObject.NULL.equals(_bnOrId)) {
-            bnOrId = _bnOrId + "";
+            return accountState.map(state -> new RpcMsg(StringUtils.toJsonHex(state.getNonce())))
+                .orElseGet(() -> new RpcMsg(null, RpcError.EXECUTION_ERROR,
+                    "Cannot find the account:" + address + " state.\n"
+                        + "State may have been pruned; please check your db pruning settings in the configuration file."));
         }
-
-        Repository repo = getRepoByJsonBlockId(bnOrId);
-        if (repo == null) // invalid bnOrId
-        {
-            return new RpcMsg(
-                    null,
-                    RpcError.EXECUTION_ERROR,
-                    "Block not found for id / block number: "
-                            + bnOrId
-                            + ". "
-                            + "State may have been pruned; please check your db pruning settings in the configuration file.");
-        }
-
-        return new RpcMsg(StringUtils.toJsonHex(repo.getNonce(address)));
     }
 
     public RpcMsg eth_getBlockTransactionCountByHash(Object _params) {
@@ -573,26 +562,27 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
         }
 
-        Long bn = parseBnOrId(_bnOrId);
+        String bnOrId = formalizeBlockNumberOrId(_bnOrId);
+        Long bn = parseBnOrId(bnOrId);
         if (bn == null) {
-            return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid block number.");
+            return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid block number");
+        } else {
+            // pending transactions
+            if (bn == BEST_PENDING_BLOCK) {
+                long pendingTxCount = this.ac.getAionHub().getPendingState().getPendingTxSize();
+                return new RpcMsg(StringUtils.toJsonHex(pendingTxCount));
+            }
+
+            Block b = this.ac.getBlockchain().getBlockByNumber(bn);
+            if (b == null) {
+                return new RpcMsg(null, RpcError.EXECUTION_ERROR, "Block not found.");
+            }
+
+            List<AionTransaction> list = b.getTransactionsList();
+
+            long n = list.size();
+            return new RpcMsg(StringUtils.toJsonHex(n));
         }
-
-        // pending transactions
-        if (bn == BEST_PENDING_BLOCK) {
-            long pendingTxCount = this.ac.getAionHub().getPendingState().getPendingTxSize();
-            return new RpcMsg(StringUtils.toJsonHex(pendingTxCount));
-        }
-
-        Block b = this.ac.getBlockchain().getBlockByNumber(bn);
-        if (b == null) {
-            return new RpcMsg(null, RpcError.EXECUTION_ERROR, "Block not found.");
-        }
-
-        List<AionTransaction> list = b.getTransactionsList();
-
-        long n = list.size();
-        return new RpcMsg(StringUtils.toJsonHex(n));
     }
 
     public RpcMsg eth_getCode(Object _params) {
@@ -608,27 +598,20 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
         }
 
-        AionAddress address = AddressUtils.wrapAddress(_address);
+        String bnOrId = formalizeBlockNumberOrId(_bnOrId);
+        Long bn = parseBnOrId(bnOrId);
+        if (bn == null) {
+            return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid block number");
+        } else {
+            AionAddress address = AddressUtils.wrapAddress(_address);
+            Optional<ByteArrayWrapper> code = (bn == BEST_PENDING_BLOCK ? pendingState.getCode(address) : ac.getCode(address));
 
-        String bnOrId = "latest";
-        if (!JSONObject.NULL.equals(_bnOrId)) {
-            bnOrId = _bnOrId + "";
+            return code.map(byteArrayWrapper -> new RpcMsg(
+                StringUtils.toJsonHex(byteArrayWrapper.toBytes()))).orElseGet(
+                () -> new RpcMsg(null, RpcError.EXECUTION_ERROR,
+                    "Cannot find the code from the account:" + address + " state.\n"
+                        + "State may have been pruned; please check your db pruning settings in the configuration file."));
         }
-
-        Repository repo = getRepoByJsonBlockId(bnOrId);
-        if (repo == null) // invalid bnOrId
-        {
-            return new RpcMsg(
-                    null,
-                    RpcError.EXECUTION_ERROR,
-                    "Block not found for id / block number: "
-                            + bnOrId
-                            + ". "
-                            + "State may have been pruned; please check your db pruning settings in the configuration file.");
-        }
-
-        byte[] code = repo.getCode(address);
-        return new RpcMsg(StringUtils.toJsonHex(code));
     }
 
     public RpcMsg eth_sign(Object _params) {
@@ -1842,15 +1825,15 @@ public class ApiWeb3Aion extends ApiAion {
         }
 
         long latestBlkNum = this.getBestBlock().getNumber();
-        AccountState accountState =
-                ((AionRepositoryImpl) this.ac.getRepository()).getAccountState(address);
+
+        Optional<AccountState> accountState = ac.getAccountState(address);
 
         BigInteger nonce = BigInteger.ZERO;
         BigInteger balance = BigInteger.ZERO;
 
-        if (accountState != null) {
-            nonce = accountState.getNonce();
-            balance = accountState.getBalance();
+        if (accountState.isPresent()) {
+            nonce = accountState.get().getNonce();
+            balance = accountState.get().getBalance();
         }
 
         JSONObject response = new JSONObject();
@@ -2906,29 +2889,6 @@ public class ApiWeb3Aion extends ApiAion {
             LOG.error("<rpc-server - cannot get cached response for stratum_getMinerStats: ", e);
             return new RpcMsg(null, RpcError.EXECUTION_ERROR, "Cached response retrieve failed.");
         }
-    }
-
-    // --------------------------------------------------------------------
-    // Helper Functions
-    // --------------------------------------------------------------------
-
-    // potential bug introduced by .getSnapshotTo()
-    // comment out until resolved
-    private Repository getRepoByJsonBlockId(String _bnOrId) {
-        Long bn = parseBnOrId(_bnOrId);
-
-        if (bn == null) {
-            return null;
-        }
-
-        if (bn == BEST_PENDING_BLOCK) return pendingState.getRepository();
-
-        Block b = this.ac.getBlockchain().getBlockByNumber(bn);
-        if (b == null) {
-            return null;
-        }
-
-        return ac.getRepository().getSnapshotTo(b.getStateRoot());
     }
 
     private Block getBlockByBN(long bn) {
