@@ -17,7 +17,7 @@ import org.aion.avm.stub.IAvmFutureResult;
 import org.aion.base.AionTransaction;
 import org.aion.base.AionTxExecSummary;
 import org.aion.base.AionTxReceipt;
-import org.aion.mcf.db.RepositoryCache;
+import org.aion.base.db.RepositoryCache;
 import org.aion.types.AionAddress;
 import org.aion.types.Log;
 import org.aion.types.Transaction;

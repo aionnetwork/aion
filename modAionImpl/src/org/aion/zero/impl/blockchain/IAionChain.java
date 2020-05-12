@@ -5,7 +5,7 @@ import java.util.Optional;
 import org.aion.base.AionTransaction;
 import org.aion.equihash.EquihashMiner;
 import org.aion.mcf.blockchain.Block;
-import org.aion.mcf.db.Repository;
+import org.aion.base.db.Repository;
 import org.aion.base.AionTxReceipt;
 import org.aion.zero.impl.types.BlockContext;
 import org.aion.zero.impl.types.StakingBlock;

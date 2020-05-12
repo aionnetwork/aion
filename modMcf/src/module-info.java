@@ -14,5 +14,4 @@ module aion.mcf {
     requires org.json;
 
     exports org.aion.mcf.blockchain;
-    exports org.aion.mcf.db;
 }

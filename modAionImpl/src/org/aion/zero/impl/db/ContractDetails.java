@@ -1,11 +1,12 @@
-package org.aion.mcf.db;
+package org.aion.zero.impl.db;
 
 import java.util.Collection;
 import java.util.Map;
 import org.aion.base.InternalVmType;
+import org.aion.base.db.ContractDetail;
 import org.aion.util.types.ByteArrayWrapper;
 
-public interface ContractDetails {
+public interface ContractDetails extends ContractDetail {
 
     /**
      * Inserts a key-value pair containing the given key and the given value.

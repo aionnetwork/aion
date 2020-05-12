@@ -1,7 +1,7 @@
 package org.aion.avm.stub;
 
 import java.math.BigInteger;
-import org.aion.mcf.db.RepositoryCache;
+import org.aion.base.db.RepositoryCache;
 import org.aion.types.AionAddress;
 
 /**

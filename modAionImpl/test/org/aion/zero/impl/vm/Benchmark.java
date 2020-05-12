@@ -42,7 +42,7 @@ import org.aion.crypto.ECKeyFac.ECKeyType;
 import org.aion.crypto.SignatureFac;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
-import org.aion.mcf.db.RepositoryCache;
+import org.aion.base.db.RepositoryCache;
 import org.aion.util.types.DataWord;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;

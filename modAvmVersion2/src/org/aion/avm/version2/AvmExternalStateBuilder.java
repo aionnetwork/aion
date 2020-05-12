@@ -5,7 +5,7 @@ import org.aion.avm.stub.IAvmExternalState;
 import org.aion.avm.stub.IEnergyRules;
 import org.aion.avm.stub.IAvmExternalStateBuilder;
 import org.aion.avm.version2.internal.ExternalStateForAvm;
-import org.aion.mcf.db.RepositoryCache;
+import org.aion.base.db.RepositoryCache;
 import org.aion.types.AionAddress;
 
 /**

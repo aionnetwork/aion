@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.aion.zero.impl.vm.common.PostExecutionWork;
 import org.aion.base.AionTransaction;
-import org.aion.mcf.db.RepositoryCache;
+import org.aion.base.db.RepositoryCache;
 import org.aion.precompiled.type.ContractExecutor;
 import org.aion.precompiled.type.IExternalStateForPrecompiled;
 import org.aion.precompiled.type.PrecompiledWrappedTransactionResult;

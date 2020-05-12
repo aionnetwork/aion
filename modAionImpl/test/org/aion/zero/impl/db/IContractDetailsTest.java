@@ -9,7 +9,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.aion.db.impl.ByteArrayKeyValueDatabase;
-import org.aion.mcf.db.ContractDetails;
 import org.aion.util.types.AddressUtils;
 import org.aion.util.types.DataWord;
 import org.aion.util.types.ByteArrayWrapper;

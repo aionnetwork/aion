@@ -8,13 +8,12 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
 import java.util.Map;
-import org.aion.mcf.db.TransformedCodeInfo;
 import org.aion.rlp.RLP;
 import org.aion.util.types.ByteArrayWrapper;
 import org.junit.Test;
 
 /**
- * Unit tests for {@link org.aion.mcf.db.TransformedCodeInfo}.
+ * Unit tests for {@link TransformedCodeInfo}.
  *
  * @author Geoff Stuart
  */

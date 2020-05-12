@@ -6,7 +6,7 @@ import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
 import org.aion.zero.impl.config.CfgPrune;
 import org.aion.zero.impl.config.PruneConfig;
-import org.aion.mcf.db.RepositoryCache;
+import org.aion.base.db.RepositoryCache;
 import org.aion.precompiled.type.IExternalStateForPrecompiled;
 import org.aion.precompiled.type.IPrecompiledDataWord;
 import org.aion.precompiled.type.PrecompiledDataWord;

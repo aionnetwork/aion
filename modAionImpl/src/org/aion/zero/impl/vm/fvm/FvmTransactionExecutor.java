@@ -11,7 +11,7 @@ import org.aion.fastvm.FastVirtualMachine;
 import org.aion.fastvm.FvmDataWord;
 import org.aion.fastvm.FvmWrappedTransactionResult;
 import org.aion.fastvm.IExternalStateForFvm;
-import org.aion.mcf.db.RepositoryCache;
+import org.aion.base.db.RepositoryCache;
 import org.aion.types.AionAddress;
 import org.aion.types.Log;
 import org.aion.types.Transaction;

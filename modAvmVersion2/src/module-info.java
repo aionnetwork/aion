@@ -2,7 +2,6 @@ module aion.avm.v2 {
     requires aion.base;
     requires aion.util;
     requires aion.crypto;
-    requires aion.mcf;
     requires aion.precompiled;
     requires aion.avm.stub;
     requires aion.types;

@@ -1,10 +1,11 @@
-package org.aion.mcf.db;
+package org.aion.zero.impl.db;
 
 import java.util.HashMap;
 import java.util.Map;
+import org.aion.base.db.TransformedCodeInfoInterface;
 import org.aion.util.types.ByteArrayWrapper;
 
-public final class TransformedCodeInfo {
+public final class TransformedCodeInfo implements TransformedCodeInfoInterface {
 
     // Key for this map is the codeHash, the value is a map which has AVM version as its key and transformed code as its value.
     public Map<ByteArrayWrapper, Map<Integer, byte[]>> transformedCodeMap;

@@ -1,4 +1,4 @@
-package org.aion.mcf.db;
+package org.aion.base.db;
 
 import java.math.BigInteger;
 import java.util.Collection;
@@ -33,8 +33,8 @@ public interface Repository {
      */
     void updateBatch(
             Map<AionAddress, AccountState> accountStates,
-            Map<AionAddress, ContractDetails> contractDetails,
-            Map<AionAddress, TransformedCodeInfo> transformedCodeCache);
+            Map<AionAddress, ContractDetail> contractDetails,
+            Map<AionAddress, TransformedCodeInfoInterface> transformedCodeCache);
 
     /** Reverts all the changes performed by this repository. */
     void rollback();
@@ -184,10 +184,10 @@ public interface Repository {
      * Retrieves the contract details of the account associated with the given address.
      *
      * @param addr the address of the account of interest
-     * @return a {@link ContractDetails} object representing the contract details as are stored in
+     * @return a {@link ContractDetail} object representing the contract details as are stored in
      *     the database or cache
      */
-    ContractDetails getContractDetails(AionAddress addr);
+    ContractDetail getContractDetails(AionAddress addr);
 
     /**
      * Returns a byte array from contract storage representing an encoding of the object graph for

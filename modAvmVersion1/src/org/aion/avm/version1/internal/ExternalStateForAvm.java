@@ -7,7 +7,7 @@ import org.aion.avm.stub.IEnergyRules;
 import org.aion.avm.stub.IEnergyRules.TransactionType;
 import org.aion.base.AccountState;
 import org.aion.base.InternalVmType;
-import org.aion.mcf.db.RepositoryCache;
+import org.aion.base.db.RepositoryCache;
 import org.aion.types.AionAddress;
 import org.aion.util.types.ByteArrayWrapper;
 
