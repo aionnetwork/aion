@@ -14,7 +14,7 @@ import org.aion.db.store.Stores;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.log.LogLevel;
-import org.aion.mcf.blockchain.Block;
+import org.aion.zero.impl.types.Block;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.zero.impl.core.ImportResult;
 import org.aion.zero.impl.db.AionBlockStore;

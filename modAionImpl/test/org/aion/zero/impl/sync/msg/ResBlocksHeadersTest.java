@@ -7,7 +7,7 @@ import static org.junit.Assert.assertArrayEquals;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.aion.mcf.blockchain.BlockHeader;
+import org.aion.zero.impl.types.BlockHeader;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.zero.impl.types.MiningBlockHeader;
 import org.junit.Test;

@@ -3,7 +3,7 @@ package org.aion.zero.impl.types;
 import static com.google.common.truth.Truth.assertThat;
 
 import org.aion.crypto.HashUtil;
-import org.aion.mcf.blockchain.BlockHeader.Seal;
+import org.aion.zero.impl.types.BlockHeader.Seal;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.junit.Test;

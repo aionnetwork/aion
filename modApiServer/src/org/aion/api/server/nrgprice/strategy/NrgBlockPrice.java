@@ -7,7 +7,7 @@ import org.aion.api.server.nrgprice.NrgPriceAdvisor;
 import org.aion.base.AionTransaction;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
-import org.aion.mcf.blockchain.Block;
+import org.aion.zero.impl.types.Block;
 import org.aion.types.AionAddress;
 import org.slf4j.Logger;
 

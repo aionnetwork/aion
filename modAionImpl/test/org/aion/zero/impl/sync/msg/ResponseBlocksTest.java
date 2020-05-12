@@ -5,7 +5,7 @@ import static com.google.common.truth.Truth.assertThat;
 import java.util.Collections;
 import java.util.List;
 import junitparams.JUnitParamsRunner;
-import org.aion.mcf.blockchain.Block;
+import org.aion.zero.impl.types.Block;
 import org.aion.p2p.Ver;
 import org.aion.rlp.RLP;
 import org.aion.util.TestResources;

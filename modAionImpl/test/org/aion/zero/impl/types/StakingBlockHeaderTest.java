@@ -8,7 +8,7 @@ import java.util.concurrent.TimeUnit;
 import org.aion.base.ConstantUtil;
 import org.aion.crypto.HashUtil;
 import org.aion.rlp.RLP;
-import org.aion.mcf.blockchain.BlockHeader.Seal;
+import org.aion.zero.impl.types.BlockHeader.Seal;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.junit.Test;

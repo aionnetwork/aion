@@ -4,7 +4,6 @@ import com.google.common.annotations.VisibleForTesting;
 import org.aion.base.ConstantUtil;
 import org.aion.crypto.HashUtil;
 import org.aion.crypto.vrf.VRF_Ed25519;
-import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.rlp.RLP;
 import org.aion.rlp.SharedRLPList;
 import org.aion.types.AionAddress;

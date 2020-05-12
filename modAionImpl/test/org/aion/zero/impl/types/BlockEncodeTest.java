@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.aion.base.TransactionTypeRule;
 import org.aion.crypto.ECKey;
-import org.aion.mcf.blockchain.BlockHeader.Seal;
+import org.aion.zero.impl.types.BlockHeader.Seal;
 import org.aion.zero.impl.blockchain.BlockchainTestUtils;
 import org.aion.zero.impl.blockchain.StandaloneBlockchain;
 import org.aion.zero.impl.vm.AvmPathManager;

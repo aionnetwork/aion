@@ -46,7 +46,6 @@ dependencies {
 
     compile project(':modAionImpl')
     compile files("${rootProject.projectDir}/lib/fastvm-df76ffb.jar")
-    compile project(':modMcf')
     compile project(':modEvtMgr')
     compile project(':modEvtMgrImpl')
     compile project(':3rdParty.libnzmq')

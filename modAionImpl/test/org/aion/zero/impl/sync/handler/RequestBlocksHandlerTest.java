@@ -11,7 +11,7 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.aion.mcf.blockchain.Block;
+import org.aion.zero.impl.types.Block;
 import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.Ver;
 import org.aion.p2p.impl1.P2pMgr;

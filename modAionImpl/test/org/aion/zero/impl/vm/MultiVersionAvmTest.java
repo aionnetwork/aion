@@ -10,7 +10,7 @@ import org.aion.base.AionTransaction;
 import org.aion.base.TransactionTypeRule;
 import org.aion.base.TransactionTypes;
 import org.aion.crypto.ECKey;
-import org.aion.mcf.blockchain.Block;
+import org.aion.zero.impl.types.Block;
 import org.aion.types.AionAddress;
 import org.aion.zero.impl.blockchain.StandaloneBlockchain;
 import org.aion.zero.impl.core.ImportResult;

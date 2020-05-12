@@ -17,7 +17,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import org.aion.db.impl.ByteArrayKeyValueDatabase;
 import org.aion.db.impl.mockdb.MockDB;
-import org.aion.mcf.blockchain.Block;
+import org.aion.zero.impl.types.Block;
 import org.aion.util.TestResources;
 import org.aion.util.types.AddressUtils;
 import org.aion.util.types.ByteArrayWrapper;

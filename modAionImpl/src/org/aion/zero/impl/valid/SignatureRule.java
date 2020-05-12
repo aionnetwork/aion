@@ -2,7 +2,7 @@ package org.aion.zero.impl.valid;
 
 import java.util.List;
 import org.aion.crypto.ed25519.ECKeyEd25519;
-import org.aion.mcf.blockchain.BlockHeader;
+import org.aion.zero.impl.types.BlockHeader;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.zero.impl.types.StakingBlockHeader;
 

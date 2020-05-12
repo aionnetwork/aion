@@ -17,7 +17,7 @@ import org.aion.crypto.ECKey;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
 import org.aion.log.AionLoggerFactory;
-import org.aion.mcf.blockchain.Block;
+import org.aion.zero.impl.types.Block;
 import org.aion.types.AionAddress;
 import org.aion.util.conversions.Hex;
 import org.aion.util.types.ByteArrayWrapper;

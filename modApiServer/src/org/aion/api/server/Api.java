@@ -15,7 +15,7 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.api.server.account.AccountManager;
 import org.aion.zero.impl.keystore.Keystore;
-import org.aion.mcf.blockchain.Block;
+import org.aion.zero.impl.types.Block;
 import org.aion.solidity.Abi;
 import org.aion.solidity.CompilationResult;
 import org.aion.solidity.CompilationResult.Contract;

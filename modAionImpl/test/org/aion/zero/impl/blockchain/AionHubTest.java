@@ -17,7 +17,7 @@ import org.aion.db.impl.mockdb.MockDB;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.log.LogLevel;
-import org.aion.mcf.blockchain.Block;
+import org.aion.zero.impl.types.Block;
 import org.aion.zero.impl.blockchain.AionImpl.NetworkBestBlockCallback;
 import org.aion.zero.impl.blockchain.AionImpl.PendingTxCallback;
 import org.aion.zero.impl.blockchain.AionImpl.TransactionBroadcastCallback;

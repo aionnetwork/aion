@@ -1,6 +1,6 @@
 package org.aion.zero.impl.core.energy;
 
-import org.aion.mcf.blockchain.BlockHeader;
+import org.aion.zero.impl.types.BlockHeader;
 
 public class MonotonicallyIncreasingStrategy extends AbstractEnergyStrategyLimit {
 

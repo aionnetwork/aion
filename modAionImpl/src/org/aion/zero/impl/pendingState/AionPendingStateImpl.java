@@ -36,7 +36,7 @@ import org.aion.base.PooledTransaction;
 import org.aion.base.TxUtil;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
-import org.aion.mcf.blockchain.Block;
+import org.aion.zero.impl.types.Block;
 import org.aion.zero.impl.blockchain.AionBlockchainImpl;
 import org.aion.zero.impl.types.TxResponse;
 import org.aion.base.AccountState;

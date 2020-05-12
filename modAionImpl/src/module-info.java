@@ -2,7 +2,6 @@ module aion.zero.impl {
     uses org.aion.evtmgr.EventMgrModule;
 
     requires aion.util;
-    requires aion.mcf;
     requires aion.log;
     requires aion.p2p;
     requires aion.p2p.impl;

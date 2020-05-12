@@ -58,7 +58,7 @@ import org.aion.db.store.Stores;
 import org.aion.db.store.XorDataSource;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
-import org.aion.mcf.blockchain.Block;
+import org.aion.zero.impl.types.Block;
 import org.aion.base.InternalVmType;
 import org.aion.rlp.SharedRLPList;
 import org.aion.base.db.Repository;

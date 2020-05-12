@@ -6,7 +6,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import org.aion.base.AionTransaction;
-import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.rlp.RLP;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;

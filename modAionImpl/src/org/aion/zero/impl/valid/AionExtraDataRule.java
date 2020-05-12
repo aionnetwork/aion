@@ -2,7 +2,7 @@ package org.aion.zero.impl.valid;
 
 import java.util.List;
 
-import org.aion.mcf.blockchain.BlockHeader;
+import org.aion.zero.impl.types.BlockHeader;
 
 public class AionExtraDataRule implements BlockHeaderRule {
 

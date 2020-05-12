@@ -1,7 +1,7 @@
 package org.aion.zero.impl.valid;
 
 import java.util.List;
-import org.aion.mcf.blockchain.BlockHeader;
+import org.aion.zero.impl.types.BlockHeader;
 
 /** A class of rules that requires memory of the previous block */
 public interface DependentBlockHeaderRule {

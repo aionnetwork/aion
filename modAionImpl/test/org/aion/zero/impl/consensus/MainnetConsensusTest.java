@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Map;
 import org.aion.log.AionLoggerFactory;
 import org.aion.base.AccountState;
-import org.aion.mcf.blockchain.Block;
+import org.aion.zero.impl.types.Block;
 import org.aion.zero.impl.core.ImportResult;
 import org.aion.log.LogEnum;
 import org.aion.log.LogLevel;

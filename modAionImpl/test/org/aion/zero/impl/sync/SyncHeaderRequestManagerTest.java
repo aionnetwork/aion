@@ -16,7 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.aion.base.ConstantUtil;
-import org.aion.mcf.blockchain.BlockHeader;
+import org.aion.zero.impl.types.BlockHeader;
 import org.aion.p2p.INode;
 import org.aion.util.types.ByteArrayWrapper;
 import org.apache.commons.lang3.tuple.Pair;

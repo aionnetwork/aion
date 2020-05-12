@@ -7,7 +7,7 @@ import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 import org.aion.crypto.ECKey;
 import org.aion.db.impl.SystemExitCodes;
-import org.aion.mcf.blockchain.Block;
+import org.aion.zero.impl.types.Block;
 import org.aion.types.AionAddress;
 import org.aion.zero.impl.core.ImportResult;
 import org.junit.Rule;

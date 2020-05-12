@@ -18,7 +18,7 @@ import org.aion.base.AionTxReceipt;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.HashUtil;
-import org.aion.mcf.blockchain.Block;
+import org.aion.zero.impl.types.Block;
 import org.aion.rpc.client.IDGeneratorStrategy;
 import org.aion.rpc.client.SimpleIDGenerator;
 import org.aion.rpc.server.RPCServerMethods;

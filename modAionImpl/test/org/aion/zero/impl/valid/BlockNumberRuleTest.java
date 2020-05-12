@@ -5,9 +5,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.LinkedList;
 import java.util.List;
-import org.aion.mcf.blockchain.BlockHeader;
-import org.aion.zero.impl.valid.BlockNumberRule;
-import org.aion.zero.impl.valid.RuleError;
+import org.aion.zero.impl.types.BlockHeader;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;

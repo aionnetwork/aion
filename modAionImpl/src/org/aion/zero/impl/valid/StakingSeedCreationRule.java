@@ -5,7 +5,7 @@ import static org.aion.crypto.HashUtil.h256;
 import java.util.Arrays;
 import java.util.List;
 import org.aion.crypto.AddressSpecs;
-import org.aion.mcf.blockchain.BlockHeader;
+import org.aion.zero.impl.types.BlockHeader;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.zero.impl.types.MiningBlockHeader;

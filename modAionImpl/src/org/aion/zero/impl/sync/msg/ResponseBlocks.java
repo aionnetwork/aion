@@ -3,7 +3,7 @@ package org.aion.zero.impl.sync.msg;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import org.aion.mcf.blockchain.Block;
+import org.aion.zero.impl.types.Block;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Msg;
 import org.aion.p2p.Ver;

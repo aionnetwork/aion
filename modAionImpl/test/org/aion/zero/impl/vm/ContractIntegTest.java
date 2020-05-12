@@ -33,7 +33,7 @@ import org.aion.crypto.HashUtil;
 import org.aion.fastvm.FastVmResultCode;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
-import org.aion.mcf.blockchain.Block;
+import org.aion.zero.impl.types.Block;
 import org.aion.zero.impl.blockchain.BlockchainTestUtils;
 import org.aion.zero.impl.core.ImportResult;
 import org.aion.base.db.RepositoryCache;

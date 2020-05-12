@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import org.aion.base.AionTransaction;
-import org.aion.mcf.blockchain.Block;
+import org.aion.zero.impl.types.Block;
 import org.aion.base.Bloom;
 import org.aion.base.LogUtility;
 import org.aion.types.Log;

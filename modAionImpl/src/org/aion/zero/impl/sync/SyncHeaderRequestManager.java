@@ -22,7 +22,7 @@ import java.util.TreeSet;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
-import org.aion.mcf.blockchain.BlockHeader;
+import org.aion.zero.impl.types.BlockHeader;
 import org.aion.p2p.INode;
 import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.P2pConstant;

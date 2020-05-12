@@ -10,7 +10,6 @@ dependencies {
     compile project(':modAionImpl')
     compile project(':modEvtMgr')
     compile project(':modP2p')
-    compile project(':modMcf')
     compile project(':3rdParty.libnzmq')
     compile 'org.slf4j:slf4j-api:1.7.25'
     compile files("${rootProject.projectDir}/lib/fastvm-df76ffb.jar")

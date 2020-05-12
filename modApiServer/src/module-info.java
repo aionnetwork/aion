@@ -1,7 +1,6 @@
 module aion.apiserver {
     requires aion.zero.impl;
     requires aion.log;
-    requires aion.mcf;
     requires aion.crypto;
     requires slf4j.api;
     requires aion.evtmgr;
