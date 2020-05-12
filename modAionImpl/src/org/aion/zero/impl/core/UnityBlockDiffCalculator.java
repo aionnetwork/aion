@@ -3,8 +3,8 @@ package org.aion.zero.impl.core;
 import static org.aion.util.biginteger.BIUtil.max;
 
 import java.math.BigInteger;
-import org.aion.mcf.blockchain.BlockHeader;
-import org.aion.mcf.blockchain.BlockHeader.Seal;
+import org.aion.zero.impl.types.BlockHeader;
+import org.aion.zero.impl.types.BlockHeader.Seal;
 import org.aion.zero.impl.api.BlockConstants;
 import org.aion.util.math.FixedPoint;
 

@@ -17,7 +17,7 @@ import junitparams.JUnitParamsRunner;
 import org.aion.crypto.ECKey;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
-import org.aion.mcf.blockchain.Block;
+import org.aion.zero.impl.types.Block;
 import org.aion.zero.impl.core.ImportResult;
 import org.aion.zero.impl.db.RepositoryConfig;
 import org.aion.zero.impl.config.PruneConfig;

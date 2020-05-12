@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 
-import org.aion.mcf.blockchain.Block;
-import org.aion.mcf.blockchain.BlockHeader;
+import org.aion.zero.impl.types.Block;
+import org.aion.zero.impl.types.BlockHeader;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.sync.msg.ResponseBlocks;

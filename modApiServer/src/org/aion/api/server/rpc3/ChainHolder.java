@@ -3,7 +3,7 @@ package org.aion.api.server.rpc3;
 import java.math.BigInteger;
 import java.util.List;
 import org.aion.base.AccountState;
-import org.aion.mcf.blockchain.Block;
+import org.aion.zero.impl.types.Block;
 import org.aion.types.AionAddress;
 import org.aion.zero.impl.types.MiningBlock;
 import org.aion.zero.impl.types.AionTxInfo;

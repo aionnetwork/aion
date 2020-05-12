@@ -4,7 +4,6 @@ module aion.boot {
     requires aion.zero.impl;
     requires aion.log;
     requires aion.evtmgr;
-    requires aion.mcf;
     requires slf4j.api;
     requires aion.p2p;
     requires aion.fastvm;

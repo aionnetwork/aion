@@ -1,4 +1,4 @@
-package org.aion.mcf.blockchain;
+package org.aion.zero.impl.types;
 
 import com.google.common.annotations.VisibleForTesting;
 import java.math.BigInteger;

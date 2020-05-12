@@ -7,7 +7,7 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import org.aion.equihash.OptimizedEquiValidator;
-import org.aion.mcf.blockchain.BlockHeader.Seal;
+import org.aion.zero.impl.types.BlockHeader.Seal;
 import org.aion.zero.impl.core.RewardsCalculatorAfterUnity;
 import org.aion.zero.impl.core.UnityBlockDiffCalculator;
 import org.aion.zero.impl.types.IBlockConstants;

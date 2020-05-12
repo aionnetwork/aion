@@ -2,7 +2,7 @@ package org.aion.zero.impl.sync;
 
 import java.util.Collections;
 import java.util.List;
-import org.aion.mcf.blockchain.Block;
+import org.aion.zero.impl.types.Block;
 
 /**
  * A container used to package together the blocks received from a peer with the peer's

@@ -14,7 +14,7 @@ import org.aion.base.AionTransaction;
 import org.aion.base.TransactionTypes;
 import org.aion.base.TxUtil;
 import org.aion.crypto.ECKey;
-import org.aion.mcf.blockchain.Block;
+import org.aion.zero.impl.types.Block;
 import org.aion.zero.impl.core.ImportResult;
 import org.aion.precompiled.ContractInfo;
 import org.aion.types.AionAddress;

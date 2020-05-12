@@ -3,7 +3,7 @@ package org.aion.zero.impl.valid;
 import com.google.common.base.Preconditions;
 import org.aion.base.AionTransaction;
 import org.aion.log.LogEnum;
-import org.aion.mcf.blockchain.Block;
+import org.aion.zero.impl.types.Block;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.zero.impl.blockchain.IAionBlockchain;
 import org.aion.zero.impl.forks.ForkUtility;

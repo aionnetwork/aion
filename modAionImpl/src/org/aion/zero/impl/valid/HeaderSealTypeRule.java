@@ -2,8 +2,8 @@ package org.aion.zero.impl.valid;
 
 import java.util.List;
 
-import org.aion.mcf.blockchain.BlockHeader;
-import org.aion.mcf.blockchain.BlockHeader.Seal;
+import org.aion.zero.impl.types.BlockHeader;
+import org.aion.zero.impl.types.BlockHeader.Seal;
 import org.aion.zero.impl.types.MiningBlockHeader;
 import org.aion.zero.impl.types.StakingBlockHeader;
 

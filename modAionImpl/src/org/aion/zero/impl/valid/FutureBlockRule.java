@@ -1,7 +1,7 @@
 package org.aion.zero.impl.valid;
 
 import java.util.List;
-import org.aion.mcf.blockchain.BlockHeader;
+import org.aion.zero.impl.types.BlockHeader;
 
 /**
  * Rule for checking that blockTimestamp does not exceed the currentTimestamp plus clock drift tolerance:

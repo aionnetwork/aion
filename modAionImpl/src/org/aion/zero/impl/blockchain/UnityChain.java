@@ -3,7 +3,7 @@ package org.aion.zero.impl.blockchain;
 import java.math.BigInteger;
 import java.util.List;
 import org.aion.base.AionTransaction;
-import org.aion.mcf.blockchain.Block;
+import org.aion.zero.impl.types.Block;
 import org.aion.zero.impl.core.ImportResult;
 import org.aion.zero.impl.types.MiningBlock;
 import org.aion.zero.impl.types.BlockContext;

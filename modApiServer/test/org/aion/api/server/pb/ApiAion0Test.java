@@ -25,7 +25,7 @@ import org.aion.equihash.EquihashMiner;
 import org.aion.api.server.account.AccountManager;
 import org.aion.log.AionLoggerFactory;
 import org.aion.zero.impl.keystore.Keystore;
-import org.aion.mcf.blockchain.Block;
+import org.aion.zero.impl.types.Block;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.string.StringUtils;

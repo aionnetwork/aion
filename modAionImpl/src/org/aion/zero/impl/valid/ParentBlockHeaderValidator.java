@@ -4,8 +4,8 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import org.aion.mcf.blockchain.BlockHeader;
-import org.aion.mcf.blockchain.BlockHeader.Seal;
+import org.aion.zero.impl.types.BlockHeader;
+import org.aion.zero.impl.types.BlockHeader.Seal;
 import org.slf4j.Logger;
 
 /** validation rules depending on parent's block header */

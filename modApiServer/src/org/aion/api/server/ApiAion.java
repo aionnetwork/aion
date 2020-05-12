@@ -26,7 +26,7 @@ import org.aion.evtmgr.IEventMgr;
 import org.aion.evtmgr.IHandler;
 import org.aion.evtmgr.impl.es.EventExecuteService;
 import org.aion.evtmgr.impl.evt.EventBlock;
-import org.aion.mcf.blockchain.Block;
+import org.aion.zero.impl.types.Block;
 import org.aion.zero.impl.blockchain.UnityChain;
 import org.aion.zero.impl.types.MiningBlock;
 import org.aion.zero.impl.types.TxResponse;

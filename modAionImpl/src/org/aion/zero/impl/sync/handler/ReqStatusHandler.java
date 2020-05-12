@@ -2,7 +2,7 @@ package org.aion.zero.impl.sync.handler;
 
 import java.math.BigInteger;
 
-import org.aion.mcf.blockchain.Block;
+import org.aion.zero.impl.types.Block;
 import org.aion.zero.impl.pendingState.AionPendingStateImpl;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Handler;

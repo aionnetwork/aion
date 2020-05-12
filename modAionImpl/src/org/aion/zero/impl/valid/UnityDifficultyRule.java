@@ -4,7 +4,7 @@ import static org.aion.util.biginteger.BIUtil.isEqual;
 
 import java.math.BigInteger;
 import java.util.List;
-import org.aion.mcf.blockchain.BlockHeader;
+import org.aion.zero.impl.types.BlockHeader;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
 import org.aion.zero.impl.core.IDifficultyCalculator;
 

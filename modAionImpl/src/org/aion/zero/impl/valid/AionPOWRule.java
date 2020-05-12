@@ -3,7 +3,7 @@ package org.aion.zero.impl.valid;
 import java.math.BigInteger;
 import java.util.List;
 import org.aion.crypto.HashUtil;
-import org.aion.mcf.blockchain.BlockHeader;
+import org.aion.zero.impl.types.BlockHeader;
 import org.aion.zero.impl.types.MiningBlockHeader;
 
 /** Checks proof value against its boundary for the block header */

@@ -6,7 +6,7 @@ import java.math.BigInteger;
 import java.util.List;
 import org.aion.crypto.HashUtil;
 import org.aion.crypto.vrf.VRF_Ed25519;
-import org.aion.mcf.blockchain.BlockHeader;
+import org.aion.zero.impl.types.BlockHeader;
 import org.aion.zero.impl.types.StakingBlockHeader;
 import org.aion.util.math.FixedPoint;
 import org.aion.util.math.LogApproximator;

@@ -14,7 +14,7 @@ import org.aion.db.impl.DatabaseFactory.Props;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.log.LogLevel;
-import org.aion.mcf.blockchain.Block;
+import org.aion.zero.impl.types.Block;
 import org.aion.util.TestResources;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.types.MiningBlock;

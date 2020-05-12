@@ -2,7 +2,7 @@ package org.aion.api.server.types;
 
 import static org.aion.api.server.types.Fltr.Type;
 
-import org.aion.mcf.blockchain.Block;
+import org.aion.zero.impl.types.Block;
 import org.aion.util.string.StringUtils;
 
 @SuppressWarnings("rawtypes")

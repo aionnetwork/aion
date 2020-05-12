@@ -6,7 +6,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
-import org.aion.mcf.blockchain.Block;
 import org.aion.types.AionAddress;
 import org.aion.base.AionTxExecSummary;
 import org.aion.base.AionTxReceipt;

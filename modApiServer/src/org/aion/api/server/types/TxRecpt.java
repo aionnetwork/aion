@@ -4,7 +4,7 @@ import static org.aion.util.string.StringUtils.toJsonHex;
 
 import org.aion.base.AionTransaction;
 import org.aion.base.TxUtil;
-import org.aion.mcf.blockchain.Block;
+import org.aion.zero.impl.types.Block;
 import org.aion.types.AionAddress;
 import org.aion.types.Log;
 import org.aion.util.bytes.ByteUtil;

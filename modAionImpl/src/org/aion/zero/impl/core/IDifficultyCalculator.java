@@ -2,7 +2,7 @@ package org.aion.zero.impl.core;
 
 import java.math.BigInteger;
 
-import org.aion.mcf.blockchain.BlockHeader;
+import org.aion.zero.impl.types.BlockHeader;
 
 /**
  * Interface for retrieving difficulty calculations for a particular chain configuration, note that

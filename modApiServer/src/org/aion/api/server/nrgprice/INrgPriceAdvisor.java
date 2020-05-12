@@ -1,6 +1,6 @@
 package org.aion.api.server.nrgprice;
 
-import org.aion.mcf.blockchain.Block;
+import org.aion.zero.impl.types.Block;
 
 public interface INrgPriceAdvisor {
     /* Is the recommendation engine hungry for more data?
