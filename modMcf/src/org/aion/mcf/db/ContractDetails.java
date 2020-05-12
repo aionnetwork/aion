@@ -2,7 +2,6 @@ package org.aion.mcf.db;
 
 import java.util.Collection;
 import java.util.Map;
-import org.aion.types.AionAddress;
 import org.aion.util.types.ByteArrayWrapper;
 
 public interface ContractDetails {

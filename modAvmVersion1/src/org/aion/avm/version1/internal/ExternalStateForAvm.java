@@ -21,7 +21,7 @@ import org.aion.util.types.ByteArrayWrapper;
  * a new equivalent object for whatever world we are talking to.
  */
 public final class ExternalStateForAvm implements IExternalState, IAvmExternalState {
-    private RepositoryCache<AccountState> repositoryCache;
+    private RepositoryCache repositoryCache;
     private BigInteger blockDifficulty;
     private AionAddress blockCoinbase;
     private IEnergyRules energyRules;
@@ -30,7 +30,7 @@ public final class ExternalStateForAvm implements IExternalState, IAvmExternalSt
     private long blockTimestamp;
     private long blockNrgLimit;
 
-    public ExternalStateForAvm(RepositoryCache<AccountState> repositoryCache, boolean allowNonceIncrement, boolean isLocalCall, BigInteger blockDifficulty, long blockNumber, long blockTimestamp, long blockNrgLimit, AionAddress blockCoinbase, IEnergyRules energyRules) {
+    public ExternalStateForAvm(RepositoryCache repositoryCache, boolean allowNonceIncrement, boolean isLocalCall, BigInteger blockDifficulty, long blockNumber, long blockTimestamp, long blockNrgLimit, AionAddress blockCoinbase, IEnergyRules energyRules) {
         this.repositoryCache = repositoryCache;
         this.allowNonceIncrement = allowNonceIncrement;
         this.isLocalCall = isLocalCall;
@@ -90,7 +90,7 @@ public final class ExternalStateForAvm implements IExternalState, IAvmExternalSt
     @Override
     public byte[] getTransformedCode(AionAddress address) {
         // will load contract into memory otherwise leading to consensus issues
-        RepositoryCache<AccountState> track = repositoryCache.startTracking();
+        RepositoryCache track = repositoryCache.startTracking();
         byte[] codeHash = track.getAccountState(address).getCodeHash();
 
         return this.repositoryCache.getTransformedCode(address, codeHash, 1);
@@ -99,7 +99,7 @@ public final class ExternalStateForAvm implements IExternalState, IAvmExternalSt
     @Override
     public void setTransformedCode(AionAddress address, byte[] transformedCode) {
         // will load contract into memory otherwise leading to consensus issues
-        RepositoryCache<AccountState> track = repositoryCache.startTracking();
+        RepositoryCache track = repositoryCache.startTracking();
         byte[] codeHash = track.getAccountState(address).getCodeHash();
 
         this.repositoryCache.setTransformedCode(address, codeHash, 1,  transformedCode);
@@ -219,7 +219,7 @@ public final class ExternalStateForAvm implements IExternalState, IAvmExternalSt
 
     private InternalVmType getVmType(AionAddress destination) {
         // will load contract into memory otherwise leading to consensus issues
-        RepositoryCache<AccountState> track = repositoryCache.startTracking();
+        RepositoryCache track = repositoryCache.startTracking();
         AccountState accountState = track.getAccountState(destination);
 
         InternalVmType vm;

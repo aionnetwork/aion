@@ -83,7 +83,7 @@ public class DevCLI {
         AionRepositoryImpl repository = AionRepositoryImpl.inst();
         try {
             Block bestBlock = repository.getBestBlock();
-            Repository<AccountState> snapshot = repository.getSnapshotTo(bestBlock.getStateRoot()).startTracking();
+            Repository snapshot = repository.getSnapshotTo(bestBlock.getStateRoot()).startTracking();
 
             AccountState account = snapshot.getAccountState(address);
             log.info(account.toString());

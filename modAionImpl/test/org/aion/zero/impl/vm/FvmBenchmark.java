@@ -1,7 +1,6 @@
 package org.aion.zero.impl.vm;
 
 import org.aion.fastvm.FvmDataWord;
-import org.aion.base.AccountState;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
@@ -43,7 +42,7 @@ public class FvmBenchmark {
 
             long t1 = System.nanoTime();
             for (int i = 0; i < blocks; i++) {
-                RepositoryCache<AccountState> repo = db.startTracking();
+                RepositoryCache repo = db.startTracking();
                 for (int j = 0; j < transactions; j++) {
                     AionAddress address =
                         new AionAddress(
@@ -61,7 +60,7 @@ public class FvmBenchmark {
 
             long t3 = System.nanoTime();
             for (int i = 0; i < blocks; i++) {
-                RepositoryCache<AccountState> repo = db.startTracking();
+                RepositoryCache repo = db.startTracking();
                 for (int j = 0; j < transactions; j++) {
                     AionAddress address =
                         new AionAddress(

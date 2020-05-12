@@ -6,7 +6,6 @@ import java.util.Arrays;
 import java.util.List;
 import org.aion.zero.impl.vm.common.PostExecutionWork;
 import org.aion.zero.impl.vm.common.VmFatalException;
-import org.aion.base.AccountState;
 import org.aion.base.AionTransaction;
 import org.aion.fastvm.FastVirtualMachine;
 import org.aion.fastvm.FvmDataWord;
@@ -58,7 +57,7 @@ public final class FvmTransactionExecutor {
      * @return a list of transaction summaries pertaining to the transactions.
      */
     public static List<AionTxExecSummary> executeTransactions(
-            RepositoryCache<AccountState> repository,
+            RepositoryCache repository,
             byte[] blockDifficulty,
             long blockNumber,
             long blockTimestamp,

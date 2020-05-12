@@ -295,16 +295,14 @@ public class AionImpl implements IAionChain {
     }
 
     @Override
-    public Repository<?> getPendingState() {
+    public Repository getPendingState() {
         return aionHub.getPendingState().getRepository();
     }
 
     @Override
-    public Repository<?> getSnapshotTo(byte[] root) {
-        Repository<?> repository = aionHub.getRepository();
-        Repository<?> snapshot = repository.getSnapshotTo(root);
-
-        return snapshot;
+    public Repository getSnapshotTo(byte[] root) {
+        Repository repository = aionHub.getRepository();
+        return repository.getSnapshotTo(root);
     }
 
     @Override
@@ -366,11 +364,10 @@ public class AionImpl implements IAionChain {
             byte[] stateRoot =
                     this.aionHub.getBlockchain().getBlockByNumber(blockNumber).getStateRoot();
             AccountState account =
-                    (AccountState)
-                            this.aionHub
-                                    .getRepository()
-                                    .getSnapshotTo(stateRoot)
-                                    .getAccountState(address);
+                this.aionHub
+                        .getRepository()
+                        .getSnapshotTo(stateRoot)
+                        .getAccountState(address);
 
             if (account == null) return Optional.empty();
 
@@ -387,11 +384,10 @@ public class AionImpl implements IAionChain {
             byte[] stateRoot =
                     this.aionHub.getBlockchain().getBlockByHash(blockHash).getStateRoot();
             AccountState account =
-                    (AccountState)
-                            this.aionHub
-                                    .getRepository()
-                                    .getSnapshotTo(stateRoot)
-                                    .getAccountState(address);
+                this.aionHub
+                        .getRepository()
+                        .getSnapshotTo(stateRoot)
+                        .getAccountState(address);
 
             if (account == null) return Optional.empty();
 
@@ -407,11 +403,10 @@ public class AionImpl implements IAionChain {
         try {
             byte[] stateRoot = this.aionHub.getBlockchain().getBestBlock().getStateRoot();
             AccountState account =
-                    (AccountState)
-                            this.aionHub
-                                    .getRepository()
-                                    .getSnapshotTo(stateRoot)
-                                    .getAccountState(address);
+                this.aionHub
+                        .getRepository()
+                        .getSnapshotTo(stateRoot)
+                        .getAccountState(address);
 
             if (account == null) return Optional.empty();
 

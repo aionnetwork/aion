@@ -4,7 +4,6 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import org.aion.zero.impl.vm.common.PostExecutionWork;
-import org.aion.base.AccountState;
 import org.aion.base.AionTransaction;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.precompiled.type.ContractExecutor;
@@ -23,7 +22,7 @@ import org.slf4j.Logger;
 public final class PrecompiledTransactionExecutor {
 
     public static List<AionTxExecSummary> executeTransactions(
-            RepositoryCache<AccountState> repository,
+            RepositoryCache repository,
             long blockNumber,
             AionAddress blockCoinbase,
             AionTransaction[] transactions,

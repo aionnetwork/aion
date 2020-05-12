@@ -11,7 +11,6 @@ import org.aion.avm.stub.IAvmExternalState;
 import org.aion.avm.stub.IAvmFutureResult;
 import org.aion.avm.stub.IEnergyRules;
 import org.aion.avm.stub.IEnergyRules.TransactionType;
-import org.aion.base.AccountState;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.types.AionAddress;
 import org.aion.types.Transaction;
@@ -67,13 +66,13 @@ public class AvmProviderTest {
         AvmProvider.startAvm(AvmVersion.VERSION_1);
 
         // Set up the repo and give the sender account some balance.
-        RepositoryCache<AccountState> repository = newRepository();
+        RepositoryCache repository = newRepository();
         AionAddress sender = randomAddress();
         AionAddress recipient = randomAddress();
         addBalance(repository, sender, BigInteger.valueOf(1_000_000));
 
         // Run the transaction.
-        RepositoryCache<AccountState> repositoryChild = repository.startTracking();
+        RepositoryCache repositoryChild = repository.startTracking();
         IAvmExternalState externalState = newExternalState(AvmVersion.VERSION_1, repositoryChild, newEnergyRules());
         Transaction transaction = newBalanceTransferTransaction(sender, recipient, BigInteger.TEN);
         IAionVirtualMachine avm = AvmProvider.getAvm(AvmVersion.VERSION_1);
@@ -97,13 +96,13 @@ public class AvmProviderTest {
         AvmProvider.startAvm(AvmVersion.VERSION_2);
 
         // Set up the repo and give the sender account some balance.
-        RepositoryCache<AccountState> repository = newRepository();
+        RepositoryCache repository = newRepository();
         AionAddress sender = randomAddress();
         AionAddress recipient = randomAddress();
         addBalance(repository, sender, BigInteger.valueOf(1_000_000));
 
         // Run the transaction.
-        RepositoryCache<AccountState> repositoryChild = repository.startTracking();
+        RepositoryCache repositoryChild = repository.startTracking();
         IAvmExternalState externalState = newExternalState(AvmVersion.VERSION_2, repositoryChild, newEnergyRules());
         Transaction transaction = newBalanceTransferTransaction(sender, recipient, BigInteger.TEN);
         IAionVirtualMachine avm = AvmProvider.getAvm(AvmVersion.VERSION_2);
@@ -120,7 +119,7 @@ public class AvmProviderTest {
         AvmProvider.releaseLock();
     }
 
-    private void addBalance(RepositoryCache<AccountState> repository, AionAddress account, BigInteger amount) {
+    private void addBalance(RepositoryCache repository, AionAddress account, BigInteger amount) {
         RepositoryCache cache = repository.startTracking();
         cache.addBalance(account, amount);
         cache.flush();
@@ -130,7 +129,7 @@ public class AvmProviderTest {
         return Transaction.contractCallTransaction(sender, recipient, new byte[32], BigInteger.ZERO, value, new byte[0], 50_000, 1);
     }
 
-    private RepositoryCache<AccountState> newRepository() {
+    private RepositoryCache newRepository() {
         return new StandaloneBlockchain.Builder()
             .withDefaultAccounts()
             .withValidatorConfiguration("simple")
@@ -151,7 +150,7 @@ public class AvmProviderTest {
         };
     }
 
-    private IAvmExternalState newExternalState(AvmVersion version, RepositoryCache<AccountState> repository, IEnergyRules energyRules) {
+    private IAvmExternalState newExternalState(AvmVersion version, RepositoryCache repository, IEnergyRules energyRules) {
         return AvmProvider.newExternalStateBuilder(version)
             .withRepository(repository)
             .withEnergyRules(energyRules)

@@ -160,7 +160,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     protected ChainConfiguration chainConfiguration;
 
     private AionRepositoryImpl repository;
-    private RepositoryCache<AccountState> track;
+    private RepositoryCache track;
     private TransactionStore transactionStore;
     private Block bestBlock;
     private StakingBlock bestStakingBlock;

@@ -10,7 +10,6 @@ import org.aion.db.impl.ByteArrayKeyValueDatabase;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
 import org.aion.zero.impl.config.CfgPrune;
-import org.aion.base.AccountState;
 import org.aion.mcf.db.InternalVmType;
 import org.aion.zero.impl.config.PruneConfig;
 import org.aion.mcf.db.Repository;
@@ -167,7 +166,7 @@ public class AionRepositoryImplTest {
     @Test
     public void testRepoTrackUpdateStorageRow() {
         final AionRepositoryImpl repository = AionRepositoryImpl.createForTesting(repoConfig);
-        final RepositoryCache<AccountState> repoTrack = repository.startTracking();
+        final RepositoryCache repoTrack = repository.startTracking();
         final AionAddress defaultAccount = new AionAddress(ByteUtil.hexStringToBytes(value1));
         final byte[] key = HashUtil.blake128("hello".getBytes());
         final byte[] value = HashUtil.blake128("world".getBytes());

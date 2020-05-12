@@ -87,7 +87,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 
 /** Has direct database connection. */
-public final class AionRepositoryImpl implements Repository<AccountState> {
+public final class AionRepositoryImpl implements Repository {
 
     // Logger
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.DB.name());

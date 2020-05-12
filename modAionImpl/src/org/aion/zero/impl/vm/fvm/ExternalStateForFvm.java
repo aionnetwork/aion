@@ -26,7 +26,7 @@ import org.aion.zero.impl.vm.common.TxNrgRule;
  * An implementation of the {@link IExternalStateForFvm} interface defined in the FVM.
  */
 public final class ExternalStateForFvm implements IExternalStateForFvm {
-    private final RepositoryCache<AccountState> repository;
+    private final RepositoryCache repository;
     private final AionAddress miner;
     private final boolean isLocalCall;
     private final boolean allowNonceIncrement;
@@ -38,7 +38,7 @@ public final class ExternalStateForFvm implements IExternalStateForFvm {
     private final boolean isUnityForkEnabled;
     private final boolean signatureSwapForkEnabled;
 
-    public ExternalStateForFvm(RepositoryCache<AccountState> repository, AionAddress miner, FvmDataWord blockDifficulty, boolean isLocalCall, boolean allowNonceIncrement, boolean isFork040enabled, long blockNumber, long blockTimestamp, long blockEnergyLimit, boolean unityForkEnabled, boolean signatureSwapForkEnabled) {
+    public ExternalStateForFvm(RepositoryCache repository, AionAddress miner, FvmDataWord blockDifficulty, boolean isLocalCall, boolean allowNonceIncrement, boolean isFork040enabled, long blockNumber, long blockTimestamp, long blockEnergyLimit, boolean unityForkEnabled, boolean signatureSwapForkEnabled) {
         this.repository = repository;
         this.miner = miner;
         this.blockDifficulty = blockDifficulty;
@@ -518,7 +518,7 @@ public final class ExternalStateForFvm implements IExternalStateForFvm {
 
     private InternalVmType getVmType(AionAddress destination) {
         // will load contract into memory otherwise leading to consensus issues
-        RepositoryCache<AccountState> track = this.repository.startTracking();
+        RepositoryCache track = this.repository.startTracking();
         AccountState accountState = track.getAccountState(destination);
 
         InternalVmType vm;

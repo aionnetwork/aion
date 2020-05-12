@@ -87,7 +87,7 @@ public class TransactionCreateSpecificationTests {
         AionAddress contract = TxUtil.calculateContractAddress(deployTxAvm);
 
         // Manipulate the repository to have a non-default balance value.
-        RepositoryCache<AccountState> cache = blockchain.getRepository().startTracking();
+        RepositoryCache cache = blockchain.getRepository().startTracking();
         cache.createAccount(contract);
         cache.addBalance(contract, BigInteger.TEN);
         cache.flush();
@@ -124,7 +124,7 @@ public class TransactionCreateSpecificationTests {
         AionAddress contract = TxUtil.calculateContractAddress(deployTxAvm);
 
         // Manipulate the repository to have a non-default nonce value.
-        RepositoryCache<AccountState> cache = blockchain.getRepository().startTracking();
+        RepositoryCache cache = blockchain.getRepository().startTracking();
         cache.createAccount(contract);
         cache.setNonce(contract, BigInteger.TEN);
         cache.flush();
@@ -161,7 +161,7 @@ public class TransactionCreateSpecificationTests {
         AionAddress contract = TxUtil.calculateContractAddress(deployTxAvm);
 
         // Manipulate the repository to have a non-default storage value.
-        RepositoryCache<AccountState> cache = blockchain.getRepository().startTracking();
+        RepositoryCache cache = blockchain.getRepository().startTracking();
         cache.addStorageRow(contract, ByteArrayWrapper.wrap(RandomUtils.nextBytes(16)), ByteArrayWrapper.wrap(RandomUtils.nextBytes(16)));
         cache.saveVmType(contract, InternalVmType.AVM);
         cache.flush();
@@ -200,7 +200,7 @@ public class TransactionCreateSpecificationTests {
         AionAddress contract = TxUtil.calculateContractAddress(deployTxAvm);
 
         // Manipulate the repository to have a non-default code value.
-        RepositoryCache<AccountState> cache = blockchain.getRepository().startTracking();
+        RepositoryCache cache = blockchain.getRepository().startTracking();
         cache.createAccount(contract);
         cache.saveCode(contract, new byte[] {1, 2, 3, 4});
         cache.saveVmType(contract, InternalVmType.AVM);
@@ -241,7 +241,7 @@ public class TransactionCreateSpecificationTests {
         AionAddress contract = TxUtil.calculateContractAddress(deployTxAvm);
 
         // Manipulate the repository to have a non-default balance value.
-        RepositoryCache<AccountState> cache = blockchain.getRepository().startTracking();
+        RepositoryCache cache = blockchain.getRepository().startTracking();
         cache.createAccount(contract);
         cache.addBalance(contract, BigInteger.TEN);
         cache.flush();
@@ -276,7 +276,7 @@ public class TransactionCreateSpecificationTests {
         AionAddress contract = TxUtil.calculateContractAddress(deployTxAvm);
 
         // Manipulate the repository to have a non-default nonce value.
-        RepositoryCache<AccountState> cache = blockchain.getRepository().startTracking();
+        RepositoryCache cache = blockchain.getRepository().startTracking();
         cache.createAccount(contract);
         cache.setNonce(contract, BigInteger.TEN);
         cache.flush();
@@ -310,7 +310,7 @@ public class TransactionCreateSpecificationTests {
         AionAddress contract = TxUtil.calculateContractAddress(deployTxAvm);
 
         // Manipulate the repository to have a non-default storage value.
-        RepositoryCache<AccountState> cache = blockchain.getRepository().startTracking();
+        RepositoryCache cache = blockchain.getRepository().startTracking();
         cache.addStorageRow(contract, ByteArrayWrapper.wrap(RandomUtils.nextBytes(16)), ByteArrayWrapper.wrap(RandomUtils.nextBytes(16)));
         cache.saveVmType(contract, InternalVmType.AVM);
         cache.flush();
@@ -345,7 +345,7 @@ public class TransactionCreateSpecificationTests {
         AionAddress contract = TxUtil.calculateContractAddress(deployTxAvm);
 
         // Manipulate the repository to have a non-default code value.
-        RepositoryCache<AccountState> cache = blockchain.getRepository().startTracking();
+        RepositoryCache cache = blockchain.getRepository().startTracking();
         cache.createAccount(contract);
         cache.saveCode(contract, new byte[] {1, 2, 3, 4});
         cache.saveVmType(contract, InternalVmType.AVM);
@@ -393,7 +393,7 @@ public class TransactionCreateSpecificationTests {
         assertThat(blockchain.getRepository().hasAccountState(internalContract)).isFalse();
 
         // Manipulate the repository to have a non-default balance value.
-        RepositoryCache<AccountState> cache = blockchain.getRepository().startTracking();
+        RepositoryCache cache = blockchain.getRepository().startTracking();
         cache.createAccount(internalContract);
         cache.addBalance(internalContract, BigInteger.TEN);
         cache.flush();
@@ -446,7 +446,7 @@ public class TransactionCreateSpecificationTests {
         assertThat(blockchain.getRepository().hasAccountState(internalContract)).isFalse();
 
         // Manipulate the repository to have a non-default balance value.
-        RepositoryCache<AccountState> cache = blockchain.getRepository().startTracking();
+        RepositoryCache cache = blockchain.getRepository().startTracking();
         cache.createAccount(internalContract);
         cache.addBalance(internalContract, BigInteger.TEN);
         cache.flush();
@@ -499,7 +499,7 @@ public class TransactionCreateSpecificationTests {
         assertThat(blockchain.getRepository().hasAccountState(internalContract)).isFalse();
 
         // Manipulate the repository to have a non-default nonce value.
-        RepositoryCache<AccountState> cache = blockchain.getRepository().startTracking();
+        RepositoryCache cache = blockchain.getRepository().startTracking();
         cache.createAccount(internalContract);
         cache.setNonce(internalContract, BigInteger.TEN);
         cache.flush();
@@ -552,7 +552,7 @@ public class TransactionCreateSpecificationTests {
         assertThat(blockchain.getRepository().hasAccountState(internalContract)).isFalse();
 
         // Manipulate the repository to have a non-default nonce value.
-        RepositoryCache<AccountState> cache = blockchain.getRepository().startTracking();
+        RepositoryCache cache = blockchain.getRepository().startTracking();
         cache.createAccount(internalContract);
         cache.setNonce(internalContract, BigInteger.TEN);
         cache.flush();
@@ -605,7 +605,7 @@ public class TransactionCreateSpecificationTests {
         assertThat(blockchain.getRepository().hasAccountState(internalContract)).isFalse();
 
         // Manipulate the repository to have a non-default storage value.
-        RepositoryCache<AccountState> cache = blockchain.getRepository().startTracking();
+        RepositoryCache cache = blockchain.getRepository().startTracking();
         cache.addStorageRow(internalContract, ByteArrayWrapper.wrap(RandomUtils.nextBytes(16)), ByteArrayWrapper.wrap(RandomUtils.nextBytes(16)));
         cache.saveVmType(internalContract, InternalVmType.AVM);
         cache.flush();
@@ -660,7 +660,7 @@ public class TransactionCreateSpecificationTests {
         assertThat(blockchain.getRepository().hasAccountState(internalContract)).isFalse();
 
         // Manipulate the repository to have a non-default storage value.
-        RepositoryCache<AccountState> cache = blockchain.getRepository().startTracking();
+        RepositoryCache cache = blockchain.getRepository().startTracking();
         cache.addStorageRow(internalContract, ByteArrayWrapper.wrap(RandomUtils.nextBytes(16)), ByteArrayWrapper.wrap(RandomUtils.nextBytes(16)));
         cache.saveVmType(internalContract, InternalVmType.AVM);
         cache.flush();
@@ -715,7 +715,7 @@ public class TransactionCreateSpecificationTests {
         assertThat(blockchain.getRepository().hasAccountState(internalContract)).isFalse();
 
         // Manipulate the repository to have a non-default code value.
-        RepositoryCache<AccountState> cache = blockchain.getRepository().startTracking();
+        RepositoryCache cache = blockchain.getRepository().startTracking();
         cache.createAccount(internalContract);
         cache.saveCode(internalContract, new byte[] {1, 2, 3, 4});
         cache.saveVmType(internalContract, InternalVmType.AVM);
@@ -774,7 +774,7 @@ public class TransactionCreateSpecificationTests {
         assertThat(blockchain.getRepository().hasAccountState(internalContract)).isFalse();
 
         // Manipulate the repository to have a non-default code value.
-        RepositoryCache<AccountState> cache = blockchain.getRepository().startTracking();
+        RepositoryCache cache = blockchain.getRepository().startTracking();
         cache.createAccount(internalContract);
         cache.saveCode(internalContract, new byte[] {1, 2, 3, 4});
         cache.saveVmType(internalContract, InternalVmType.AVM);
@@ -831,7 +831,7 @@ public class TransactionCreateSpecificationTests {
         assertThat(blockchain.getRepository().hasAccountState(internalContract)).isFalse();
 
         // Manipulate the repository to have a non-default balance value.
-        RepositoryCache<AccountState> cache = blockchain.getRepository().startTracking();
+        RepositoryCache cache = blockchain.getRepository().startTracking();
         cache.createAccount(internalContract);
         cache.addBalance(internalContract, BigInteger.TEN);
         cache.flush();
@@ -882,7 +882,7 @@ public class TransactionCreateSpecificationTests {
         assertThat(blockchain.getRepository().hasAccountState(internalContract)).isFalse();
 
         // Manipulate the repository to have a non-default balance value.
-        RepositoryCache<AccountState> cache = blockchain.getRepository().startTracking();
+        RepositoryCache cache = blockchain.getRepository().startTracking();
         cache.createAccount(internalContract);
         cache.addBalance(internalContract, BigInteger.TEN);
         cache.flush();
@@ -933,7 +933,7 @@ public class TransactionCreateSpecificationTests {
         assertThat(blockchain.getRepository().hasAccountState(internalContract)).isFalse();
 
         // Manipulate the repository to have a non-default nonce value.
-        RepositoryCache<AccountState> cache = blockchain.getRepository().startTracking();
+        RepositoryCache cache = blockchain.getRepository().startTracking();
         cache.createAccount(internalContract);
         cache.setNonce(internalContract, BigInteger.TEN);
         cache.flush();
@@ -983,7 +983,7 @@ public class TransactionCreateSpecificationTests {
         assertThat(blockchain.getRepository().hasAccountState(internalContract)).isFalse();
 
         // Manipulate the repository to have a non-default nonce value.
-        RepositoryCache<AccountState> cache = blockchain.getRepository().startTracking();
+        RepositoryCache cache = blockchain.getRepository().startTracking();
         cache.createAccount(internalContract);
         cache.setNonce(internalContract, BigInteger.TEN);
         cache.flush();
@@ -1034,7 +1034,7 @@ public class TransactionCreateSpecificationTests {
         assertThat(blockchain.getRepository().hasAccountState(internalContract)).isFalse();
 
         // Manipulate the repository to have a non-default storage value.
-        RepositoryCache<AccountState> cache = blockchain.getRepository().startTracking();
+        RepositoryCache cache = blockchain.getRepository().startTracking();
         cache.addStorageRow(internalContract, ByteArrayWrapper.wrap(RandomUtils.nextBytes(16)), ByteArrayWrapper.wrap(RandomUtils.nextBytes(16)));
         cache.saveVmType(internalContract, InternalVmType.AVM);
         cache.flush();
@@ -1085,7 +1085,7 @@ public class TransactionCreateSpecificationTests {
         assertThat(blockchain.getRepository().hasAccountState(internalContract)).isFalse();
 
         // Manipulate the repository to have a non-default storage value.
-        RepositoryCache<AccountState> cache = blockchain.getRepository().startTracking();
+        RepositoryCache cache = blockchain.getRepository().startTracking();
         cache.addStorageRow(internalContract, ByteArrayWrapper.wrap(RandomUtils.nextBytes(16)), ByteArrayWrapper.wrap(RandomUtils.nextBytes(16)));
         cache.saveVmType(internalContract, InternalVmType.AVM);
         cache.flush();
@@ -1137,7 +1137,7 @@ public class TransactionCreateSpecificationTests {
         assertThat(blockchain.getRepository().hasAccountState(internalContract)).isFalse();
 
         // Manipulate the repository to have a non-default code value.
-        RepositoryCache<AccountState> cache = blockchain.getRepository().startTracking();
+        RepositoryCache cache = blockchain.getRepository().startTracking();
         cache.createAccount(internalContract);
         cache.saveCode(internalContract, new byte[] {1, 2, 3, 4});
         cache.saveVmType(internalContract, InternalVmType.AVM);
@@ -1190,7 +1190,7 @@ public class TransactionCreateSpecificationTests {
         assertThat(blockchain.getRepository().hasAccountState(internalContract)).isFalse();
 
         // Manipulate the repository to have a non-default code value.
-        RepositoryCache<AccountState> cache = blockchain.getRepository().startTracking();
+        RepositoryCache cache = blockchain.getRepository().startTracking();
         cache.createAccount(internalContract);
         cache.saveCode(internalContract, new byte[] {1, 2, 3, 4});
         cache.saveVmType(internalContract, InternalVmType.AVM);
@@ -1236,7 +1236,7 @@ public class TransactionCreateSpecificationTests {
         AionAddress fvmContract = TxUtil.calculateContractAddress(deployTxFVM);
 
         // Manipulate the repository to have a non-default balance value.
-        RepositoryCache<AccountState> cache = blockchain.getRepository().startTracking();
+        RepositoryCache cache = blockchain.getRepository().startTracking();
         cache.createAccount(fvmContract);
         cache.addBalance(fvmContract, BigInteger.TEN);
         cache.flush();
@@ -1271,7 +1271,7 @@ public class TransactionCreateSpecificationTests {
         AionAddress fvmContract = TxUtil.calculateContractAddress(deployTxFVM);
 
         // Manipulate the repository to have a non-default nonce value.
-        RepositoryCache<AccountState> cache = blockchain.getRepository().startTracking();
+        RepositoryCache cache = blockchain.getRepository().startTracking();
         cache.createAccount(fvmContract);
         cache.setNonce(fvmContract, BigInteger.TEN);
         cache.flush();
@@ -1306,7 +1306,7 @@ public class TransactionCreateSpecificationTests {
         AionAddress fvmContract = TxUtil.calculateContractAddress(deployTxFVM);
 
         // Manipulate the repository to have a non-default storage value.
-        RepositoryCache<AccountState> cache = blockchain.getRepository().startTracking();
+        RepositoryCache cache = blockchain.getRepository().startTracking();
         cache.addBalance(fvmContract, BigInteger.TEN);
         cache.addStorageRow(fvmContract, ByteArrayWrapper.wrap(RandomUtils.nextBytes(16)), ByteArrayWrapper.wrap(RandomUtils.nextBytes(16)));
         cache.saveVmType(fvmContract, InternalVmType.FVM);
@@ -1343,7 +1343,7 @@ public class TransactionCreateSpecificationTests {
         AionAddress fvmContract = TxUtil.calculateContractAddress(deployTxFVM);
 
         // Manipulate the repository to have a non-default code value.
-        RepositoryCache<AccountState> cache = blockchain.getRepository().startTracking();
+        RepositoryCache cache = blockchain.getRepository().startTracking();
         cache.createAccount(fvmContract);
         cache.saveCode(fvmContract, new byte[] {1, 2, 3, 4});
         cache.saveVmType(fvmContract, InternalVmType.FVM);
@@ -1380,7 +1380,7 @@ public class TransactionCreateSpecificationTests {
         AionAddress fvmContract = TxUtil.calculateContractAddress(deployTxFVM);
 
         // Manipulate the repository to have a non-default balance value.
-        RepositoryCache<AccountState> cache = blockchain.getRepository().startTracking();
+        RepositoryCache cache = blockchain.getRepository().startTracking();
         cache.createAccount(fvmContract);
         cache.addBalance(fvmContract, BigInteger.TEN);
         cache.flush();
@@ -1416,7 +1416,7 @@ public class TransactionCreateSpecificationTests {
         AionAddress fvmContract = TxUtil.calculateContractAddress(deployTxFVM);
 
         // Manipulate the repository to have a non-default nonce value.
-        RepositoryCache<AccountState> cache = blockchain.getRepository().startTracking();
+        RepositoryCache cache = blockchain.getRepository().startTracking();
         cache.createAccount(fvmContract);
         cache.setNonce(fvmContract, BigInteger.TEN);
         cache.flush();
@@ -1451,7 +1451,7 @@ public class TransactionCreateSpecificationTests {
         AionAddress fvmContract = TxUtil.calculateContractAddress(deployTxFVM);
 
         // Manipulate the repository to have a non-default storage value.
-        RepositoryCache<AccountState> cache = blockchain.getRepository().startTracking();
+        RepositoryCache cache = blockchain.getRepository().startTracking();
         cache.addBalance(fvmContract, BigInteger.TEN);
         cache.addStorageRow(fvmContract, ByteArrayWrapper.wrap(RandomUtils.nextBytes(16)), ByteArrayWrapper.wrap(RandomUtils.nextBytes(16)));
         cache.saveVmType(fvmContract, InternalVmType.FVM);
@@ -1488,7 +1488,7 @@ public class TransactionCreateSpecificationTests {
         AionAddress fvmContract = TxUtil.calculateContractAddress(deployTxFVM);
 
         // Manipulate the repository to have a non-default code value.
-        RepositoryCache<AccountState> cache = blockchain.getRepository().startTracking();
+        RepositoryCache cache = blockchain.getRepository().startTracking();
         cache.createAccount(fvmContract);
         cache.saveCode(fvmContract, new byte[] {1, 2, 3, 4});
         cache.saveVmType(fvmContract, InternalVmType.FVM);

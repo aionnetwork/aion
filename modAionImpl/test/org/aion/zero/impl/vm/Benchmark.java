@@ -42,7 +42,6 @@ import org.aion.crypto.ECKeyFac.ECKeyType;
 import org.aion.crypto.SignatureFac;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
-import org.aion.base.AccountState;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.util.types.DataWord;
 import org.aion.types.AionAddress;
@@ -62,7 +61,7 @@ public class Benchmark {
 
     private static MiningBlock block = createDummyBlock();
     private static AionRepositoryImpl db = AionRepositoryImpl.inst();
-    private static RepositoryCache<AccountState> repo = db.startTracking();
+    private static RepositoryCache repo = db.startTracking();
 
     private static ECKey key;
     private static AionAddress owner;
