@@ -5,7 +5,7 @@ import static org.aion.p2p.V1Constants.HASH_SIZE;
 
 import java.util.Set;
 import junitparams.JUnitParamsRunner;
-import org.aion.mcf.db.InternalVmType;
+import org.aion.base.InternalVmType;
 import org.aion.rlp.RLP;
 import org.aion.util.types.ByteArrayWrapper;
 import org.junit.Test;

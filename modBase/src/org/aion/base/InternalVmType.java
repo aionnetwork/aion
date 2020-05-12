@@ -1,4 +1,4 @@
-package org.aion.mcf.db;
+package org.aion.base;
 
 /**
  * This enum lists the VM types accepted by the code base. The VM type indicates which VM was used

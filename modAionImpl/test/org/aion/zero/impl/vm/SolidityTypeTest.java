@@ -38,7 +38,7 @@ import org.aion.crypto.ECKey;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
-import org.aion.mcf.db.InternalVmType;
+import org.aion.base.InternalVmType;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.util.types.DataWord;
 import org.aion.solidity.CompilationResult;

@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 import org.aion.db.impl.ByteArrayKeyValueStore;
 import org.aion.db.store.XorDataSource;
-import org.aion.mcf.db.InternalVmType;
+import org.aion.base.InternalVmType;
 import org.aion.types.AionAddress;
 import org.aion.util.types.ByteArrayWrapper;
 import org.apache.commons.lang3.RandomUtils;

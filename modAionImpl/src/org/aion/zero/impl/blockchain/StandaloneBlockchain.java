@@ -20,7 +20,7 @@ import org.aion.evtmgr.IEventMgr;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.BlockHeader.Seal;
 import org.aion.zero.impl.config.CfgPrune;
-import org.aion.mcf.db.InternalVmType;
+import org.aion.base.InternalVmType;
 import org.aion.zero.impl.config.PruneConfig;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.zero.impl.config.CfgAion;

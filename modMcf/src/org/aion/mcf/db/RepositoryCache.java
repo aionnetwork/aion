@@ -1,6 +1,7 @@
 package org.aion.mcf.db;
 
 import java.math.BigInteger;
+import org.aion.base.InternalVmType;
 import org.aion.types.AionAddress;
 import org.aion.util.types.ByteArrayWrapper;
 
