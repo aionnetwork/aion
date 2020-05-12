@@ -8,7 +8,7 @@ import org.aion.fastvm.FastVmTransactionResult;
 import org.aion.fastvm.FvmDataWord;
 import org.aion.fastvm.IExternalStateForFvm;
 import org.aion.zero.impl.config.CfgFork;
-import org.aion.mcf.db.InternalVmType;
+import org.aion.base.InternalVmType;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.precompiled.ContractInfo;
 import org.aion.precompiled.PrecompiledTransactionResult;

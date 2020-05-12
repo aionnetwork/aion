@@ -11,7 +11,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import org.aion.mcf.db.ContractDetails;
-import org.aion.mcf.db.InternalVmType;
+import org.aion.base.InternalVmType;
 import org.aion.util.conversions.Hex;
 import org.aion.util.types.ByteArrayWrapper;
 

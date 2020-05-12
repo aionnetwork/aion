@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import org.aion.db.store.Serializer;
-import org.aion.mcf.db.InternalVmType;
+import org.aion.base.InternalVmType;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPList;

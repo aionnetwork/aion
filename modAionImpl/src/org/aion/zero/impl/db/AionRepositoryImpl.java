@@ -58,7 +58,7 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.db.ContractDetails;
-import org.aion.mcf.db.InternalVmType;
+import org.aion.base.InternalVmType;
 import org.aion.mcf.db.Repository;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.mcf.db.TransformedCodeInfo;

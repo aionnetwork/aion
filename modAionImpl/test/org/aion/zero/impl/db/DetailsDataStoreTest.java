@@ -3,7 +3,7 @@ package org.aion.zero.impl.db;
 import static com.google.common.truth.Truth.assertThat;
 import static org.aion.util.bytes.ByteUtil.EMPTY_BYTE_ARRAY;
 
-import org.aion.mcf.db.InternalVmType;
+import org.aion.base.InternalVmType;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPList;
 import org.aion.types.AionAddress;

@@ -3,7 +3,6 @@ package org.aion.zero.impl.db;
 import static org.aion.crypto.HashUtil.EMPTY_DATA_HASH;
 import static org.aion.crypto.HashUtil.h256;
 import static org.aion.util.bytes.ByteUtil.EMPTY_BYTE_ARRAY;
-import static org.aion.util.types.ByteArrayWrapper.wrap;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -13,7 +12,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import org.aion.base.ConstantUtil;
 import org.aion.db.impl.ByteArrayKeyValueStore;
-import org.aion.mcf.db.InternalVmType;
+import org.aion.base.InternalVmType;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPList;
@@ -21,7 +20,6 @@ import org.aion.types.AionAddress;
 import org.aion.util.conversions.Hex;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.db.DetailsDataStore.RLPContractDetails;
-import org.aion.zero.impl.trie.Node;
 import org.aion.zero.impl.trie.SecureTrie;
 
 /**

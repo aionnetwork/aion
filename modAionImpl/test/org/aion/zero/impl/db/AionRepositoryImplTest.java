@@ -10,7 +10,7 @@ import org.aion.db.impl.ByteArrayKeyValueDatabase;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
 import org.aion.zero.impl.config.CfgPrune;
-import org.aion.mcf.db.InternalVmType;
+import org.aion.base.InternalVmType;
 import org.aion.zero.impl.config.PruneConfig;
 import org.aion.mcf.db.Repository;
 import org.aion.mcf.db.RepositoryCache;

@@ -13,7 +13,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import org.aion.base.ConstantUtil;
 import org.aion.db.impl.ByteArrayKeyValueStore;
-import org.aion.mcf.db.InternalVmType;
+import org.aion.base.InternalVmType;
 import org.aion.precompiled.ContractInfo;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;

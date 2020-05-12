@@ -14,7 +14,7 @@ import org.aion.mcf.blockchain.Block;
 import org.aion.zero.impl.core.ImportResult;
 import org.aion.log.LogEnum;
 import org.aion.log.LogLevel;
-import org.aion.mcf.db.InternalVmType;
+import org.aion.base.InternalVmType;
 import org.aion.base.TransactionTypeRule;
 import org.aion.types.AionAddress;
 import org.aion.util.conversions.Hex;

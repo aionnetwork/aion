@@ -1,6 +1,7 @@
 ext.moduleName = 'aion.avm.version2'
 
 dependencies {
+    compile project(':modBase')
     compile project(':modCrypto')
     compile project(':modMcf')
     compile project(':modUtil')

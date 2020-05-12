@@ -2,6 +2,7 @@ package org.aion.mcf.db;
 
 import java.util.Collection;
 import java.util.Map;
+import org.aion.base.InternalVmType;
 import org.aion.util.types.ByteArrayWrapper;
 
 public interface ContractDetails {
