@@ -46,6 +46,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.aion.base.AionTransaction;
 import org.aion.base.ConstantUtil;
 import org.aion.base.AccountState;
+import org.aion.base.db.ContractDetail;
+import org.aion.base.db.TransformedCodeInfoInterface;
 import org.aion.db.impl.ByteArrayKeyValueDatabase;
 import org.aion.db.impl.ByteArrayKeyValueStore;
 import org.aion.db.impl.DBVendor;
@@ -57,12 +59,10 @@ import org.aion.db.store.XorDataSource;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
-import org.aion.mcf.db.ContractDetails;
 import org.aion.base.InternalVmType;
-import org.aion.mcf.db.Repository;
-import org.aion.mcf.db.RepositoryCache;
-import org.aion.mcf.db.TransformedCodeInfo;
 import org.aion.rlp.SharedRLPList;
+import org.aion.base.db.Repository;
+import org.aion.base.db.RepositoryCache;
 import org.aion.util.types.AddressUtils;
 import org.aion.util.types.DataWord;
 import org.aion.zero.impl.config.CfgDb.Props;
@@ -392,15 +392,15 @@ public final class AionRepositoryImpl implements Repository {
     @Override
     public void updateBatch(
             Map<AionAddress, AccountState> stateCache,
-            Map<AionAddress, ContractDetails> detailsCache,
-            Map<AionAddress, TransformedCodeInfo> transformedCodeCache) {
+            Map<AionAddress, ContractDetail> detailsCache,
+            Map<AionAddress, TransformedCodeInfoInterface> transformedCodeCache) {
         rwLock.writeLock().lock();
 
         try {
             for (Map.Entry<AionAddress, AccountState> entry : stateCache.entrySet()) {
                 AionAddress address = entry.getKey();
                 AccountState accountState = entry.getValue();
-                ContractDetails contractDetails = detailsCache.get(address);
+                ContractDetails contractDetails = (ContractDetails) detailsCache.get(address);
 
                 if (accountState.isDeleted()) {
                     // TODO-A: batch operations here
@@ -465,8 +465,8 @@ public final class AionRepositoryImpl implements Repository {
                 }
             }
 
-            for (Map.Entry<AionAddress, TransformedCodeInfo> entry : transformedCodeCache.entrySet()) {
-                for (Map.Entry<ByteArrayWrapper, Map<Integer, byte[]>> infoMap : entry.getValue().transformedCodeMap.entrySet()) {
+            for (Map.Entry<AionAddress, TransformedCodeInfoInterface> entry : transformedCodeCache.entrySet()) {
+                for (Map.Entry<ByteArrayWrapper, Map<Integer, byte[]>> infoMap : ((TransformedCodeInfo)entry.getValue()).transformedCodeMap.entrySet()) {
                     for (Map.Entry<Integer, byte[]> innerEntry : infoMap.getValue().entrySet()) {
                         setTransformedCode(entry.getKey(), infoMap.getKey().toBytes(), innerEntry.getKey(), innerEntry.getValue());
                     }

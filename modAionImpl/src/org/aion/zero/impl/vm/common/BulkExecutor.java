@@ -11,7 +11,7 @@ import org.aion.base.AionTransaction;
 import org.aion.base.TransactionTypeRule;
 import org.aion.zero.impl.config.CfgFork;
 import org.aion.base.InternalVmType;
-import org.aion.mcf.db.RepositoryCache;
+import org.aion.base.db.RepositoryCache;
 import org.aion.precompiled.ContractInfo;
 import org.aion.types.AionAddress;
 import org.aion.zero.impl.vm.fvm.FvmTransactionExecutor;

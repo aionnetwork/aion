@@ -1,7 +1,7 @@
 package org.aion.zero.impl.vm.precompiled;
 
 import java.math.BigInteger;
-import org.aion.mcf.db.RepositoryCache;
+import org.aion.base.db.RepositoryCache;
 import org.aion.precompiled.type.IPrecompiledDataWord;
 import org.aion.precompiled.type.IExternalStateForPrecompiled;
 import org.aion.precompiled.type.PrecompiledDataWord;

@@ -14,7 +14,7 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.mcf.blockchain.Block;
 import org.aion.zero.impl.core.ImportResult;
 import org.aion.base.InternalVmType;
-import org.aion.mcf.db.Repository;
+import org.aion.base.db.Repository;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.types.AddressUtils;

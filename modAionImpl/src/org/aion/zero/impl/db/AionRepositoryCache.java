@@ -11,14 +11,14 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import org.aion.base.db.ContractDetail;
+import org.aion.base.db.TransformedCodeInfoInterface;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.base.AccountState;
-import org.aion.mcf.db.ContractDetails;
 import org.aion.base.InternalVmType;
-import org.aion.mcf.db.Repository;
-import org.aion.mcf.db.RepositoryCache;
-import org.aion.mcf.db.TransformedCodeInfo;
+import org.aion.base.db.Repository;
+import org.aion.base.db.RepositoryCache;
 import org.aion.precompiled.ContractInfo;
 import org.aion.types.AionAddress;
 import org.aion.util.types.ByteArrayWrapper;
@@ -38,9 +38,9 @@ public final class AionRepositoryCache implements RepositoryCache {
     final Map<AionAddress, AccountState> cachedAccounts;
     /** local contract details cache */
     @VisibleForTesting
-    final Map<AionAddress, ContractDetails> cachedDetails;
+    final Map<AionAddress, ContractDetail> cachedDetails;
     /** local transformed code cache */
-    private final Map<AionAddress, TransformedCodeInfo> cachedTransformedCode;
+    private final Map<AionAddress, TransformedCodeInfoInterface> cachedTransformedCode;
 
     private final Lock lock = new ReentrantLock();
 
@@ -170,7 +170,7 @@ public final class AionRepositoryCache implements RepositoryCache {
         lock.lock();
 
         try {
-            ContractDetails contractDetails = cachedDetails.get(address);
+            ContractDetails contractDetails = (ContractDetails) cachedDetails.get(address);
 
             if (contractDetails == null) {
                 // ask repository when not cached
@@ -197,7 +197,7 @@ public final class AionRepositoryCache implements RepositoryCache {
             AionRepositoryCache parent = (AionRepositoryCache) repository;
 
             AccountState account = parent.cachedAccounts.get(address);
-            ContractDetails details = parent.cachedDetails.get(address);
+            ContractDetails details = (ContractDetails) parent.cachedDetails.get(address);
 
             // when account not cached load from grandparent
             if (account == null) {
@@ -211,7 +211,8 @@ public final class AionRepositoryCache implements RepositoryCache {
             InnerContractDetails details;
             if (account != null) {
                 account = new AccountState(account);
-                details = new InnerContractDetails(repository.getContractDetails(address));
+                details = new InnerContractDetails(
+                    (ContractDetails) repository.getContractDetails(address));
             } else {
                 account = new AccountState();
                 details = new InnerContractDetails(null);
@@ -325,7 +326,7 @@ public final class AionRepositoryCache implements RepositoryCache {
         lock.lock();
 
         try {
-            TransformedCodeInfo transformedCodeInfo = cachedTransformedCode.get(address);
+            TransformedCodeInfo transformedCodeInfo = (TransformedCodeInfo) cachedTransformedCode.get(address);
             byte[] transformedCode = null;
 
             if (transformedCodeInfo != null) {
@@ -347,7 +348,7 @@ public final class AionRepositoryCache implements RepositoryCache {
         lock.lock();
 
         try {
-            TransformedCodeInfo transformedCodeInfo = cachedTransformedCode.get(address);
+            TransformedCodeInfo transformedCodeInfo = (TransformedCodeInfo) cachedTransformedCode.get(address);
 
             if (transformedCodeInfo == null) {
                 transformedCodeInfo = new TransformedCodeInfo();
@@ -496,7 +497,7 @@ public final class AionRepositoryCache implements RepositoryCache {
                 }
             }
             // determine which contracts should get stored
-            for (Map.Entry<AionAddress, ContractDetails> entry : cachedDetails.entrySet()) {
+            for (Map.Entry<AionAddress, ContractDetail> entry : cachedDetails.entrySet()) {
                 InnerContractDetails contractDetailsCache = (InnerContractDetails) entry.getValue();
                 contractDetailsCache.commit();
 
@@ -504,7 +505,7 @@ public final class AionRepositoryCache implements RepositoryCache {
                     // in forked block the contract account might not exist thus it is created without origin,
                     // but on the main chain details can contain data which should be merged into a single storage trie
                     // so both branches with different stateRoots are valid
-                    contractDetailsCache.origContract = other.getContractDetails(entry.getKey());
+                    contractDetailsCache.origContract = (ContractDetails) other.getContractDetails(entry.getKey());
                     contractDetailsCache.commit();
                 }
             }
@@ -533,8 +534,8 @@ public final class AionRepositoryCache implements RepositoryCache {
     @Override
     public void updateBatch(
             Map<AionAddress, AccountState> accounts,
-            final Map<AionAddress, ContractDetails> details,
-            Map<AionAddress, TransformedCodeInfo> transformedCodeCache) {
+            final Map<AionAddress, ContractDetail> details,
+            Map<AionAddress, TransformedCodeInfoInterface> transformedCodeCache) {
 
         lock.lock();
         try {
@@ -543,15 +544,15 @@ public final class AionRepositoryCache implements RepositoryCache {
                 this.cachedAccounts.put(accEntry.getKey(), accEntry.getValue());
             }
 
-            for (Map.Entry<AionAddress, TransformedCodeInfo> entry : transformedCodeCache.entrySet()) {
-                for (Map.Entry<ByteArrayWrapper, Map<Integer, byte[]>> infoMap : entry.getValue().transformedCodeMap.entrySet()) {
+            for (Map.Entry<AionAddress, TransformedCodeInfoInterface> entry : transformedCodeCache.entrySet()) {
+                for (Map.Entry<ByteArrayWrapper, Map<Integer, byte[]>> infoMap : ((TransformedCodeInfo)entry.getValue()).transformedCodeMap.entrySet()) {
                     for (Map.Entry<Integer, byte[]> innerEntry : infoMap.getValue().entrySet()) {
                         setTransformedCode(entry.getKey(), infoMap.getKey().toBytes(), innerEntry.getKey(), innerEntry.getValue());
                     }
                 }
             }
 
-            for (Map.Entry<AionAddress, ContractDetails> ctdEntry : details.entrySet()) {
+            for (Map.Entry<AionAddress, ContractDetail> ctdEntry : details.entrySet()) {
                 InnerContractDetails contractDetailsCache = (InnerContractDetails) ctdEntry.getValue();
                 if (contractDetailsCache.origContract != null
                         && !(contractDetailsCache.origContract instanceof StoredContractDetails)) {
@@ -629,7 +630,7 @@ public final class AionRepositoryCache implements RepositoryCache {
         s.append("cachedDetails [");
         if (cachedDetails != null && !cachedDetails.isEmpty()) {
             s.append("\n");
-            for (Map.Entry<AionAddress, ContractDetails> ca : cachedDetails.entrySet()) {
+            for (Map.Entry<AionAddress, ContractDetail> ca : cachedDetails.entrySet()) {
                 s.append(ca.getKey()).append("\n").append(ca.getValue()).append("\n");
             }
         } else {

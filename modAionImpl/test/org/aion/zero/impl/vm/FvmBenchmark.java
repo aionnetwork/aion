@@ -1,7 +1,7 @@
 package org.aion.zero.impl.vm;
 
 import org.aion.fastvm.FvmDataWord;
-import org.aion.mcf.db.RepositoryCache;
+import org.aion.base.db.RepositoryCache;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.types.ByteArrayWrapper;

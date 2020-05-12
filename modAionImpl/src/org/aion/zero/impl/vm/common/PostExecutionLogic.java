@@ -2,8 +2,8 @@ package org.aion.zero.impl.vm.common;
 
 import org.aion.base.AionTransaction;
 import org.aion.base.AionTxExecSummary;
-import org.aion.mcf.db.Repository;
-import org.aion.mcf.db.RepositoryCache;
+import org.aion.base.db.Repository;
+import org.aion.base.db.RepositoryCache;
 
 /**
  * A functional interface that specifies post-execution logic that is to be applied immediately

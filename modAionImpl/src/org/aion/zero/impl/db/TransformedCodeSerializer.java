@@ -3,7 +3,6 @@ package org.aion.zero.impl.db;
 import java.util.HashMap;
 import java.util.Map;
 import org.aion.db.store.Serializer;
-import org.aion.mcf.db.TransformedCodeInfo;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPList;

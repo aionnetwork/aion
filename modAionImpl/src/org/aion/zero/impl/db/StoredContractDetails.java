@@ -1,7 +1,5 @@
 package org.aion.zero.impl.db;
 
-import org.aion.mcf.db.ContractDetails;
-
 /**
  * Interface for contract details that are stored in the database.
  *

@@ -9,4 +9,5 @@ module aion.base {
     requires commons.lang3;
 
     exports org.aion.base;
+    exports org.aion.base.db;
 }

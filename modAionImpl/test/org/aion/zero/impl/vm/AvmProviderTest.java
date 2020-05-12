@@ -11,7 +11,7 @@ import org.aion.avm.stub.IAvmExternalState;
 import org.aion.avm.stub.IAvmFutureResult;
 import org.aion.avm.stub.IEnergyRules;
 import org.aion.avm.stub.IEnergyRules.TransactionType;
-import org.aion.mcf.db.RepositoryCache;
+import org.aion.base.db.RepositoryCache;
 import org.aion.types.AionAddress;
 import org.aion.types.Transaction;
 import org.aion.types.TransactionResult;

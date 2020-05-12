@@ -2,8 +2,8 @@ package org.aion.zero.impl.vm.common;
 
 import org.aion.base.AionTransaction;
 import org.aion.base.AionTxExecSummary;
-import org.aion.mcf.db.Repository;
-import org.aion.mcf.db.RepositoryCache;
+import org.aion.base.db.Repository;
+import org.aion.base.db.RepositoryCache;
 
 /**
  * An abstract notion of work that is to be applied after a transaction has been executed.
