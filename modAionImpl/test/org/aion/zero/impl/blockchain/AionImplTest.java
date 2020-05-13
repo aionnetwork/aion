@@ -7,8 +7,8 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
 import java.util.concurrent.locks.ReentrantLock;
-import org.aion.mcf.blockchain.Block;
 import org.aion.zero.impl.core.ImportResult;
+import org.aion.zero.impl.types.Block;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
