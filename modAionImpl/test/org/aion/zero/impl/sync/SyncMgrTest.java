@@ -29,7 +29,6 @@ import org.aion.util.TestResources;
 import org.aion.util.conversions.Hex;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.blockchain.AionBlockchainImpl;
-import org.aion.zero.impl.blockchain.BlockchainTestUtils;
 import org.aion.zero.impl.sync.SyncHeaderRequestManager.SyncMode;
 import org.aion.zero.impl.sync.msg.ReqBlocksBodies;
 import org.aion.zero.impl.types.MiningBlockHeader;
@@ -87,7 +86,7 @@ public class SyncMgrTest {
         when(header.getTxTrieRootWrapper()).thenReturn(EMPTY_TRIE_HASH);
         List<BlockHeader> list = new ArrayList<>();
         list.add(header);
-        syncMgr.syncHeaderRequestManager.storeHeaders(1, list);
+        syncMgr.syncHeaderRequestManager.storeHeadersForRequests(1, list);
 
         syncMgr.requestBodies(1, "peer1");
 
@@ -106,7 +105,7 @@ public class SyncMgrTest {
         when(header1.getTxTrieRootWrapper()).thenReturn(EMPTY_TRIE_HASH);
         List<BlockHeader> list1 = new ArrayList<>();
         list1.add(header1);
-        syncMgr.syncHeaderRequestManager.storeHeaders(1, list1);
+        syncMgr.syncHeaderRequestManager.storeHeadersForRequests(1, list1);
 
         BlockHeader header2 = mock(BlockHeader.class);
         when(header2.getNumber()).thenReturn(102L);
@@ -115,7 +114,7 @@ public class SyncMgrTest {
         when(header2.getTxTrieRootWrapper()).thenReturn(EMPTY_TRIE_HASH);
         List<BlockHeader> list2 = new ArrayList<>();
         list2.add(header2);
-        syncMgr.syncHeaderRequestManager.storeHeaders(1, list2);
+        syncMgr.syncHeaderRequestManager.storeHeadersForRequests(1, list2);
 
         syncMgr.requestBodies(1, "peer1");
 
@@ -135,7 +134,7 @@ public class SyncMgrTest {
         when(header.getTxTrieRootWrapper()).thenReturn(EMPTY_TRIE_HASH);
         List<BlockHeader> list = new ArrayList<>();
         list.add(header);
-        syncMgr.syncHeaderRequestManager.storeHeaders(1, list);
+        syncMgr.syncHeaderRequestManager.storeHeadersForRequests(1, list);
         syncMgr.importedBlockHashes.put(ByteArrayWrapper.wrap(hash), true);
 
         syncMgr.requestBodies(1, "peer1");
@@ -160,7 +159,7 @@ public class SyncMgrTest {
         when(peer1.getBestBlockNumber()).thenReturn(2 * bestBlockNumber);
         // ensure that peer1 exists in the syncHeaderRequestManager
         syncMgr.syncHeaderRequestManager.assertUpdateActiveNodes(Map.of(1, peer1), null, null, Set.of(1), Set.of(1), 2 * bestBlockNumber);
-        syncMgr.syncHeaderRequestManager.storeHeaders(1, list);
+        syncMgr.syncHeaderRequestManager.storeHeadersForRequests(1, list);
         syncMgr.syncHeaderRequestManager.runInMode(1, SyncMode.NORMAL);
 
         syncMgr.requestBodies(1, "peer1");
@@ -192,7 +191,7 @@ public class SyncMgrTest {
         when(peer1.getBestBlockNumber()).thenReturn(2 * bestBlockNumber);
         // ensure that peer1 exists in the syncHeaderRequestManager
         syncMgr.syncHeaderRequestManager.assertUpdateActiveNodes(Map.of(1, peer1), null, null, Set.of(1), Set.of(1), 2 * bestBlockNumber);
-        syncMgr.syncHeaderRequestManager.storeHeaders(1, list);
+        syncMgr.syncHeaderRequestManager.storeHeadersForRequests(1, list);
         syncMgr.syncHeaderRequestManager.runInMode(1, SyncMode.NORMAL);
 
         syncMgr.requestBodies(1, "peer1");
@@ -218,7 +217,7 @@ public class SyncMgrTest {
         List<BlockHeader> list = new ArrayList<>();
         list.add(header1);
         list.add(header2);
-        syncMgr.syncHeaderRequestManager.storeHeaders(1, list);
+        syncMgr.syncHeaderRequestManager.storeHeadersForRequests(1, list);
         syncMgr.importedBlockHashes.put(ByteArrayWrapper.wrap(hash1), true);
 
         syncMgr.requestBodies(1, "peer1");
@@ -343,7 +342,6 @@ public class SyncMgrTest {
         int nodeId = 1;
         String displayId = "peer1";
 
-        BlockchainTestUtils
         // Make the first two blocks appear empty.
         List<BlockHeader> emptyPrefixBlocks = new ArrayList<>();
         BlockHeader bh = spy(consecutiveHeaders.get(0));
@@ -365,9 +363,9 @@ public class SyncMgrTest {
         verify(p2pMgr, never()).errCheck(nodeId, displayId);
 
         // Check that the sequential subset of headers was stored.
-        assertThat(syncMgr.syncHeaderRequestManager.matchAndDropHeaders(nodeId, emptyPrefixBlocks.size(), emptyPrefixBlocks.get(0).getTxTrieRootWrapper())).isNull();
-        assertThat(syncMgr.syncHeaderRequestManager.matchAndDropHeaders(nodeId, headers.size(), headers.get(0).getTxTrieRootWrapper())).isNull();
-        List<BlockHeader> stored = syncMgr.syncHeaderRequestManager.matchAndDropHeaders(nodeId, newHeaders.size(), newHeaders.get(0).getTxTrieRootWrapper());
+        assertThat(syncMgr.syncHeaderRequestManager.matchAndDropHeaders(nodeId, emptyPrefixBlocks.get(0).getTxTrieRootWrapper())).isNull();
+        assertThat(syncMgr.syncHeaderRequestManager.matchAndDropHeaders(nodeId, headers.get(0).getTxTrieRootWrapper())).isNull();
+        List<BlockHeader> stored = syncMgr.syncHeaderRequestManager.matchAndDropHeaders(nodeId, newHeaders.get(0).getTxTrieRootWrapper());
         assertThat(stored.size()).isEqualTo(newHeaders.size());
         assertThat(stored).containsAllIn(newHeaders);
     }

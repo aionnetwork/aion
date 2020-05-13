@@ -104,8 +104,10 @@ public class SyncHeaderRequestManager {
     // track the different peers
     private final Map<Integer, RequestState> bookedPeerStates, availablePeerStates;
 
-    // store the headers whose bodies have been requested from corresponding peer
+    /** Stores received headers whose bodies have not been requested yet. */
     private final Map<Integer, List<List<BlockHeader>>> storedHeaders;
+    /** Stores the headers whose bodies have been requested from the corresponding peer. */
+    private final Map<Integer, Map<ByteArrayWrapper, List<BlockHeader>>> headersWithPendingBodies;
 
     private final Set<Integer> knownActiveNodes;
 
@@ -140,6 +142,7 @@ public class SyncHeaderRequestManager {
         this.bookedPeerStates = new HashMap<>();
         this.availablePeerStates = new HashMap<>();
         this.storedHeaders = new HashMap<>();
+        this.headersWithPendingBodies = new HashMap<>();
         this.knownActiveNodes = new HashSet<>();
         this.localHeight = 0;
         this.networkHeight = 0;
@@ -553,8 +556,8 @@ public class SyncHeaderRequestManager {
         return Pair.of(true, "Expected output matched.");
     }
 
-    /** Keeps track of received headers. */
-    public void storeHeaders(int peerId, List<BlockHeader> headers) {
+    /** Saves the received headers for use in bodies requests. */
+    public void storeHeadersForRequests(int peerId, List<BlockHeader> headers) {
         lock.lock();
 
         try {
@@ -575,24 +578,47 @@ public class SyncHeaderRequestManager {
         }
     }
 
+    /** Saves the received headers with requested bodies for use in matching to the received bodies. */
+    public void storeHeadersForMatches(int peerId, List<BlockHeader> headers) {
+        lock.lock();
+
+        try {
+            Objects.requireNonNull(headers);
+
+            // Store the received headers for later requesting the bodies.
+            headersWithPendingBodies.computeIfAbsent(peerId, k -> new HashMap<>());
+            headersWithPendingBodies.get(peerId).put(ByteArrayWrapper.wrap(headers.get(0).getTxTrieRoot()), headers);
+
+            syncLog.debug("<save-headers nodeId={} size={} object={}>", peerId, headers.size(), printHeaders(headers));
+        } finally {
+            lock.unlock();
+        }
+    }
+
     private static List<String> printHeaders(List<BlockHeader> headers) {
         return headers.stream().map(h -> Hex.toHexString(h.getHash()).substring(0, 6) + " #" + h.getNumber()).collect(Collectors.toList());
     }
 
     /**
-     * Returns a list of {@link List<BlockHeader>} of different size for making bodies requests.
+     * Returns a list of {@link List<BlockHeader>} for making bodies requests.
      *
      * @param peerId the peer to make the requests to
-     * @return a list of {@link List<BlockHeader>} of different size for making bodies requests
+     * @return a list of {@link List<BlockHeader>} for making bodies requests
      */
     public List<List<BlockHeader>> getHeadersForBodiesRequests(int peerId) {
         lock.lock();
 
         try {
-            if (!storedHeaders.containsKey(peerId)) {
+            if (!storedHeaders.containsKey(peerId) || storedHeaders.get(peerId).isEmpty()) {
                 return Collections.emptyList();
             } else {
-                return new ArrayList<>(storedHeaders.get(peerId));
+                // Request bodies for all the pending headers.
+                List<List<BlockHeader>> headersForRequests = new ArrayList<>(storedHeaders.get(peerId));
+
+                // Clear the list to avoid requesting the same bodies twice.
+                storedHeaders.get(peerId).clear();
+
+                return headersForRequests;
             }
         } finally {
             lock.unlock();

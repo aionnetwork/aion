@@ -1,5 +1,6 @@
 package org.aion.zero.impl.sync;
 
+import static org.aion.base.ConstantUtil.EMPTY_TRIE_HASH;
 import static org.aion.util.string.StringUtils.getNodeIdShort;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -9,6 +10,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -19,7 +21,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import org.aion.base.ConstantUtil;
 import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IEventMgr;
 import org.aion.evtmgr.impl.evt.EventConsensus;
@@ -66,7 +67,7 @@ public final class SyncMgr {
     private static final int MAX_STORAGE_DIFF = 200;
 
     private static final byte[] EMPTY_BLOCK_BODY = RLP.encodeList(RLP.encodeList(new byte[0]));
-    private static final ByteArrayWrapper EMPTY_TRIE = ByteArrayWrapper.wrap(ConstantUtil.EMPTY_TRIE_HASH);
+    private static final ByteArrayWrapper EMPTY_TRIE = ByteArrayWrapper.wrap(EMPTY_TRIE_HASH);
 
     private static final Logger log = AionLoggerFactory.getLogger(LogEnum.SYNC.name());
     private static final Logger survey_log = AionLoggerFactory.getLogger(LogEnum.SURVEY.name());
@@ -370,7 +371,7 @@ public final class SyncMgr {
             // Request bodies for the remaining headers (which are still a sequential list).
             if (!filtered.isEmpty()) {
                 // Save headers for future bodies requests and matching with the received bodies.
-                syncHeaderRequestManager.storeHeaders(nodeId, filtered);
+                syncHeaderRequestManager.storeHeadersForRequests(nodeId, filtered);
                 syncExecutors.execute(() -> requestBodies(nodeId, displayId));
             }
         }
@@ -432,7 +433,7 @@ public final class SyncMgr {
 
                     if (!filtered.isEmpty()) {
                         // Store the subset that is still useful.
-                        syncHeaderRequestManager.storeHeaders(nodeId, filtered);
+                        syncHeaderRequestManager.storeHeadersForRequests(nodeId, filtered);
                         dispatchBodiedRequestToP2p(nodeId, displayId, filtered);
                     }
                 }
