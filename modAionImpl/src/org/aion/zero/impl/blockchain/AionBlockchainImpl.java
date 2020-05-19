@@ -284,6 +284,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
         this.repository = repository;
         this.storeInternalTransactions = storeInternalTransactions;
+        GEN_LOG.info("Internal tx database {}", storeInternalTransactions ? "enabled" : "disabled");
 
         this.isMainnet = isMainnet;
 

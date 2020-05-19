@@ -70,6 +70,8 @@
 		<vendor>rocksdb</vendor>
 		<!--Boolean value. Enable/disable database compression to trade storage space for execution time.-->
 		<enable_db_compression>true</enable_db_compression>
+                <!--Boolean value. Enable/disable internal transaction deatils store to the database-->
+                <internal-tx-storage>false</internal-tx-storage>
 	</db>
 	<log>
 		<!--Enable/Disable logback service; if disabled, output will not be logged -->
