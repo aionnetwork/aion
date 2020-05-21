@@ -1,9 +1,11 @@
 package org.aion.zero.impl.pendingState;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.aion.db.utils.FileUtils.deleteRecursively;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
+import java.io.File;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -36,6 +38,7 @@ import org.aion.zero.impl.vm.AvmTestConfig;
 import org.aion.zero.impl.vm.TestResourceProvider;
 import org.aion.base.AionTxReceipt;
 import org.apache.commons.lang3.tuple.Pair;
+import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -48,6 +51,7 @@ public class PendingStateTest {
     private ECKey deployerKey;
     private AionPendingStateImpl pendingState;
     private long energyPrice = 10_000_000_000L;
+    private File testNetworkRoot;
 
     @BeforeClass
     public static void setup() {
@@ -62,6 +66,12 @@ public class PendingStateTest {
 
     @Before
     public void reinitialize() throws SecurityException, IllegalArgumentException {
+        testNetworkRoot = CfgAion.inst().getExecDir();
+        if (testNetworkRoot.exists()) {
+            deleteRecursively(testNetworkRoot);
+            testNetworkRoot.delete();
+        }
+        testNetworkRoot.mkdirs();
 
         bundle =
             new StandaloneBlockchain.Builder()
@@ -76,6 +86,14 @@ public class PendingStateTest {
 
         pendingState = AionHub.createForTesting(CfgAion.inst(), blockchain,
             new PendingTxCallback(new ArrayList<>()), new NetworkBestBlockCallback(AionImpl.inst()), new TransactionBroadcastCallback(AionImpl.inst())).getPendingState();
+    }
+
+    @After
+    public void resetNetwork() {
+        if (testNetworkRoot.exists()) {
+            deleteRecursively(testNetworkRoot);
+            testNetworkRoot.delete();
+        }
     }
 
     private List<AionTransaction> getMockTransaction(int startNonce, int num, int keyIndex) {
