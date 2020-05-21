@@ -144,7 +144,8 @@ public class StakingContractHelper {
                 , block.getNrgLimit()
                 , BlockCachingContext.CALL.avmType
                 , 0
-                , chain.forkUtility.isUnityForkActive(block.getNumber()));
+                , chain.forkUtility.isUnityForkActive(block.getNumber())
+                , chain.forkUtility.isSignatureSwapForkActive(block.getNumber()));
 
             return summaries.get(0).getReceipt();
     }

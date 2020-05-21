@@ -55,14 +55,18 @@ public final class AvmResourcesVersion2 implements Closeable {
 
     /**
      * Initializes and starts a new version 2 instance of the avm.
-     *
+     * @param enableCoinbaseLock  the flag to enable th e coinbase lock in the AVM
      * @throws IllegalStateException If the avm is already running.
      */
-    public void initializeAndStartNewAvm() {
+    public void initializeAndStartNewAvm(boolean enableCoinbaseLock) {
         if (this.avm != null) {
             throw new IllegalStateException("The avm version 2 has already been started. Two avm's of the same version cannot both be running!");
         }
-        this.avm = this.resourceFactory.createAndInitializeNewAvm();
+
+        this.avm =
+            enableCoinbaseLock
+                ? this.resourceFactory.createAndInitializeNewAvmWithCoinbaseLock()
+                : this.resourceFactory.createAndInitializeNewAvm();
     }
 
     /**

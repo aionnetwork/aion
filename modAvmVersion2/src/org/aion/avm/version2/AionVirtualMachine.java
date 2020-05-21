@@ -39,6 +39,18 @@ public final class AionVirtualMachine implements IAionVirtualMachine {
     }
 
     /**
+     * Constructs a new Avm instance and starts it up.
+     *
+     * @return A new AVM.
+     */
+    public static AionVirtualMachine createAndInitializeNewAvmWithCoinbaseLock() {
+        AvmConfiguration avmCfg = new AvmConfiguration();
+        avmCfg.enableCoinbaseLocking = true;
+        return new AionVirtualMachine(CommonAvmFactory
+            .buildAvmInstanceForConfiguration(new AionCapabilities(), avmCfg));
+    }
+
+    /**
      * Executes the transactions and returns future results.
      *
      * @param externalState The current state of the world.

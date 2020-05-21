@@ -18,6 +18,11 @@ public final class AvmResourceFactory implements IAvmResourceFactory {
     }
 
     @Override
+    public IAionVirtualMachine createAndInitializeNewAvmWithCoinbaseLock() {
+        throw new UnsupportedOperationException("The AVM v1 does not support the coinbase lock feature");
+    }
+
+    @Override
     public IAvmExternalStateBuilder newExternalStateBuilder() {
         return new AvmExternalStateBuilder();
     }

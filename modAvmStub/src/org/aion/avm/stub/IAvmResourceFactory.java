@@ -19,6 +19,13 @@ public interface IAvmResourceFactory {
     public IAionVirtualMachine createAndInitializeNewAvm();
 
     /**
+     * Creates and initializes a new AVM with coinbase lock feature, returning it.
+     *
+     * @return a new AVM.
+     */
+    public IAionVirtualMachine createAndInitializeNewAvmWithCoinbaseLock();
+
+    /**
      * Returns a new external state builder.
      *
      * @return a new builder.

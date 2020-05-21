@@ -242,7 +242,8 @@ public final class BulkExecutor {
                                 blockRemainingEnergy,
                                 blockCachingContext.avmType,
                                 cachedBlockNumber,
-                                unityForkEnabled);
+                                unityForkEnabled,
+                                signatureSwapForkEnabled);
             } else if (transactionIsForFastVirtualMachine(
                     repository, firstTransactionInNextBatch)) {
                 currentBatchOfSummaries =
@@ -324,7 +325,8 @@ public final class BulkExecutor {
             long blockRemainingEnergy,
             AvmExecutionType executionType,
             long cachedBlockNumber,
-            boolean unityForkEnabled)
+            boolean unityForkEnabled,
+            boolean signatureSchemeSwapEnabled)
             throws VmFatalException {
 
         // Grab the next batch of avm transactions to execute.
@@ -350,7 +352,8 @@ public final class BulkExecutor {
                 blockRemainingEnergy,
                 executionType,
                 cachedBlockNumber,
-                unityForkEnabled);
+                unityForkEnabled,
+                signatureSchemeSwapEnabled);
     }
 
     /**
