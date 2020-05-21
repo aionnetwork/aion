@@ -150,6 +150,8 @@ public class AvmProviderVersion2Test {
         AvmProvider.enableAvmVersion(AvmVersion.VERSION_2, this.projectRootDir);
         AvmProvider.startAvm(AvmVersion.VERSION_2);
         AvmProvider.shutdownAvm(AvmVersion.VERSION_2);
+        AvmProvider.startAvm(AvmVersion.VERSION_2, true);
+        AvmProvider.shutdownAvm(AvmVersion.VERSION_2);
         AvmProvider.startAvm(AvmVersion.VERSION_2);
         AvmProvider.shutdownAvm(AvmVersion.VERSION_2);
         AvmProvider.disableAvmVersion(AvmVersion.VERSION_2);

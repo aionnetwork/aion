@@ -120,6 +120,37 @@ public class AvmProviderTest {
         AvmProvider.releaseLock();
     }
 
+    @Test
+    public void testBalanceTransferTransactionVersion2WithCoinbaseLock() throws Exception {
+        Assert.assertTrue(AvmProvider.tryAcquireLock(1, TimeUnit.MINUTES));
+        AvmProvider.enableAvmVersion(AvmVersion.VERSION_2, this.projectRootDir);
+        AvmProvider.startAvm(AvmVersion.VERSION_2, true);
+
+        // Set up the repo and give the sender account some balance.
+        RepositoryCache<AccountState> repository = newRepository();
+        AionAddress sender = randomAddress();
+        AionAddress recipient = randomAddress();
+        addBalance(repository, sender, BigInteger.valueOf(1_000_000));
+
+        // Run the transaction.
+        RepositoryCache<AccountState> repositoryChild = repository.startTracking();
+        IAvmExternalState externalState = newExternalState(AvmVersion.VERSION_2, repositoryChild, newEnergyRules());
+        Transaction transaction = newBalanceTransferTransaction(sender, recipient, BigInteger.TEN);
+        IAionVirtualMachine avm = AvmProvider.getAvm(AvmVersion.VERSION_2);
+        IAvmFutureResult[] futures = avm.run(externalState, new Transaction[]{ transaction }, AvmExecutionType.MINING, 0);
+
+        // Assert the result and state changes we expect.
+        Assert.assertEquals(1, futures.length);
+        TransactionResult result = futures[0].getResult();
+        Assert.assertTrue(result.transactionStatus.isSuccess());
+        Assert.assertEquals(BigInteger.TEN, repositoryChild.getBalance(recipient));
+
+        AvmProvider.shutdownAvm(AvmVersion.VERSION_2);
+        AvmProvider.disableAvmVersion(AvmVersion.VERSION_2);
+        AvmProvider.releaseLock();
+    }
+
+
     private void addBalance(RepositoryCache<AccountState> repository, AionAddress account, BigInteger amount) {
         RepositoryCache cache = repository.startTracking();
         cache.addBalance(account, amount);

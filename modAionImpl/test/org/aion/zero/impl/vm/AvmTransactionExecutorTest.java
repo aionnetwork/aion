@@ -334,6 +334,39 @@ public class AvmTransactionExecutorTest {
         AvmProvider.releaseLock();
     }
 
+    @Test
+    public void testUpdateAvmsWhenSwitchingCoinbaseLock() throws Exception {
+        Assert.assertTrue(AvmProvider.tryAcquireLock(1, TimeUnit.MINUTES));
+
+        // setup state.
+        AvmProvider.enableAvmVersion(AvmVersion.VERSION_2, projectRootDir);
+        AvmProvider.startAvm(AvmVersion.VERSION_2);
+        Assert.assertTrue(AvmProvider.isAvmRunning(AvmVersion.VERSION_2));
+
+        // update the avm state and claim the vm will run on the version 2
+        Assert.assertEquals(AvmVersion.VERSION_2, AvmTransactionExecutor.updateAvmsAndGetVersionToUse(projectRootDir, VERSION_2_FORK + TOLERANCE));
+
+        // check the status of the avm version2
+        Assert.assertTrue(AvmProvider.isVersionEnabled(AvmVersion.VERSION_2));
+        Assert.assertTrue(AvmProvider.isAvmRunning(AvmVersion.VERSION_2));
+
+        // switch the avm to version2 with coinbase lock
+        Assert.assertEquals(AvmVersion.VERSION_2, AvmTransactionExecutor.updateAvmsAndGetVersionToUse(projectRootDir, VERSION_2_FORK + TOLERANCE, true));
+
+        // check the status of the avm version2
+        Assert.assertTrue(AvmProvider.isVersionEnabled(AvmVersion.VERSION_2));
+        Assert.assertTrue(AvmProvider.isAvmRunning(AvmVersion.VERSION_2));
+
+        // switch the avm back to version2 without coinbase lock
+        Assert.assertEquals(AvmVersion.VERSION_2, AvmTransactionExecutor.updateAvmsAndGetVersionToUse(projectRootDir, VERSION_2_FORK + TOLERANCE));
+
+        // check the status of the avm version2
+        Assert.assertTrue(AvmProvider.isVersionEnabled(AvmVersion.VERSION_2));
+        Assert.assertTrue(AvmProvider.isAvmRunning(AvmVersion.VERSION_2));
+
+        AvmProvider.releaseLock();
+    }
+
     private static void disableAndShutdownAllVersions() throws Exception {
         // Disable will also shutdown for us.
         AvmProvider.disableAvmVersion(AvmVersion.VERSION_1);
