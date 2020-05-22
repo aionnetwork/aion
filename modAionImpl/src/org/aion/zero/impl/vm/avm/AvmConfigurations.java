@@ -20,6 +20,8 @@ public final class AvmConfigurations {
                             ? TxNrgRule.isValidNrgContractCreateAfterUnity(l, null)
                             : TxNrgRule.isValidNrgTxAfterUnity(l, null);
 
+    private static boolean enableCoinbaseAddressLocking = false;
+
     private AvmConfigurations() {}
 
     /**
@@ -49,6 +51,7 @@ public final class AvmConfigurations {
         isInitialized = true;
         multiVersionSchedule = schedule;
         projectRootDir = projectRootDirectory;
+        enableCoinbaseAddressLocking = false;
     }
 
     /**
@@ -75,6 +78,11 @@ public final class AvmConfigurations {
         isInitialized = true;
         multiVersionSchedule = schedule;
         projectRootDir = projectRootDirectory;
+        enableCoinbaseAddressLocking = false;
+    }
+
+    public static void setEnableCoinbaseAddressLocking(boolean _enableCoinbaseAddressLocking) {
+        enableCoinbaseAddressLocking = _enableCoinbaseAddressLocking;
     }
 
     /**
@@ -92,6 +100,7 @@ public final class AvmConfigurations {
         isInitialized = false;
         multiVersionSchedule = null;
         projectRootDir = null;
+        enableCoinbaseAddressLocking = false;
     }
 
     public static AvmVersionSchedule getAvmVersionSchedule() {
@@ -120,5 +129,9 @@ public final class AvmConfigurations {
             throw new IllegalStateException("Cannot get energy limit rules after unity fork - this class has not been initialized yet!");
         }
         return energyRulesAfterUnityFork;
+    }
+
+    public static boolean isCoinbaseAddressLockingEnabled() {
+        return enableCoinbaseAddressLocking;
     }
 }

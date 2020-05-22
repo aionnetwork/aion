@@ -18,6 +18,11 @@ public final class AvmResourceFactory implements IAvmResourceFactory {
     }
 
     @Override
+    public IAionVirtualMachine createAndInitializeNewAvmWithCoinbaseLock() {
+        return AionVirtualMachine.createAndInitializeNewAvmWithCoinbaseLock();
+    }
+
+    @Override
     public IAvmExternalStateBuilder newExternalStateBuilder() {
         return new AvmExternalStateBuilder();
     }

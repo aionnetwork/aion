@@ -39,6 +39,9 @@ public final class AvmProvider {
     private static AvmResourcesVersion1 avmResourcesVersion1 = null;
     private static AvmResourcesVersion2 avmResourcesVersion2 = null;
 
+    // AKI-709 The flag for the avm missing feature
+    private static boolean coinbaseLocking = false;
+
     /**
      * Returns {@code true} only if the specified avm version is enabled, otherwise {@code false}.
      *
@@ -190,7 +193,6 @@ public final class AvmProvider {
                 throw new IllegalStateException("Cannot get avm version 2 - verison has not been enabled yet!");
             }
             return avmResourcesVersion2.getAvm();
-
         } else {
             throw new IllegalStateException("Unknown avm version: " + version);
         }
@@ -204,6 +206,18 @@ public final class AvmProvider {
      * @throws IllegalStateException If the avm version has not been enabled or is already running.
      */
     public static void startAvm(AvmVersion version) {
+        startAvm(version, false);
+    }
+
+    /**
+     * Initializes and starts up the specified version of the avm.
+     *
+     * @param version The version to start.
+     * @param enableCoinbaseLock the flag to enable the coinbase lock.
+     * @throws IllegalMonitorStateException If the calling thread does not own the lock.
+     * @throws IllegalStateException If the avm version has not been enabled or is already running.
+     */
+    public static void startAvm(AvmVersion version, boolean enableCoinbaseLock) {
         if (!LOCK.isHeldByCurrentThread()) {
             throw new IllegalMonitorStateException("The calling thread does not own the lock!");
         }
@@ -220,8 +234,8 @@ public final class AvmProvider {
             if (avmResourcesVersion2 == null) {
                 throw new IllegalStateException("Cannot start avm version 2 - verison has not been enabled yet!");
             }
-            avmResourcesVersion2.initializeAndStartNewAvm();
 
+            avmResourcesVersion2.initializeAndStartNewAvm(enableCoinbaseLock);
         } else {
             throw new IllegalStateException("Unknown avm version: " + version);
         }

@@ -57,10 +57,12 @@ public final class AvmTransactionExecutor {
      * @param remainingBlockEnergy The amount of energy remaining in the block.
      * @param executionType The avm execution type.
      * @param cachedBlockNumber The cached block number.
+     * @param unityForkEnabled the flag shows the unityfork feature enabled/disabled
+     * @param signatureSchemeSwapEnabled the flag shows the signatureSchemeSwap feature enabled/disabled
      * @return the execution summaries of the transactions.
      * @throws VmFatalException If a fatal error occurred and the kernel must be shut down.
      */
-    public static List<AionTxExecSummary> executeTransactions(RepositoryCache<AccountState> repository, BigInteger blockDifficulty, long blockNumber, long blockTimestamp, long blockEnergyLimit, AionAddress miner, AionTransaction[] transactions, PostExecutionWork postExecutionWork, boolean decrementBlockEnergyLimit, boolean allowNonceIncrement, boolean isLocalCall, long remainingBlockEnergy, AvmExecutionType executionType, long cachedBlockNumber, boolean unityForkEnabled) throws VmFatalException {
+    public static List<AionTxExecSummary> executeTransactions(RepositoryCache<AccountState> repository, BigInteger blockDifficulty, long blockNumber, long blockTimestamp, long blockEnergyLimit, AionAddress miner, AionTransaction[] transactions, PostExecutionWork postExecutionWork, boolean decrementBlockEnergyLimit, boolean allowNonceIncrement, boolean isLocalCall, long remainingBlockEnergy, AvmExecutionType executionType, long cachedBlockNumber, boolean unityForkEnabled, boolean signatureSchemeSwapEnabled) throws VmFatalException {
         List<AionTxExecSummary> transactionSummaries = new ArrayList<>();
         long blockEnergy = remainingBlockEnergy;
 
@@ -71,7 +73,7 @@ public final class AvmTransactionExecutor {
             }
 
             // Ensure that the vm is in the correct state and grab the version of the avm we need to use for this block.
-            AvmVersion versionToUse = updateAvmsAndGetVersionToUse(AvmConfigurations.getProjectRootDirectory(), blockNumber);
+            AvmVersion versionToUse = updateAvmsAndGetVersionToUse(AvmConfigurations.getProjectRootDirectory(), blockNumber, signatureSchemeSwapEnabled);
 
             IAvmFutureResult[] futures = invokeAvm(versionToUse, repository, blockDifficulty, blockNumber, blockTimestamp, blockEnergyLimit, miner, transactions, allowNonceIncrement, isLocalCall, executionType, cachedBlockNumber, unityForkEnabled);
 
@@ -134,6 +136,26 @@ public final class AvmTransactionExecutor {
      * @return the version of the avm to use for the given block number.
      */
     public static AvmVersion updateAvmsAndGetVersionToUse(String projectRootPath, long currentBlockNumber) throws IOException, IllegalAccessException, ClassNotFoundException, InstantiationException {
+        return updateAvmsAndGetVersionToUse(projectRootPath, currentBlockNumber, false);
+    }
+    /**
+     * Updates the state of the avm versions depending on the current block number.
+     *
+     * This method will ensure that any avm versions that are enabled but which are prohibited to
+     * be enabled at this block number will be shutdown and disabled.
+     *
+     * It will also ensure that the avm version that is considered the canonical version at this
+     * block number is enabled and that its avm is started.
+     *
+     * @implNote The projectRootPath is the path to the root directory of the aion project. This is
+     * required so that we can find the resources to load.
+     *
+     * @param projectRootPath The path of the project root directory.
+     * @param currentBlockNumber The current block number.
+     * @param enableCoinbaseAddressLocking The flag to enable the coinbase addresslock
+     * @return the version of the avm to use for the given block number.
+     */
+    public static AvmVersion updateAvmsAndGetVersionToUse(String projectRootPath, long currentBlockNumber, boolean enableCoinbaseAddressLocking) throws IOException, IllegalAccessException, ClassNotFoundException, InstantiationException {
         AvmVersionSchedule schedule = AvmConfigurations.getAvmVersionSchedule();
         AvmVersion versionToUse = schedule.whichVersionToRunWith(currentBlockNumber);
         if (versionToUse == null) {
@@ -145,6 +167,14 @@ public final class AvmTransactionExecutor {
             ensureVersionIsEnabledAndStarted(AvmVersion.VERSION_1, projectRootPath);
         } else if (versionToUse == AvmVersion.VERSION_2) {
             disableVersionIfEnabledAndProhibited(schedule, AvmVersion.VERSION_1, currentBlockNumber);
+
+            if (AvmConfigurations.isCoinbaseAddressLockingEnabled() != enableCoinbaseAddressLocking) {
+                if (AvmProvider.isAvmRunning(versionToUse)) {
+                    AvmProvider.shutdownAvm(versionToUse);
+                }
+                AvmConfigurations.setEnableCoinbaseAddressLocking(enableCoinbaseAddressLocking);
+            }
+
             ensureVersionIsEnabledAndStarted(AvmVersion.VERSION_2, projectRootPath);
         } else {
             throw new IllegalStateException("Unknown avm version: " + versionToUse);
@@ -214,6 +244,7 @@ public final class AvmTransactionExecutor {
      * @param isLocalCall Whether this is a local call (ie. is to cause no state changes).
      * @param executionType The avm execution type.
      * @param cachedBlockNumber The cached block number.
+     * @param unityForkEnabled The unityFork feature enabled/disabled.
      * @return the future execution results.
      */
     private static IAvmFutureResult[] invokeAvm(AvmVersion versionToUse, RepositoryCache<AccountState> repository, BigInteger blockDifficulty, long blockNumber, long blockTimestamp, long blockEnergyLimit, AionAddress miner, AionTransaction[] transactions, boolean allowNonceIncrement, boolean isLocalCall, AvmExecutionType executionType, long cachedBlockNumber, boolean unityForkEnabled) {
@@ -258,9 +289,9 @@ public final class AvmTransactionExecutor {
     private static void ensureVersionIsEnabledAndStarted(AvmVersion version, String projectRootPath) throws ClassNotFoundException, IOException, InstantiationException, IllegalAccessException {
         if (!AvmProvider.isVersionEnabled(version)) {
             AvmProvider.enableAvmVersion(version, projectRootPath);
-            AvmProvider.startAvm(version);
+            AvmProvider.startAvm(version, AvmConfigurations.isCoinbaseAddressLockingEnabled());
         } else if (!AvmProvider.isAvmRunning(version)) {
-            AvmProvider.startAvm(version);
+            AvmProvider.startAvm(version, AvmConfigurations.isCoinbaseAddressLockingEnabled());
         }
     }
 
