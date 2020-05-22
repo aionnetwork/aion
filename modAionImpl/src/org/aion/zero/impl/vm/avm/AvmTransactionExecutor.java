@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import org.aion.log.AionLoggerFactory;
+import org.aion.log.LogEnum;
 import org.aion.zero.impl.vm.avm.schedule.AvmVersionSchedule;
 import org.aion.zero.impl.vm.common.PostExecutionWork;
 import org.aion.zero.impl.vm.common.VmFatalException;
@@ -168,11 +170,16 @@ public final class AvmTransactionExecutor {
         } else if (versionToUse == AvmVersion.VERSION_2) {
             disableVersionIfEnabledAndProhibited(schedule, AvmVersion.VERSION_1, currentBlockNumber);
 
-            if (AvmConfigurations.isCoinbaseAddressLockingEnabled() != enableCoinbaseAddressLocking) {
+            if (AvmConfigurations.isCoinbaseAddressLockingEnabled() != enableCoinbaseAddressLocking
+                // AKI-636 workaround
+                || currentBlockNumber == 4820587) {
                 if (AvmProvider.isAvmRunning(versionToUse)) {
                     AvmProvider.shutdownAvm(versionToUse);
                 }
-                AvmConfigurations.setEnableCoinbaseAddressLocking(enableCoinbaseAddressLocking);
+
+                boolean enable = (currentBlockNumber == 4820587) || enableCoinbaseAddressLocking;
+                AionLoggerFactory.getLogger(LogEnum.VM.toString()).info("Set the CoinbaseAddressLocking to {}, block#{}", enable, currentBlockNumber);
+                AvmConfigurations.setEnableCoinbaseAddressLocking(enable);
             }
 
             ensureVersionIsEnabledAndStarted(AvmVersion.VERSION_2, projectRootPath);

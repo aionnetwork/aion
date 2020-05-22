@@ -3,6 +3,8 @@ package org.aion.zero.impl.vm.avm;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
+import org.aion.log.AionLoggerFactory;
+import org.aion.log.LogEnum;
 import org.aion.zero.impl.vm.avm.internal.AvmResourcesVersion1;
 import org.aion.zero.impl.vm.avm.internal.AvmResourcesVersion2;
 import org.aion.avm.stub.AvmVersion;
@@ -234,7 +236,6 @@ public final class AvmProvider {
             if (avmResourcesVersion2 == null) {
                 throw new IllegalStateException("Cannot start avm version 2 - verison has not been enabled yet!");
             }
-
             avmResourcesVersion2.initializeAndStartNewAvm(enableCoinbaseLock);
         } else {
             throw new IllegalStateException("Unknown avm version: " + version);
