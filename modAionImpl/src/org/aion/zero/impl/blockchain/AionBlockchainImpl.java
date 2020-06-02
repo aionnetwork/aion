@@ -550,7 +550,12 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     private State pushState(byte[] bestBlockHash) {
         State push = stateStack.push(new State());
-        this.bestBlock = repository.getBlockStore().getBlockByHashWithInfo(bestBlockHash);
+        Block block = repository.getBlockStore().getBlockByHashWithInfo(bestBlockHash);;
+        if (block == null) {
+            throw new IllegalStateException("BlockStore error, cannot find the block byHash: " + ByteUtil.toHexString(bestBlockHash));
+        }
+
+        this.bestBlock = block;
         LOG.debug("pushState bestBlock:{}", bestBlock);
 
         if (bestBlock.getHeader().getSealType() == Seal.PROOF_OF_WORK) {
@@ -598,22 +603,21 @@ public class AionBlockchainImpl implements IAionBlockchain {
      */
     private AionBlockSummary tryConnectAndFork(final BlockWrapper blockWrapper) {
         Block block = blockWrapper.block;
-        State savedState = pushState(block.getParentHash());
-        this.fork = true;
 
+        this.fork = true;
+        State savedState = null;
         AionBlockSummary summary = null;
         try {
+            savedState = pushState(block.getParentHash());
             summary = add(blockWrapper).getLeft();
             kernelStateUpdate(block, summary);
-
-
         } catch (Exception e) {
             LOG.error("Unexpected error: ", e);
         } finally {
             this.fork = false;
         }
 
-        if (summary != null && isMoreThan(totalDifficulty.get(), savedState.td)) {
+        if (summary != null && savedState != null && isMoreThan(totalDifficulty.get(), savedState.td)) {
             if (LOG.isInfoEnabled()) {
                 LOG.info(
                         "branching: from = {}/{}, to = {}/{}",
@@ -1245,6 +1249,9 @@ public class AionBlockchainImpl implements IAionBlockchain {
         block.updateHeaderDifficulty(newDiff);
 
         BigInteger totalTransactionFee = blockPreSeal(parentHdr, block);
+        if (totalTransactionFee == null) {
+            return null;
+        }
 
         // derive base block reward
         BigInteger baseBlockReward =
@@ -1430,7 +1437,11 @@ public class AionBlockchainImpl implements IAionBlockchain {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        blockPreSeal(parentHdr, block);
+
+        BigInteger transactionFee = blockPreSeal(parentHdr, block);
+        if (transactionFee == null) {
+            return null;
+        }
 
         if (signingPublicKey != null) {
             stakingBlockTemplate.putIfAbsent(
@@ -1476,6 +1487,10 @@ public class AionBlockchainImpl implements IAionBlockchain {
                     totalEnergyUsed);
 
             return totalTransactionFee;
+        } catch (IllegalStateException e) {
+            LOG.error("blockPreSeal failed.", e);
+            popState();
+            return null;
         } finally{
             lock.unlock();
         }
@@ -2437,10 +2452,15 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 return null;
             }
 
-            // Use a snapshot to the given parent.
-            pushState(parent.getHash());
+
             try {
+                // Use a snapshot to the given parent.
+                pushState(parent.getHash());
+
                 return createNewStakingBlock(parent, pendingTransactions, newSeed, signingPublicKey, coinbase);
+            } catch (IllegalStateException e) {
+                LOG.error("createStakingBlockTemplate failed.", e);
+                return null;
             } finally {
                 // Ensures that the repository is left in a valid state even if an exception occurs.
                 popState();
