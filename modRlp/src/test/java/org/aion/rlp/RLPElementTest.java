@@ -9,7 +9,7 @@ public class RLPElementTest {
 
     @Test(expected = RuntimeException.class)
     public void testRLPList_wRuntimeException() {
-        RLPList.recursivePrint(null);
+        RlpTestHelper.recursivePrint(null);
     }
 
     @Test

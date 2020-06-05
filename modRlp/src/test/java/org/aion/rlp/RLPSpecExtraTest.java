@@ -699,7 +699,7 @@ public class RLPSpecExtraTest {
         assertThat(list.size()).isEqualTo(1);
         assertThat(list.get(0).getRLPData()).isEqualTo(actual);
 
-        RLPList.recursivePrint(list);
+        RlpTestHelper.recursivePrint(list);
         assertThat(result.toString()).isEqualTo(ByteUtil.toHexString(list.get(0).getRLPData()));
         System.out.println();
 
@@ -731,7 +731,7 @@ public class RLPSpecExtraTest {
         assertThat(list.size()).isEqualTo(1);
         assertThat(list.get(0).getRLPData()).isEqualTo(actual);
 
-        RLPList.recursivePrint(list);
+        RlpTestHelper.recursivePrint(list);
         assertThat(result.toString()).isEqualTo(ByteUtil.toHexString(list.get(0).getRLPData()));
         System.out.println();
 
@@ -771,7 +771,7 @@ public class RLPSpecExtraTest {
         assertThat(list.size()).isEqualTo(1);
         assertThat(list.get(0).getRLPData()).isEqualTo(input);
 
-        RLPList.recursivePrint(list);
+        RlpTestHelper.recursivePrint(list);
         System.out.println();
 
         RLPElement elm = RLP.decode2OneItem(input, 1);
@@ -807,7 +807,7 @@ public class RLPSpecExtraTest {
         assertThat(list.size()).isEqualTo(1);
         assertThat(list.get(0).getRLPData()).isEqualTo(input);
 
-        RLPList.recursivePrint(list);
+        RlpTestHelper.recursivePrint(list);
         System.out.println();
 
         RLPElement elm = RLP.decode2OneItem(input, 1);

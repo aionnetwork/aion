@@ -463,7 +463,7 @@ public class RLPTest {
 
         RLPList rlpList = decode2(payload);
 
-        RLPList.recursivePrint(rlpList);
+        RlpTestHelper.recursivePrint(rlpList);
         // TODO: add some asserts in place of just printing the rlpList
     }
 
@@ -636,7 +636,7 @@ public class RLPTest {
 
         RLPList rlpList = decode2(payload);
 
-        RLPList.recursivePrint(rlpList);
+        RlpTestHelper.recursivePrint(rlpList);
         // TODO: add some asserts in place of just printing the rlpList
     }
 
@@ -650,7 +650,7 @@ public class RLPTest {
 
         RLPList rlpList = decode2(payload);
 
-        RLPList.recursivePrint(rlpList);
+        RlpTestHelper.recursivePrint(rlpList);
         // TODO: add some asserts in place of just printing the rlpList
     }
 
@@ -668,7 +668,7 @@ public class RLPTest {
 
         RLPList rlpList = decode2(payload);
 
-        RLPList.recursivePrint(rlpList);
+        RlpTestHelper.recursivePrint(rlpList);
         // TODO: add some asserts in place of just printing the rlpList
     }
 

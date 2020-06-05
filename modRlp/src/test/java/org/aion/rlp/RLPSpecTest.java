@@ -872,7 +872,7 @@ public class RLPSpecTest {
         assertThat(list.size()).isEqualTo(1);
         assertThat(list.get(0).getRLPData().length).isEqualTo(0);
 
-        RLPList.recursivePrint(list);
+        RlpTestHelper.recursivePrint(list);
         assertThat(result.toString()).isEqualTo(ByteUtil.toHexString(list.get(0).getRLPData()));
         System.out.println();
 
@@ -905,7 +905,7 @@ public class RLPSpecTest {
         assertThat(list.size()).isEqualTo(1);
         assertThat(list.get(0).getRLPData()).isEqualTo(actual);
 
-        RLPList.recursivePrint(list);
+        RlpTestHelper.recursivePrint(list);
         assertThat(result.toString()).isEqualTo(ByteUtil.toHexString(list.get(0).getRLPData()));
         System.out.println();
 
@@ -938,7 +938,7 @@ public class RLPSpecTest {
         assertThat(list.size()).isEqualTo(1);
         assertThat(list.get(0).getRLPData()).isEqualTo(actual);
 
-        RLPList.recursivePrint(list);
+        RlpTestHelper.recursivePrint(list);
         assertThat(result.toString()).isEqualTo(ByteUtil.toHexString(list.get(0).getRLPData()));
         System.out.println();
 
@@ -971,7 +971,7 @@ public class RLPSpecTest {
         assertThat(list.size()).isEqualTo(1);
         assertThat(list.get(0).getRLPData()).isEqualTo(actual);
 
-        RLPList.recursivePrint(list);
+        RlpTestHelper.recursivePrint(list);
         assertThat(result.toString()).isEqualTo(ByteUtil.toHexString(list.get(0).getRLPData()));
         System.out.println();
 
@@ -1005,7 +1005,7 @@ public class RLPSpecTest {
         assertThat(list.size()).isEqualTo(1);
         assertThat(list.get(0).getRLPData()).isEqualTo(actual);
 
-        RLPList.recursivePrint(list);
+        RlpTestHelper.recursivePrint(list);
         assertThat(result.toString()).isEqualTo(ByteUtil.toHexString(list.get(0).getRLPData()));
         System.out.println();
 
@@ -1040,7 +1040,7 @@ public class RLPSpecTest {
         assertThat(list.size()).isEqualTo(1);
         assertThat(list.get(0).getRLPData()).isEqualTo(actual);
 
-        RLPList.recursivePrint(list);
+        RlpTestHelper.recursivePrint(list);
         assertThat(result.toString()).isEqualTo(ByteUtil.toHexString(list.get(0).getRLPData()));
         System.out.println();
     }
@@ -1067,7 +1067,7 @@ public class RLPSpecTest {
         assertThat(list.size()).isEqualTo(1);
         assertThat(list.get(0).getRLPData()).isEqualTo(actual);
 
-        RLPList.recursivePrint(list);
+        RlpTestHelper.recursivePrint(list);
         System.out.println();
         assertThat(result.toString()).isEqualTo(ByteUtil.toHexString(list.get(0).getRLPData()));
     }
@@ -1092,7 +1092,7 @@ public class RLPSpecTest {
         assertThat(list.size()).isEqualTo(1);
         assertThat(list.get(0).getRLPData()).isEqualTo(actual);
 
-        RLPList.recursivePrint(list);
+        RlpTestHelper.recursivePrint(list);
         System.out.println();
         assertThat(result.toString()).isEqualTo(ByteUtil.toHexString(list.get(0).getRLPData()));
     }
@@ -1117,7 +1117,7 @@ public class RLPSpecTest {
         assertThat(list.size()).isEqualTo(1);
         assertThat(list.get(0).getRLPData().length).isEqualTo(0);
 
-        RLPList.recursivePrint(list);
+        RlpTestHelper.recursivePrint(list);
         System.out.println();
         assertThat(result.toString()).isEqualTo(ByteUtil.toHexString(list.get(0).getRLPData()));
 
@@ -1329,7 +1329,7 @@ public class RLPSpecTest {
 
         assertThat(elmList.size()).isEqualTo(0);
 
-        RLPList.recursivePrint(list);
+        RlpTestHelper.recursivePrint(list);
         System.out.println();
 
         // check Value
@@ -1373,7 +1373,7 @@ public class RLPSpecTest {
             assertThat(bytesToAscii(elmList.get(i).getRLPData())).isEqualTo(expected[i]);
         }
 
-        RLPList.recursivePrint(list);
+        RlpTestHelper.recursivePrint(list);
         System.out.println();
 
         // check Value
@@ -1438,7 +1438,7 @@ public class RLPSpecTest {
         // third item
         assertThat(byteArrayToInt(elmList.get(2).getRLPData())).isEqualTo(expected[2]);
 
-        RLPList.recursivePrint(list);
+        RlpTestHelper.recursivePrint(list);
         System.out.println();
 
         // check Value
@@ -1503,7 +1503,7 @@ public class RLPSpecTest {
             assertThat(bytesToAscii(elmList.get(i).getRLPData())).isEqualTo(expected[i]);
         }
 
-        RLPList.recursivePrint(list);
+        RlpTestHelper.recursivePrint(list);
         System.out.println();
 
         // check Value
@@ -1579,7 +1579,7 @@ public class RLPSpecTest {
             }
         }
 
-        RLPList.recursivePrint(list);
+        RlpTestHelper.recursivePrint(list);
         System.out.println();
 
         // check Value
@@ -1686,7 +1686,7 @@ public class RLPSpecTest {
             }
         }
 
-        RLPList.recursivePrint(list);
+        RlpTestHelper.recursivePrint(list);
         System.out.println();
 
         // check Value
@@ -1772,7 +1772,7 @@ public class RLPSpecTest {
         actualRlpList = (RLPList) elmList.get(1);
         assertThat(actualRlpList.size()).isEqualTo(0);
 
-        RLPList.recursivePrint(list);
+        RlpTestHelper.recursivePrint(list);
         System.out.println();
 
         // check Value
@@ -1921,7 +1921,7 @@ public class RLPSpecTest {
         actualList2 = (RLPList) actualList2.get(0);
         assertThat(actualList2.size()).isEqualTo(0);
 
-        RLPList.recursivePrint(list);
+        RlpTestHelper.recursivePrint(list);
         System.out.println();
 
         // check Value
@@ -2037,7 +2037,7 @@ public class RLPSpecTest {
             }
         }
 
-        RLPList.recursivePrint(list);
+        RlpTestHelper.recursivePrint(list);
         System.out.println();
 
         // check Value
@@ -2077,7 +2077,7 @@ public class RLPSpecTest {
         assertThat(list.get(0).getRLPData()).isEqualTo(input);
         assertThat(list.get(0).getRLPData()).isEqualTo(actual);
 
-        RLPList.recursivePrint(list);
+        RlpTestHelper.recursivePrint(list);
         System.out.println();
 
         // check Value
@@ -2105,7 +2105,7 @@ public class RLPSpecTest {
         assertThat(list.get(0).getRLPData()).isEqualTo(input);
         assertThat(list.get(0).getRLPData()).isEqualTo(actual);
 
-        RLPList.recursivePrint(list);
+        RlpTestHelper.recursivePrint(list);
         System.out.println();
 
         // check Value
@@ -2133,7 +2133,7 @@ public class RLPSpecTest {
         assertThat(list.get(0).getRLPData()).isEqualTo(input);
         assertThat(list.get(0).getRLPData()).isEqualTo(actual);
 
-        RLPList.recursivePrint(list);
+        RlpTestHelper.recursivePrint(list);
         System.out.println();
 
         // check Value
