@@ -21,6 +21,7 @@ public class RLPItem implements RLPElement {
         this.rlpData = (rlpData == null) ? ByteUtil.EMPTY_BYTE_ARRAY : rlpData;
     }
 
+    @Override
     public byte[] getRLPData() {
         // @Jay
         // TODO: the ethereumJ implement the comment code piece, it will make
