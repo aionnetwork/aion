@@ -70,6 +70,8 @@ public class RLP {
     private static final byte[] BYTES_SHORT_ITEM = new byte[] {(byte) OFFSET_SHORT_ITEM};
     private static final byte[] BYTES_SHORT_LIST = new byte[] {(byte) OFFSET_SHORT_LIST};
 
+    private static final int MAX_DEPTH = 16;
+
     // DECODING
 
     public static int decodeInt(byte[] data, int index) {
@@ -148,26 +150,33 @@ public class RLP {
      * @return rlpList - outcome of recursive RLP structure
      */
     public static RLPList decode2(byte[] msgData) {
+        if (msgData == null || msgData.length == 0) {
+            return new RLPList();
+        }
+
         RLPList rlpList = new RLPList();
-        fullTraverse(msgData, 0, 0, msgData == null ? 0 : msgData.length, rlpList);
+        fullTraverse(msgData, 0, 0, msgData.length, rlpList);
         return rlpList;
     }
 
     /** @implNote Considers only encodings of one byte. */
     public static RLPElement decode2OneItem(byte[] msgData, int startPos) {
+        if (msgData == null || msgData.length == 0) {
+            return new RLPList();
+        }
+
         RLPList rlpList = new RLPList();
         fullTraverse(msgData, 0, startPos, startPos + 1, rlpList);
         return rlpList.get(0);
     }
 
     /** Get exactly one message payload */
-    private static void fullTraverse(
-            byte[] msgData, int level, int startPos, int endPos, RLPList rlpList) {
-
+    private static void fullTraverse(byte[] msgData, int level, int startPos, int endPos, RLPList rlpList) {
         try {
-            if (msgData == null || msgData.length == 0) {
-                return;
+            if (level > MAX_DEPTH) {
+                throw new RuntimeException(String.format("Error: Traversing over max RLP depth (%s)", MAX_DEPTH));
             }
+
             int pos = startPos;
 
             while (pos < endPos) {
@@ -267,7 +276,7 @@ public class RLP {
                             + Hex.toHexString(
                                     msgData,
                                     startPos,
-                                    endPos - startPos > 1024 ? 1024 : endPos - startPos)
+                                    Math.min(endPos - startPos, 1024))
                             + ")",
                     e);
         } catch (OutOfMemoryError e) {
@@ -668,22 +677,22 @@ public class RLP {
             String inputString = (String) input;
             return inputString.getBytes();
         } else if (input instanceof Byte) {
-            Byte inputByte = (Byte) input;
+            byte inputByte = (byte) input;
             return (inputByte == 0)
                     ? ByteUtil.EMPTY_BYTE_ARRAY
                     : asUnsignedByteArray(BigInteger.valueOf(inputByte));
         } else if (input instanceof Short) {
-            Short inputShort = (Short) input;
+            short inputShort = (short) input;
             return (inputShort == 0)
                     ? ByteUtil.EMPTY_BYTE_ARRAY
                     : asUnsignedByteArray(BigInteger.valueOf(inputShort));
         } else if (input instanceof Integer) {
-            Integer inputInt = (Integer) input;
+            int inputInt = (int) input;
             return (inputInt == 0)
                     ? ByteUtil.EMPTY_BYTE_ARRAY
                     : asUnsignedByteArray(BigInteger.valueOf(inputInt));
         } else if (input instanceof Long) {
-            Long inputLong = (Long) input;
+            long inputLong = (long) input;
             return (inputLong == 0)
                     ? ByteUtil.EMPTY_BYTE_ARRAY
                     : asUnsignedByteArray(BigInteger.valueOf(inputLong));
