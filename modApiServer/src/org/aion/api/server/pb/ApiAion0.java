@@ -277,9 +277,9 @@ public class ApiAion0 extends ApiAion implements IApiAion {
     @SuppressWarnings("rawtypes")
     public ApiAion0(IAionChain ac, AccountManager am) {
         super(ac, am);
-        this.pendingReceipts = Collections.synchronizedMap(new LRUMap<>(10000, 100));
+        this.pendingReceipts = Collections.synchronizedMap(new LRUMap<>(1024, 100));
 
-        int MAP_SIZE = 50_000;
+        int MAP_SIZE = 1024;
         this.pendingStatus = new LinkedBlockingQueue(MAP_SIZE);
         this.txWait = new LinkedBlockingQueue(MAP_SIZE);
         this.msgIdMapping = Collections.synchronizedMap(new LRUMap<>(MAP_SIZE, 100));

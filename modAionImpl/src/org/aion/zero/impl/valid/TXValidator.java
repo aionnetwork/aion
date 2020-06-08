@@ -25,7 +25,7 @@ public class TXValidator {
     private static final Logger LOG = LoggerFactory.getLogger(LogEnum.TX.name());
 
     private static final Map<ByteArrayWrapper, TxResponse> cache =
-            Collections.synchronizedMap(new LRUMap<>(16 * 1024));
+            Collections.synchronizedMap(new LRUMap<>(4096));
 
     public static TxResponse validateTx(AionTransaction tx, boolean unityForkEnabled) {
         TxResponse valid = cache.get(ByteArrayWrapper.wrap(tx.getTransactionHash()));
