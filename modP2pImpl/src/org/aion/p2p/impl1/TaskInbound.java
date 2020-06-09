@@ -29,7 +29,6 @@ import org.aion.p2p.impl.zero.msg.ReqHandshake1;
 import org.aion.p2p.impl.zero.msg.ResActiveNodes;
 import org.aion.p2p.impl.zero.msg.ResHandshake;
 import org.aion.p2p.impl.zero.msg.ResHandshake1;
-import org.aion.p2p.impl1.P2pMgr.Dest;
 import org.slf4j.Logger;
 
 public class TaskInbound implements Runnable {
@@ -52,6 +51,8 @@ public class TaskInbound implements Runnable {
     // used when survey logging
     private static final long MIN_DURATION = 60_000_000_000L; // 60 seconds
     private long waitTime = 0, processTime = 0;
+
+    private static ByteBuffer readBuf;
 
     public TaskInbound(
             final Logger p2pLOG,
@@ -81,7 +82,7 @@ public class TaskInbound implements Runnable {
         long startTime, duration;
 
         // readBuffer buffer pre-alloc. @ max_body_size
-        ByteBuffer readBuf = ByteBuffer.allocate(P2pConstant.MAX_BODY_SIZE);
+        readBuf = ByteBuffer.allocate(P2pConstant.MAX_BODY_SIZE);
 
         while (start.get()) {
 

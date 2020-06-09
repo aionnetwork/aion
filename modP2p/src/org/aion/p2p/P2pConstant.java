@@ -6,7 +6,7 @@ public class P2pConstant {
             STOP_CONN_AFTER_FAILED_CONN = 8, //
             FAILED_CONN_RETRY_INTERVAL = 3000, //
             BAN_CONN_RETRY_INTERVAL = 30_000, //
-            MAX_BODY_SIZE = 2 * 1024 * 1024 * 32, //
+            MAX_BODY_SIZE = 2 * 1024 * 1024 * 16, //
             RECV_BUFFER_SIZE = 8192 * 1024, //
             SEND_BUFFER_SIZE = 8192 * 1024, //
 
