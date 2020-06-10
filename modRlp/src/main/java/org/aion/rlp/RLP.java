@@ -159,6 +159,12 @@ public class RLP {
         return rlpList;
     }
 
+    public static SharedRLPList decode2SharedList(byte[] msgData) {
+        SharedRLPList rlpList = new SharedRLPList(msgData);
+        fullTraverseFromSharedRlpList(rlpList, 0, 0, rlpList.length);
+        return rlpList;
+    }
+
     /** @implNote Considers only encodings of one byte. */
     public static RLPElement decode2OneItem(byte[] msgData, int startPos) {
         if (msgData == null || msgData.length == 0) {
@@ -168,6 +174,93 @@ public class RLP {
         RLPList rlpList = new RLPList();
         fullTraverse(msgData, 0, startPos, startPos + 1, rlpList);
         return rlpList.get(0);
+    }
+
+    /** Get exactly one message payload */
+    private static void fullTraverseFromSharedRlpList(SharedRLPList rlpList, int level, int startPos, int endPos) {
+        try {
+            if (level > MAX_DEPTH) {
+                throw new RuntimeException(String.format("Error: Traversing over max RLP depth (%s)", MAX_DEPTH));
+            }
+
+            int pos = startPos;
+
+            while (pos < endPos) {
+
+                int type = SharedRLPList.getDataType(rlpList, pos);
+
+                if (type < OFFSET_SHORT_ITEM) { // single byte item
+                    rlpList.add(new SharedRLPItem(rlpList.getRLPData(), pos, 1));
+                    ++pos;
+                } else if (type == OFFSET_SHORT_ITEM) { // null item
+                    rlpList.add(new SharedRLPItem(rlpList.getRLPData(), pos, 0));
+                    ++pos;
+                } else if (type <= OFFSET_LONG_ITEM) {
+                    // It's an item less than 55 bytes long,
+                    // data[0] - 0x80 == length of the item
+                    byte length = (byte) (type - OFFSET_SHORT_ITEM);
+                    rlpList.add(new SharedRLPItem(rlpList.getRLPData(), pos + 1, length));
+                    pos += 1 + length;
+                } else if (type < OFFSET_SHORT_LIST) {
+                    // It's an item with a payload more than 55 bytes
+                    // data[0] - 0xB7 = how much next bytes allocated for
+                    // the length of the string
+                    byte lengthOfLength = (byte) (type - OFFSET_LONG_ITEM);
+                    int length = calcLength(lengthOfLength, rlpList.getRLPData(), pos);
+
+                    // now we can parse an item for data[1]..data[length]
+                    rlpList.add(new SharedRLPItem(rlpList.getRLPData(), pos + lengthOfLength + 1, length));
+                    pos += lengthOfLength + length + 1;
+                } else if (type <= OFFSET_LONG_LIST) {
+                    // It's a list with a payload less than 55 bytes
+                    byte length = (byte) (type - OFFSET_SHORT_LIST);
+                    SharedRLPList newLevelList = new SharedRLPList(rlpList.getRLPData(), pos, length + 1);
+
+                    if (length > 0) {
+                        fullTraverseFromSharedRlpList(
+                                newLevelList, level + 1, pos + 1, pos + length + 1);
+                    }
+                    rlpList.add(newLevelList);
+
+                    pos += 1 + length;
+                } else {
+                    // logger.debug("fullTraverse: level: " + level + " startPos: "
+                    // + pos + " endPos: " + endPos);
+                    // It's a list with a payload more than 55 bytes
+                    // data[0] - 0xF7 = how many next bytes allocated
+                    // for the length of the list
+                    byte lengthOfLength = (byte) (type - OFFSET_LONG_LIST);
+                    int length = calcLength(lengthOfLength, rlpList.getRLPData(), pos);
+
+                    SharedRLPList newLevelList = new SharedRLPList(rlpList.getRLPData(), pos, lengthOfLength + length + 1);
+
+                    fullTraverseFromSharedRlpList(
+                        newLevelList,
+                        level + 1,
+                        pos + lengthOfLength + 1,
+                        pos + lengthOfLength + length + 1);
+
+                    rlpList.add(newLevelList);
+
+                    pos += lengthOfLength + length + 1;
+                }
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(
+                "RLP wrong encoding ("
+                    + Hex.toHexString(
+                    rlpList.getRLPData(),
+                    startPos,
+                    Math.min(endPos - startPos, 1024))
+                    + ")",
+                e);
+        } catch (OutOfMemoryError e) {
+            throw new RuntimeException(
+                "Invalid RLP (excessive mem allocation while parsing) ("
+                    + Hex.toHexString(rlpList.getRLPData(), startPos, endPos - startPos)
+                    + ")",
+                e);
+        }
     }
 
     /** Get exactly one message payload */
