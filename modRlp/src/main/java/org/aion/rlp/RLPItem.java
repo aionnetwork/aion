@@ -32,4 +32,9 @@ public class RLPItem implements RLPElement {
         // }
         return rlpData;
     }
+
+    @Override
+    public boolean isList() {
+        throw  new UnsupportedOperationException();
+    }
 }

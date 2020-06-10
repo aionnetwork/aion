@@ -20,4 +20,9 @@ public class RLPList extends ArrayList<RLPElement> implements RLPElement {
     public byte[] getRLPData() {
         return rlpData;
     }
+
+    @Override
+    public boolean isList() {
+        throw  new UnsupportedOperationException();
+    }
 }

@@ -54,4 +54,9 @@ public class SharedRLPItem implements RLPElement {
             return result;
         }
     }
+
+    @Override
+    public boolean isList() {
+        return false;
+    }
 }

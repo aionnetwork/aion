@@ -37,6 +37,11 @@ public class SharedRLPList extends ArrayList<RLPElement> implements RLPElement {
         return rlpData;
     }
 
+    @Override
+    public boolean isList() {
+        return true;
+    }
+
     /**
      * Helper method for identifying the data type by given SharedRLPList and position
      * @param list SharedRLPList
