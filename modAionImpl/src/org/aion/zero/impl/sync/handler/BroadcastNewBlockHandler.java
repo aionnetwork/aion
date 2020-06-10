@@ -6,6 +6,7 @@ import org.aion.p2p.Handler;
 import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.Ver;
 import org.aion.rlp.RLP;
+import org.aion.rlp.RLPElement;
 import org.aion.rlp.SharedRLPList;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.zero.impl.sync.Act;
@@ -58,31 +59,27 @@ public final class BroadcastNewBlockHandler extends Handler {
 
         try { // preventative try-catch: it's unlikely that exceptions can pass up to here
             SharedRLPList list = RLP.decode2SharedList(rawdata);
-            //RLPList params = RLP.decode2(rawdata);
-            SharedRLPList blockRLP = (SharedRLPList) list.get(0);
-            //RLPList blockRLP = (RLPList) params.get(0);
-
-            // returns null when decoding failed
-            Block block = BlockUtil.newBlockFromUnsafeSource(blockRLP);
-            if (block != null) {
-                BlockPropagationHandler.PropStatus result =
+            RLPElement element = list.get(0);
+            if (element.isList()) {
+                // returns null when decoding failed
+                Block block = BlockUtil.newBlockFromUnsafeSource((SharedRLPList) element);
+                if (block != null) {
+                    BlockPropagationHandler.PropStatus result =
                         this.propHandler.processIncomingBlock(_nodeIdHashcode, _displayId, block);
 
-                duration = System.nanoTime() - startTime;
-                surveyLog.debug("Receive Stage 6: process propagated block, duration = {} ns.", duration);
-
-                if (this.log.isDebugEnabled()) {
-                    String hash = block.getShortHash();
-                    hash = hash != null ? hash : "null";
-                    this.log.debug(
-                            "<block-prop node="
-                                    + _displayId
-                                    + " block-hash="
-                                    + hash
-                                    + " status="
-                                    + result.name()
-                                    + ">");
+                    duration = System.nanoTime() - startTime;
+                    surveyLog.debug("Receive Stage 6: process propagated block, duration = {} ns.", duration);
+                    log.debug(
+                        "<block-prop node="
+                            + _displayId
+                            + " block-hash="
+                            + block.getShortHash()
+                            + " status="
+                            + result.name()
+                            + ">");
                 }
+            } else {
+                throw new IllegalArgumentException("decoded data is not a list.");
             }
         } catch (Exception e) {
             log.error("RLP decode error!", e);

@@ -35,12 +35,23 @@ public final class ResBlocksBodies extends Msg {
     }
 
     public static ResBlocksBodies decodeUsingRef(final byte[] _msgBytes) {
-        SharedRLPList paramsList = (SharedRLPList) RLP.decode2SharedList(_msgBytes).get(0);
-        List<byte[]> blocksBodies = new ArrayList<>();
-        for (RLPElement aParamsList : paramsList) {
-            blocksBodies.add(SharedRLPList.getRLPDataCopy((SharedRLPList) aParamsList));
+        SharedRLPList list = RLP.decode2SharedList(_msgBytes);
+        if (list.isEmpty()) {
+            return new ResBlocksBodies(null);
+        } else {
+            RLPElement element = list.get(0);
+            if (element.isList()) {
+                List<byte[]> blocksBodies = new ArrayList<>();
+                for (RLPElement aParamsList : (SharedRLPList)element) {
+                    if (aParamsList.isList()) {
+                        blocksBodies.add(SharedRLPList.getRLPDataCopy((SharedRLPList) aParamsList));
+                    }
+                }
+                return new ResBlocksBodies(blocksBodies);
+            } else {
+                return new ResBlocksBodies(null);
+            }
         }
-        return new ResBlocksBodies(blocksBodies);
     }
 
     public List<byte[]> getBlocksBodies() {

@@ -49,12 +49,9 @@ public final class ResBlocksBodiesHandler extends Handler {
         startTime = System.nanoTime();
         List<byte[]> bodies = resBlocksBodies.getBlocksBodies();
         if (bodies == null) {
-            log.error("<res-bodies decoder-error from {}, len: {]>", _displayId, _msgBytes.length);
+            log.error("<res-bodies decoder-error from {}, len: {}>", _displayId, _msgBytes.length);
             p2pMgr.errCheck(_nodeIdHashcode, _displayId);
-            if (log.isTraceEnabled()) {
-                log.trace("res-bodies dump: {}", ByteUtil.toHexString(_msgBytes));
-            }
-
+            log.trace("res-bodies dump: {}", ByteUtil.toHexString(_msgBytes));
         } else {
             this.syncMgr
                     .getSyncStats()
