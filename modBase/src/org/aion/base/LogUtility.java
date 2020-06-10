@@ -2,11 +2,13 @@ package org.aion.base;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import org.aion.crypto.HashUtil;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPItem;
 import org.aion.rlp.RLPList;
+import org.aion.rlp.SharedRLPList;
 import org.aion.types.Log;
 
 public class LogUtility {
@@ -33,16 +35,20 @@ public class LogUtility {
     }
 
     public static Log decodeLog(byte[] rlp) {
-        RLPList params = RLP.decode2(rlp);
-        RLPList logInfo = (RLPList) params.get(0);
 
-        RLPItem encodedAddress = (RLPItem) logInfo.get(0);
-        RLPList encodedTopics = (RLPList) logInfo.get(1);
-        RLPItem encodedData = (RLPItem) logInfo.get(2);
+        SharedRLPList decodedTxList = RLP.decode2SharedList(rlp);
 
-        byte[] address = encodedAddress.getRLPData(); // Can be null
-        byte[] data = encodedData.getRLPData(); // Can be null
+        RLPElement element = decodedTxList.get(0);
+        if (!element.isList()) {
+            throw new IllegalArgumentException(
+                    "The rlp decode error, the decoded item should be a list");
+        }
+        SharedRLPList logInfo = (SharedRLPList) element;
 
+        byte[] address = logInfo.get(0).getRLPData(); // Can be null
+        byte[] data = logInfo.get(2).getRLPData(); // Can be null
+
+        SharedRLPList encodedTopics = (SharedRLPList) logInfo.get(1);
         List<byte[]> topics = new ArrayList<>();
         for (RLPElement topic1 : encodedTopics) {
             byte[] topic = topic1.getRLPData();
@@ -60,6 +66,34 @@ public class LogUtility {
             throw new IllegalArgumentException(
                     "Unable to decode Log because of null "
                             + (address == null ? "address" : "data"));
+        }
+        return ret;
+    }
+
+    public static Log decodeLog(SharedRLPList sharedRLPList) {
+        Objects.requireNonNull(sharedRLPList);
+
+        byte[] address = sharedRLPList.get(0).getRLPData(); // Can be null
+        byte[] data = sharedRLPList.get(2).getRLPData(); // Can be null
+
+        SharedRLPList encodedTopics = (SharedRLPList) sharedRLPList.get(1);
+        List<byte[]> topics = new ArrayList<>();
+        for (RLPElement topic1 : encodedTopics) {
+            byte[] topic = topic1.getRLPData();
+            topics.add(topic);
+        }
+
+        Log ret;
+        if (address != null && data != null) {
+            if (topics.isEmpty()) {
+                ret = Log.dataOnly(address, data);
+            } else {
+                ret = Log.topicsAndData(address, topics, data);
+            }
+        } else {
+            throw new IllegalArgumentException(
+                "Unable to decode Log because of null "
+                    + (address == null ? "address" : "data"));
         }
         return ret;
     }

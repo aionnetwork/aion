@@ -11,6 +11,8 @@ import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPItem;
 import org.aion.rlp.RLPList;
+import org.aion.rlp.SharedRLPItem;
+import org.aion.rlp.SharedRLPList;
 import org.aion.types.Log;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
@@ -36,18 +38,19 @@ public class AionTxReceipt {
 
     public AionTxReceipt(byte[] rlp) {
 
-        RLPList params = RLP.decode2(rlp);
-        RLPList receipt = (RLPList) params.get(0);
+        SharedRLPList list = RLP.decode2SharedList(rlp);
+        RLPElement element = list.get(0);
 
-        RLPItem postTxStateRLP = (RLPItem) receipt.get(0);
-        RLPItem bloomRLP = (RLPItem) receipt.get(1);
-        RLPList logs = (RLPList) receipt.get(2);
-        RLPItem result = (RLPItem) receipt.get(3);
+        if (!element.isList()) {
+            throw new IllegalArgumentException("rlpData decode error, the first rlpElement should be a list");
+        }
 
-        postTxState = ArrayUtils.nullToEmpty(postTxStateRLP.getRLPData());
-        bloomFilter = new Bloom(bloomRLP.getRLPData());
+        SharedRLPList receipt = (SharedRLPList) element;
+
+        postTxState = ArrayUtils.nullToEmpty(receipt.get(0).getRLPData());
+        bloomFilter = new Bloom(receipt.get(1).getRLPData());
         executionResult =
-                (executionResult = result.getRLPData()) == null
+                (executionResult = receipt.get(3).getRLPData()) == null
                         ? EMPTY_BYTE_ARRAY
                         : executionResult;
         energyUsed = ByteUtil.byteArrayToLong(receipt.get(4).getRLPData());
@@ -57,8 +60,9 @@ public class AionTxReceipt {
             error = errBytes != null ? new String(errBytes, StandardCharsets.UTF_8) : "";
         }
 
+        SharedRLPList logs = (SharedRLPList) receipt.get(2);
         for (RLPElement log : logs) {
-            Log logInfo = LogUtility.decodeLog(log.getRLPData());
+            Log logInfo = LogUtility.decodeLog((SharedRLPList)log);
             if (logInfo != null) {
                 logInfoList.add(logInfo);
             }

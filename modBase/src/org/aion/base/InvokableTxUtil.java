@@ -9,11 +9,11 @@ import org.aion.crypto.SignatureFac;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.rlp.RLP;
-import org.aion.rlp.RLPList;
+import org.aion.rlp.RLPElement;
+import org.aion.rlp.SharedRLPList;
 import org.aion.types.AionAddress;
 import org.aion.types.InternalTransaction;
 import org.aion.types.InternalTransaction.RejectedStatus;
-import org.aion.util.bytes.ByteUtil;
 import org.aion.util.types.AddressUtils;
 import org.slf4j.Logger;
 
@@ -131,56 +131,57 @@ public class InvokableTxUtil {
 
         byte[] rlpEncoding = Arrays.copyOfRange(encodingWithVersion, 1, encodingWithVersion.length);
 
-        RLPList decodedTxList;
         try {
-            decodedTxList = RLP.decode2(rlpEncoding);
-        } catch (Exception e) {
-            return null;
-        }
-        RLPList tx = (RLPList) decodedTxList.get(0);
+            SharedRLPList decodedTxList = RLP.decode2SharedList(rlpEncoding);
 
-        BigInteger nonce = new BigInteger(1, tx.get(RLP_META_TX_NONCE).getRLPData());
-        BigInteger value = new BigInteger(1, tx.get(RLP_META_TX_VALUE).getRLPData());
-        byte[] data = tx.get(RLP_META_TX_DATA).getRLPData();
+            RLPElement element = decodedTxList.get(0);
+            if (!element.isList()) {
+                throw new IllegalArgumentException("The rlp decode error, the decoded item should be a list");
+            }
 
-        AionAddress destination;
-        try {
-            destination = new AionAddress(tx.get(RLP_META_TX_TO).getRLPData());
-        } catch(Exception e) {
-            destination = null;
-        }
+            SharedRLPList tx= (SharedRLPList) element;
 
-        AionAddress executor;
-        try {
-            executor = new AionAddress(tx.get(RLP_META_TX_EXECUTOR).getRLPData());
-        } catch(Exception e) {
-            executor = null;
-        }
+            BigInteger nonce = new BigInteger(1, tx.get(RLP_META_TX_NONCE).getRLPData());
+            BigInteger value = new BigInteger(1, tx.get(RLP_META_TX_VALUE).getRLPData());
+            byte[] data = tx.get(RLP_META_TX_DATA).getRLPData();
 
-        // Verify the executor
+            AionAddress destination;
+            try {
+                destination = new AionAddress(tx.get(RLP_META_TX_TO).getRLPData());
+            } catch(Exception e) {
+                destination = null;
+            }
 
-        if (executor != null && !executor.equals(AddressUtils.ZERO_ADDRESS) && !executor.equals(callingAddress)) {
-            return null;
-        }
+            AionAddress executor;
+            try {
+                executor = new AionAddress(tx.get(RLP_META_TX_EXECUTOR).getRLPData());
+            } catch(Exception e) {
+                executor = null;
+            }
 
-        byte[] sigs = tx.get(RLP_META_TX_SIG).getRLPData();
-        ISignature signature;
-        AionAddress sender;
-        if (sigs != null) {
-            // Singature Factory will decode the signature based on the algo
-            // presetted in main() entry.
-            ISignature is = SignatureFac.fromBytes(sigs);
-            if (is != null) {
-                signature = is;
-                sender = new AionAddress(is.getAddress());
+            // Verify the executor
+
+            if (executor != null && !executor.equals(AddressUtils.ZERO_ADDRESS) && !executor.equals(callingAddress)) {
+                return null;
+            }
+
+            byte[] sigs = tx.get(RLP_META_TX_SIG).getRLPData();
+            ISignature signature;
+            AionAddress sender;
+            if (sigs != null) {
+                // Singature Factory will decode the signature based on the algo
+                // presetted in main() entry.
+                ISignature is = SignatureFac.fromBytes(sigs);
+                if (is != null) {
+                    signature = is;
+                    sender = new AionAddress(is.getAddress());
+                } else {
+                    return null;
+                }
             } else {
                 return null;
             }
-        } else {
-            return null;
-        }
 
-        try {
             return createFromRlp(
                 nonce,
                 sender,
@@ -192,11 +193,12 @@ public class InvokableTxUtil {
                 energyPrice,
                 signature,
                 encodingWithVersion);
-        }
-        catch (Exception e) {
+
+        } catch (Exception e) {
             LOG.error("Invokable tx -> unable to decode rlpEncoding. " + e);
             return null;
         }
+
     }
 
     private static InternalTransaction createFromRlp(

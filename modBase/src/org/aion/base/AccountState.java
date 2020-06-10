@@ -5,7 +5,8 @@ import static org.aion.crypto.HashUtil.EMPTY_DATA_HASH;
 
 import java.math.BigInteger;
 import org.aion.rlp.RLP;
-import org.aion.rlp.RLPList;
+import org.aion.rlp.RLPElement;
+import org.aion.rlp.SharedRLPList;
 import org.aion.util.types.ByteArrayWrapper;
 
 /** Account state. */
@@ -88,7 +89,14 @@ public class AccountState {
      * @param rlpData the RLP representation of the state of an account
      */
     public AccountState(byte[] rlpData) {
-        RLPList items = (RLPList) RLP.decode2(rlpData).get(0);
+        SharedRLPList list = RLP.decode2SharedList(rlpData);
+        RLPElement element = list.get(0);
+
+        if (!element.isList()) {
+            throw new IllegalArgumentException("rlpData decode error, the first rlpElement should be a list");
+        }
+
+        SharedRLPList items = (SharedRLPList) element;
 
         byte[] nonceValue = items.get(0).getRLPData();
         nonce = nonceValue == null ? BigInteger.ZERO : new BigInteger(1, nonceValue);
