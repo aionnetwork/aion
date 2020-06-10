@@ -8,6 +8,7 @@ import org.aion.p2p.Ver;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPList;
+import org.aion.rlp.SharedRLPList;
 import org.aion.zero.impl.sync.Act;
 
 /**
@@ -29,6 +30,15 @@ public final class ResBlocksBodies extends Msg {
         for (RLPElement aParamsList : paramsList) {
             RLPList rlpData = ((RLPList) aParamsList);
             blocksBodies.add(rlpData.getRLPData());
+        }
+        return new ResBlocksBodies(blocksBodies);
+    }
+
+    public static ResBlocksBodies decodeUsingRef(final byte[] _msgBytes) {
+        SharedRLPList paramsList = (SharedRLPList) RLP.decode2SharedList(_msgBytes).get(0);
+        List<byte[]> blocksBodies = new ArrayList<>();
+        for (RLPElement aParamsList : paramsList) {
+            blocksBodies.add(SharedRLPList.getRLPDataCopy((SharedRLPList) aParamsList));
         }
         return new ResBlocksBodies(blocksBodies);
     }

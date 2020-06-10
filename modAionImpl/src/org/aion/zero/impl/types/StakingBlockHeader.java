@@ -7,6 +7,7 @@ import org.aion.crypto.vrf.VRF_Ed25519;
 import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPList;
+import org.aion.rlp.SharedRLPList;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 
@@ -543,6 +544,40 @@ public class StakingBlockHeader  implements BlockHeader {
          * @return the Builder
          */
         public Builder withRlpList(RLPList rlpHeader) {
+            if (rlpHeader == null) {
+                throw new NullPointerException("rlpHeader can not be null");
+            }
+
+            withNumber(rlpHeader.get(RLP_BH_NUMBER).getRLPData());
+            withParentHash(rlpHeader.get(RLP_BH_PARENTHASH).getRLPData());
+            withCoinbase(new AionAddress(rlpHeader.get(RLP_BH_COINBASE).getRLPData()));
+            withStateRoot(rlpHeader.get(RLP_BH_STATEROOT).getRLPData());
+            withTxTrieRoot(rlpHeader.get(RLP_BH_TXTRIE).getRLPData());
+            withReceiptTrieRoot(rlpHeader.get(RLP_BH_RECEIPTTRIE).getRLPData());
+            withLogsBloom(rlpHeader.get(RLP_BH_LOGSBLOOM).getRLPData());
+            withDifficulty(rlpHeader.get(RLP_BH_DIFFICULTY).getRLPData());
+            withExtraData(rlpHeader.get(RLP_BH_EXTRADATA).getRLPData());
+            withEnergyConsumed(rlpHeader.get(RLP_BH_NRG_CONSUMED).getRLPData());
+            withEnergyLimit(rlpHeader.get(RLP_BH_NRG_LIMIT).getRLPData());
+            withTimestamp(rlpHeader.get(RLP_BH_TIMESTAMP).getRLPData());
+            byte[] data = rlpHeader.get(RLP_BH_SEED_OR_PROOF).getRLPData();
+            if (data == null) {
+                throw new IllegalArgumentException("the seed or proof data is missing");
+            } else if (data.length == SEED_LENGTH) {
+                withSeed(rlpHeader.get(RLP_BH_SEED_OR_PROOF).getRLPData());
+            } else if (data.length == PROOF_LENGTH) {
+                withProof(rlpHeader.get(RLP_BH_SEED_OR_PROOF).getRLPData());
+            } else {
+                throw new IllegalArgumentException("incorrect seed or proof length");
+            }
+
+            withSignature(rlpHeader.get(RLP_BH_SIGNATURE).getRLPData());
+            withSigningPublicKey(rlpHeader.get(RLP_BH_SIGNING_PUBLICKEY).getRLPData());
+
+            return this;
+        }
+
+        public Builder withRlpList(SharedRLPList rlpHeader) {
             if (rlpHeader == null) {
                 throw new NullPointerException("rlpHeader can not be null");
             }

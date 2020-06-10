@@ -6,7 +6,7 @@ import org.aion.p2p.Handler;
 import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.Ver;
 import org.aion.rlp.RLP;
-import org.aion.rlp.RLPList;
+import org.aion.rlp.SharedRLPList;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.zero.impl.sync.Act;
 import org.aion.zero.impl.sync.msg.BroadcastNewBlock;
@@ -57,8 +57,10 @@ public final class BroadcastNewBlockHandler extends Handler {
         }
 
         try { // preventative try-catch: it's unlikely that exceptions can pass up to here
-            RLPList params = RLP.decode2(rawdata);
-            RLPList blockRLP = (RLPList) params.get(0);
+            SharedRLPList list = RLP.decode2SharedList(rawdata);
+            //RLPList params = RLP.decode2(rawdata);
+            SharedRLPList blockRLP = (SharedRLPList) list.get(0);
+            //RLPList blockRLP = (RLPList) params.get(0);
 
             // returns null when decoding failed
             Block block = BlockUtil.newBlockFromUnsafeSource(blockRLP);

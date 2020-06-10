@@ -42,7 +42,7 @@ public final class ResBlocksBodiesHandler extends Handler {
         long startTime, duration;
 
         startTime = System.nanoTime();
-        ResBlocksBodies resBlocksBodies = ResBlocksBodies.decode(_msgBytes);
+        ResBlocksBodies resBlocksBodies = ResBlocksBodies.decodeUsingRef(_msgBytes);
         duration = System.nanoTime() - startTime;
         surveyLog.debug("Receive Stage 4: decode bodies, duration = {} ns.", duration);
 

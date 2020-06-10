@@ -11,6 +11,7 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPList;
+import org.aion.rlp.SharedRLPList;
 import org.aion.types.AionAddress;
 import org.aion.types.InternalTransaction;
 import org.aion.types.Transaction;
@@ -184,6 +185,96 @@ public final class TxUtil {
                 // malformed
                 throw new IllegalArgumentException("TxUtil#decode: malformed encoding: " +
                         "BEACON_HASH_EXTENSION was specified, but no beacon hash was provided");
+            }
+            beaconHash = tx.get(RLP_TX_BEACON_HASH).getRLPData();
+        } else {
+            // the beacon hash is absent
+            beaconHash = null;
+        }
+
+        try {
+            return AionTransaction.createFromRlp(
+                nonce,
+                sender,
+                destination,
+                value,
+                data,
+                energyLimit,
+                energyPrice,
+                type,
+                timeStamp,
+                signature,
+                rlpEncoding,
+                beaconHash);
+        }
+        catch (Exception e) {
+            LOG.error("tx -> invalid parameter decoded in rlpEncoding");
+            return null;
+        }
+    }
+
+    public static AionTransaction decode2(byte[] rlpEncoding) {
+
+        SharedRLPList decodedTxList;
+        try {
+            decodedTxList = RLP.decode2SharedList(rlpEncoding);
+        } catch (Exception e) {
+            LOG.error("tx -> unable to decode rlpEncoding");
+            return null;
+        }
+        SharedRLPList tx = (SharedRLPList) decodedTxList.get(0);
+
+        byte[] nonce = tx.get(RLP_TX_NONCE).getRLPData();
+        byte[] value = tx.get(RLP_TX_VALUE).getRLPData();
+        byte[] data = tx.get(RLP_TX_DATA).getRLPData();
+
+        byte[] rlpTo = tx.get(RLP_TX_TO).getRLPData();
+        AionAddress destination;
+        if (rlpTo == null || rlpTo.length == 0) {
+            destination = null;
+        } else {
+            destination = new AionAddress(tx.get(RLP_TX_TO).getRLPData());
+        }
+
+        byte[] timeStamp = tx.get(RLP_TX_TIMESTAMP).getRLPData();
+        long energyLimit = new BigInteger(1, tx.get(RLP_TX_NRG).getRLPData()).longValue();
+        long energyPrice = new BigInteger(1, tx.get(RLP_TX_NRGPRICE).getRLPData()).longValue();
+        byte type = new BigInteger(1, tx.get(RLP_TX_TYPE).getRLPData()).byteValue();
+
+        byte[] sigs = tx.get(RLP_TX_SIG).getRLPData();
+        ISignature signature;
+        AionAddress sender;
+        if (sigs != null) {
+            // Singature Factory will decode the signature based on the algo
+            // presetted in main() entry.
+            ISignature is = SignatureFac.fromBytes(sigs);
+            if (is != null) {
+                signature = is;
+                sender = new AionAddress(is.getAddress());
+            } else {
+                LOG.error("tx -> unable to decode signature");
+                return null;
+            }
+        } else {
+            LOG.error("tx -> no signature found");
+            return null;
+        }
+
+        final byte[] beaconHash;
+        if(tx.size() - 1 >= RLP_TX_EXTENSIONS) {
+            // there are extensions
+            // today -- the only one that exists is beacon hash extension
+            byte extensions = tx.get(RLP_TX_EXTENSIONS).getRLPData()[0];
+            if(extensions != BEACON_HASH_EXTENSION) {
+                throw new IllegalArgumentException("TxUtil#decode: unknown extension value: " +
+                    Byte.toString(extensions));
+            }
+
+            // the beacon hash should be present -- check that it really does
+            if(tx.size() - 1 != RLP_TX_BEACON_HASH) {
+                // malformed
+                throw new IllegalArgumentException("TxUtil#decode: malformed encoding: " +
+                    "BEACON_HASH_EXTENSION was specified, but no beacon hash was provided");
             }
             beaconHash = tx.get(RLP_TX_BEACON_HASH).getRLPData();
         } else {

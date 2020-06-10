@@ -17,6 +17,7 @@ import org.aion.mcf.blockchain.BlockHeader.Seal;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPList;
+import org.aion.rlp.SharedRLPList;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.trie.Trie;
 import org.aion.zero.impl.trie.TrieImpl;
@@ -115,6 +116,38 @@ public final class BlockUtil {
         }
     }
 
+    public static Block newBlockFromUnsafeSource(SharedRLPList rlpList) {
+        // return null when given empty bytes
+        if (rlpList == null || rlpList.size() != 2) {
+            return null;
+        }
+        try {
+            // parse header
+            SharedRLPList headerRLP = (SharedRLPList) rlpList.get(0);
+            byte[] type = headerRLP.get(0).getRLPData();
+            SharedRLPList transactionsRLP = (SharedRLPList) rlpList.get(1);
+            List<AionTransaction> txs = parseTransactions(transactionsRLP);
+            if (type[0] == Seal.PROOF_OF_WORK.getSealId()) {
+                MiningBlockHeader miningHeader = MiningBlockHeader.Builder.newInstance(true).withRlpList(headerRLP).build();
+                if (!BlockDetailsValidator.isValidTxTrieRoot(miningHeader.getTxTrieRoot(), txs, miningHeader.getNumber(), syncLog)) {
+                    return null;
+                }
+                return new MiningBlock(miningHeader, txs);
+            } else if (type[0] == Seal.PROOF_OF_STAKE.getSealId()) {
+                StakingBlockHeader stakingHeader = StakingBlockHeader.Builder.newInstance(true).withRlpList(headerRLP).build();
+                if (!BlockDetailsValidator.isValidTxTrieRoot(stakingHeader.getTxTrieRoot(), txs, stakingHeader.getNumber(), syncLog)) {
+                    return null;
+                }
+                return new StakingBlock(stakingHeader, txs);
+            } else {
+                return null;
+            }
+        } catch (Exception e) {
+            syncLog.warn("Unable to decode block bytes " + Arrays.toString(SharedRLPList.getRLPDataCopy(rlpList)), e);
+            return null;
+        }
+    }
+
     /**
      * Assembles a new block instance given its header and body. Returns {@code null} when given
      * invalid data.
@@ -209,6 +242,14 @@ public final class BlockUtil {
         for (int i = 0; i < txTransactions.size(); i++) {
             RLPElement transactionRaw = txTransactions.get(i);
             transactionsList.add(TxUtil.decode(transactionRaw.getRLPData()));
+        }
+        return transactionsList;
+    }
+
+    private static List<AionTransaction> parseTransactions(SharedRLPList txTransactions) {
+        List<AionTransaction> transactionsList = new ArrayList<>();
+        for (RLPElement transactionRaw : txTransactions) {
+            transactionsList.add(TxUtil.decode2(transactionRaw.getRLPData()));
         }
         return transactionsList;
     }
