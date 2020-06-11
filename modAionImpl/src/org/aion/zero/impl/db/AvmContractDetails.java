@@ -18,6 +18,7 @@ import org.aion.precompiled.ContractInfo;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPList;
+import org.aion.rlp.SharedRLPList;
 import org.aion.types.AionAddress;
 import org.aion.util.conversions.Hex;
 import org.aion.util.types.ByteArrayWrapper;
@@ -278,7 +279,15 @@ public class AvmContractDetails implements StoredContractDetails {
         AvmContractDetails details = new AvmContractDetails(input.address, storageSource, objectGraphSource);
 
         RLPElement code = input.code;
-        if (code instanceof RLPList) {
+        if (code instanceof SharedRLPList) {
+            for (RLPElement e : ((SharedRLPList) code)) {
+                if (e.isList()) {
+                    details.setCode(SharedRLPList.getRLPDataCopy((SharedRLPList) e));
+                } else {
+                    details.setCode(e.getRLPData());
+                }
+            }
+        } else if (code instanceof RLPList) {
             for (RLPElement e : ((RLPList) code)) {
                 details.setCode(e.getRLPData());
             }
@@ -294,11 +303,11 @@ public class AvmContractDetails implements StoredContractDetails {
         byte[] storageRootHash;
         Optional<byte[]> concatenatedData = details.objectGraphSource.get(consensusRoot);
         if (concatenatedData.isPresent()) {
-            RLPList data = RLP.decode2(concatenatedData.get());
-            if (!(data.get(0) instanceof RLPList)) {
+            SharedRLPList data = RLP.decode2SharedList(concatenatedData.get());
+            if (!(data.get(0).isList())) {
                 throw new IllegalArgumentException("Invalid concatenated storage for AVM.");
             }
-            RLPList pair = (RLPList) data.get(0);
+            SharedRLPList pair = (SharedRLPList) data.get(0);
             if (pair.size() != 2) {
                 throw new IllegalArgumentException("Invalid concatenated storage for AVM.");
             }
@@ -316,7 +325,8 @@ public class AvmContractDetails implements StoredContractDetails {
             details.storageTrie = new SecureTrie(details.externalStorageSource, storageRootHash);
         } else {
             details.storageTrie = new SecureTrie(null);
-            details.storageTrie.deserialize(storage.getRLPData());
+            details.storageTrie.deserialize((SharedRLPList)storage);
+
             // switch from in-memory to external storage
             details.storageTrie.getCache().setDB(details.externalStorageSource);
             details.storageTrie.sync();

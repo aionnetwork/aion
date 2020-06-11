@@ -17,6 +17,7 @@ import org.aion.mcf.db.InternalVmType;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPList;
+import org.aion.rlp.SharedRLPList;
 import org.aion.types.AionAddress;
 import org.aion.util.conversions.Hex;
 import org.aion.util.types.ByteArrayWrapper;
@@ -229,7 +230,15 @@ public class FvmContractDetails implements StoredContractDetails {
         FvmContractDetails details = new FvmContractDetails(input.address, storageSource);
 
         RLPElement code = input.code;
-        if (code instanceof RLPList) {
+        if (code instanceof SharedRLPList) {
+            for (RLPElement e : ((SharedRLPList) code)) {
+                if (e.isList()) {
+                    details.setCode(SharedRLPList.getRLPDataCopy((SharedRLPList) e));
+                } else {
+                    details.setCode(e.getRLPData());
+                }
+            }
+        } else if (code instanceof RLPList) {
             for (RLPElement e : ((RLPList) code)) {
                 details.setCode(e.getRLPData());
             }
@@ -246,7 +255,7 @@ public class FvmContractDetails implements StoredContractDetails {
             details.storageTrie = new SecureTrie(details.externalStorageSource, consensusRoot);
         } else {
             details.storageTrie = new SecureTrie(null);
-            details.storageTrie.deserialize(storage.getRLPData());
+            details.storageTrie.deserialize((SharedRLPList) storage);
             // switch from in-memory to external storage
             details.storageTrie.getCache().setDB(details.externalStorageSource);
             details.storageTrie.sync();

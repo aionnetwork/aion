@@ -18,6 +18,7 @@ import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPItem;
 import org.aion.rlp.RLPList;
+import org.aion.rlp.SharedRLPItem;
 import org.aion.types.AionAddress;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.db.DetailsDataStore.RLPContractDetails;
@@ -217,17 +218,16 @@ public class AvmContractDetailsTest {
             storage.put(ByteArrayWrapper.wrap(key), ByteArrayWrapper.wrap(value));
         }
 
-        RLPElement storageTrie = mock(RLPItem.class);
-        when(storageTrie.getRLPData()).thenReturn(trie.serialize());
+        RLPElement storageTrie = RLP.decode2SharedList(trie.serialize());
 
         AionAddress address = new AionAddress(RandomUtils.nextBytes(AionAddress.LENGTH));
 
         byte[] codeBytes = RandomUtils.nextBytes(100);
-        RLPElement code = mock(RLPItem.class);
+        RLPElement code = mock(SharedRLPItem.class);
         when(code.getRLPData()).thenReturn(codeBytes);
 
         byte[] rootHash = RandomUtils.nextBytes(32);
-        RLPElement root = mock(RLPItem.class);
+        RLPElement root = mock(SharedRLPItem.class);
         when(root.getRLPData()).thenReturn(rootHash);
 
         byte[] storageHash = RandomUtils.nextBytes(32);
@@ -278,17 +278,16 @@ public class AvmContractDetailsTest {
             storage.put(ByteArrayWrapper.wrap(key), ByteArrayWrapper.wrap(value));
         }
 
-        RLPElement storageTrie = mock(RLPItem.class);
-        when(storageTrie.getRLPData()).thenReturn(trie.serialize());
+        RLPElement storageTrie = RLP.decode2SharedList(trie.serialize());
 
         AionAddress address = new AionAddress(RandomUtils.nextBytes(AionAddress.LENGTH));
 
         byte[] codeBytes = RandomUtils.nextBytes(100);
-        RLPElement code = mock(RLPItem.class);
+        RLPElement code = mock(SharedRLPItem.class);
         when(code.getRLPData()).thenReturn(codeBytes);
 
         byte[] rootHash = RandomUtils.nextBytes(32);
-        RLPElement root = mock(RLPItem.class);
+        RLPElement root = mock(SharedRLPItem.class);
         when(root.getRLPData()).thenReturn(rootHash);
 
         byte[] storageHash = EMPTY_TRIE_HASH;

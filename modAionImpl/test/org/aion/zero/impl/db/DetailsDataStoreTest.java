@@ -6,6 +6,7 @@ import static org.aion.util.bytes.ByteUtil.EMPTY_BYTE_ARRAY;
 import org.aion.mcf.db.InternalVmType;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPList;
+import org.aion.rlp.SharedRLPList;
 import org.aion.types.AionAddress;
 import org.aion.zero.impl.db.DetailsDataStore.RLPContractDetails;
 import org.aion.zero.impl.trie.SecureTrie;
@@ -117,7 +118,7 @@ public class DetailsDataStoreTest {
         assertThat(details.isExternalStorage).isTrue();
         assertThat(details.storageRoot.getRLPData()).isEqualTo(root);
         assertThat(details.storageTrie).isNull();
-        assertThat(((RLPList) details.code).get(0).getRLPData()).isEqualTo(code1);
-        assertThat(((RLPList) details.code).get(1).getRLPData()).isEqualTo(code2);
+        assertThat(((SharedRLPList) details.code).get(0).getRLPData()).isEqualTo(code1);
+        assertThat(((SharedRLPList) details.code).get(1).getRLPData()).isEqualTo(code2);
     }
 }

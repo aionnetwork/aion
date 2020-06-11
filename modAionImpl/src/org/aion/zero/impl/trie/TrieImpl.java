@@ -28,6 +28,7 @@ import org.aion.db.impl.ByteArrayKeyValueStore;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPItem;
 import org.aion.rlp.RLPList;
+import org.aion.rlp.SharedRLPList;
 import org.aion.rlp.Value;
 import org.aion.util.conversions.Hex;
 import org.aion.util.types.ByteArrayWrapper;
@@ -705,6 +706,26 @@ public class TrieImpl implements Trie {
             }
 
             this.deserializeRoot(root.getRLPData());
+        }
+    }
+
+
+    public void deserialize(SharedRLPList storage) {
+        synchronized (cache) {
+            SharedRLPList rlpList = (SharedRLPList) storage.get(0);
+
+            SharedRLPList valsList = (SharedRLPList) rlpList.get(1);
+            for (int i = 0; i < valsList.size(); ++i) {
+
+                byte[] val = valsList.get(i).getRLPData();
+                byte[] key = new byte[32];
+
+                Value value = Value.fromRlpEncoded(val);
+                System.arraycopy(rlpList.get(0).getRLPData(), i * 32, key, 0, 32);
+                cache.getNodes().put(wrap(key), new Node(value));
+            }
+
+            this.deserializeRoot(rlpList.get(2).getRLPData());
         }
     }
 

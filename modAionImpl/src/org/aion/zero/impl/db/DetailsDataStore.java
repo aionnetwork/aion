@@ -13,7 +13,7 @@ import org.aion.mcf.db.InternalVmType;
 import org.aion.precompiled.ContractInfo;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
-import org.aion.rlp.RLPList;
+import org.aion.rlp.SharedRLPList;
 import org.aion.types.AionAddress;
 import org.aion.util.types.ByteArrayWrapper;
 import org.slf4j.Logger;
@@ -210,7 +210,7 @@ public class DetailsDataStore {
             throw new IllegalArgumentException("Cannot decode ContractDetails from empty RLP encoding.");
         }
 
-        RLPList decoded = (RLPList) (RLP.decode2(encoding)).get(0);
+        SharedRLPList decoded = (SharedRLPList) (RLP.decode2SharedList(encoding)).get(0);
         int elements = decoded.size();
 
         if (elements == 3 || elements == 5) {
