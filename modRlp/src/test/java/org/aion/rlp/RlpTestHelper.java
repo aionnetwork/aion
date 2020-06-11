@@ -15,6 +15,13 @@ public class RlpTestHelper {
                 recursivePrint(singleElement);
             }
             System.out.print("]");
+        } else if (element instanceof SharedRLPList) {
+            SharedRLPList rlpList = (SharedRLPList) element;
+            System.out.print("[");
+            for (RLPElement singleElement : rlpList) {
+                recursivePrint(singleElement);
+            }
+            System.out.print("]");
         } else {
             String hex = ByteUtil.toHexString(element.getRLPData());
             System.out.print(hex + ", ");
