@@ -26,7 +26,7 @@ import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
-import org.aion.rlp.RLPList;
+import org.aion.rlp.SharedRLPList;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 import org.aion.zero.impl.types.BlockUtil;
@@ -1480,7 +1480,7 @@ public class AionBlockStore {
             this.mainChain = mainChain;
         }
 
-        BlockInfo(RLPList list) {
+        BlockInfo(SharedRLPList list) {
             this.hash = list.get(0).getRLPData();
             this.totalDifficulty = ByteUtil.bytesToBigInteger(list.get(1).getRLPData());
 
@@ -1560,20 +1560,16 @@ public class AionBlockStore {
 
                 @Override
                 public List<BlockInfo> deserialize(byte[] stream) {
-                    RLPList list = (RLPList) RLP.decode2(stream).get(0);
+                    SharedRLPList list = (SharedRLPList) RLP.decode2SharedList(stream).get(0);
                     List<BlockInfo> res = new ArrayList<>(list.size());
 
                     for (RLPElement aList : list) {
-
-                        RLPList outerList = RLP.decode2(aList.getRLPData());
-                        if (outerList.isEmpty()) {
+                        if (!aList.isList() || ((SharedRLPList)aList).isEmpty()) {
                             throw new IllegalArgumentException(
                                 "Rlp decode error during construct the BlockInfo.");
                         }
 
-                        RLPList blockInfoRlp = (RLPList) outerList.get(0);
-
-                        res.add(new BlockInfo(blockInfoRlp));
+                        res.add(new BlockInfo((SharedRLPList)aList));
                     }
                     return res;
                 }

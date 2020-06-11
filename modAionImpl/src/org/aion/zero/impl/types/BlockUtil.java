@@ -55,10 +55,10 @@ public final class BlockUtil {
 
         // attempt decoding, return null if it fails
         try {
-            RLPList params = RLP.decode2(rlp);
-            RLPList block = (RLPList) params.get(0);
-            RLPList header = (RLPList) block.get(0);
-            List<AionTransaction> txs = parseTransactions((RLPList) block.get(1));
+            SharedRLPList params = RLP.decode2SharedList(rlp);
+            SharedRLPList block = (SharedRLPList) params.get(0);
+            SharedRLPList header = (SharedRLPList) block.get(0);
+            List<AionTransaction> txs = parseTransactions((SharedRLPList) block.get(1));
             byte[] sealType = header.get(0).getRLPData();
             if (sealType[0] == Seal.PROOF_OF_WORK.getSealId()) {
                 MiningBlockHeader miningHeader = MiningBlockHeader.Builder.newInstance().withRlpList(header).build();
@@ -254,10 +254,10 @@ public final class BlockUtil {
         return transactionsList;
     }
 
-    private static List<AionTransaction> parseTransactions(SharedRLPList txTransactions) {
+    private static List<AionTransaction> parseTransactions(SharedRLPList rlpTxs) {
         List<AionTransaction> transactionsList = new ArrayList<>();
-        for (RLPElement transactionRaw : txTransactions) {
-            transactionsList.add(TxUtil.decodeUsingRlpSharedList(transactionRaw.getRLPData()));
+        for (RLPElement rlpTx : rlpTxs) {
+            transactionsList.add(TxUtil.decodeUsingRlpSharedList((SharedRLPList) rlpTx));
         }
         return transactionsList;
     }
