@@ -34,6 +34,7 @@ import org.aion.mcf.db.exception.InvalidFileTypeException;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPList;
+import org.aion.rlp.SharedRLPList;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.types.BlockUtil;
@@ -188,7 +189,7 @@ public class PendingBlockStore implements Closeable {
 
                 @Override
                 public List<byte[]> deserialize(byte[] stream) {
-                    RLPList list = (RLPList) RLP.decode2(stream).get(0);
+                    SharedRLPList list = (SharedRLPList) RLP.decode2SharedList(stream).get(0);
                     List<byte[]> res = new ArrayList<>(list.size());
 
                     for (RLPElement aList : list) {
@@ -213,11 +214,11 @@ public class PendingBlockStore implements Closeable {
 
                 @Override
                 public List<Block> deserialize(byte[] stream) {
-                    RLPList list = (RLPList) RLP.decode2(stream).get(0);
+                    SharedRLPList list = (SharedRLPList) RLP.decode2SharedList(stream).get(0);
                     List<Block> res = new ArrayList<>(list.size());
 
                     for (RLPElement aList : list) {
-                        Block block = BlockUtil.newBlockFromRlp(aList.getRLPData());
+                        Block block = BlockUtil.newBlockFromSharedRLPList((SharedRLPList) aList);
                         if (block != null) {
                             res.add(block);
                         } else {

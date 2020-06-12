@@ -75,6 +75,31 @@ public final class BlockUtil {
         }
     }
 
+    public static Block newBlockFromSharedRLPList(SharedRLPList rlpList) {
+        // return null when given empty bytes
+        if (rlpList == null || rlpList.isEmpty()) {
+            return null;
+        }
+
+        try {
+            SharedRLPList header = (SharedRLPList) rlpList.get(0);
+            List<AionTransaction> txs = parseTransactions((SharedRLPList) rlpList.get(1));
+            byte[] sealType = header.get(0).getRLPData();
+            if (sealType[0] == Seal.PROOF_OF_WORK.getSealId()) {
+                MiningBlockHeader miningHeader = MiningBlockHeader.Builder.newInstance().withRlpList(header).build();
+                return new MiningBlock(miningHeader, txs);
+            } else if (sealType[0] == Seal.PROOF_OF_STAKE.getSealId()) {
+                StakingBlockHeader stakingHeader = StakingBlockHeader.Builder.newInstance().withRlpList(header).build();
+                return new StakingBlock(stakingHeader, txs);
+            } else {
+                return null;
+            }
+        } catch (Exception e) {
+            genLog.warn("Unable to decode block bytes " + Arrays.toString(SharedRLPList.getRLPDataCopy(rlpList)), e);
+            return null;
+        }
+    }
+
     /**
      * Decodes the given encoding into a new instance of a block or returns {@code null} if the RLP
      * encoding does not describe a valid block.
