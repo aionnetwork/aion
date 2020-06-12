@@ -3,6 +3,7 @@ package org.aion.zero.impl.types;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import org.aion.base.AionTransaction;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
@@ -10,6 +11,8 @@ import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPItem;
 import org.aion.rlp.RLPList;
+import org.aion.rlp.SharedRLPItem;
+import org.aion.rlp.SharedRLPList;
 import org.aion.types.AionAddress;
 import org.aion.types.InternalTransaction;
 import org.aion.types.InternalTransaction.RejectedStatus;
@@ -83,6 +86,62 @@ public class AionTxInfo {
             LOG.error("The given RLP encoding is not a valid AionTxInfo object.", e);
             return null;
         }
+    }
+
+    public static AionTxInfo newInstanceFromEncoding(SharedRLPList rlpList) {
+        try {
+            return decodeToTxInfo(rlpList);
+        } catch (Exception e) {
+            LOG.error("The given RLP encoding is not a valid AionTxInfo object.", e);
+            return null;
+        }
+    }
+
+    private static AionTxInfo decodeToTxInfo(SharedRLPList rlpTxInfo) {
+        Objects.requireNonNull(rlpTxInfo);
+
+        AionTxReceipt receipt = new AionTxReceipt((SharedRLPList) rlpTxInfo.get(INDEX_RECEIPT));
+
+        ByteArrayWrapper blockHash = ByteArrayWrapper.wrap(rlpTxInfo.get(INDEX_BLOCK_HASH).getRLPData());
+
+        int index;
+        byte[] txIndex = rlpTxInfo.get(INDEX_TX_INDEX).getRLPData();
+        if (txIndex == null) {
+            index = 0;
+        } else {
+            index = new BigInteger(1, txIndex).intValue();
+        }
+
+        boolean createdWithInternalTx;
+        List<InternalTransaction> internalTransactions;
+
+        switch (rlpTxInfo.size()) {
+            case SIZE_OF_OLD_ENCODING:
+                // old encodings are incomplete since internal tx were not stored
+                createdWithInternalTx = false;
+                internalTransactions = null;
+                break;
+            case SIZE_WITH_BASE_DATA:
+                // read the completeness flag from storage
+                createdWithInternalTx = rlpTxInfo.get(INDEX_CREATE_FLAG).getRLPData().length == 1;
+                internalTransactions = null;
+                break;
+            case SIZE_WITH_INTERNAL_TRANSACTIONS:
+                // read the completeness flag from storage
+                createdWithInternalTx = rlpTxInfo.get(INDEX_CREATE_FLAG).getRLPData().length == 1;
+                // decode the internal transactions
+                internalTransactions = new ArrayList<>();
+                SharedRLPList internalTxRlp = (SharedRLPList) rlpTxInfo.get(INDEX_INTERNAL_TX);
+                for (RLPElement item : internalTxRlp) {
+                    internalTransactions.add(fromRlp((SharedRLPList) item));
+                }
+                break;
+            default:
+                // incorrect encoding
+                return null;
+        }
+
+        return new AionTxInfo(receipt, blockHash, index, internalTransactions, createdWithInternalTx);
     }
 
     private static AionTxInfo decode(byte[] rlp) {
@@ -241,6 +300,38 @@ public class AionTxInfo {
             return InternalTransaction.contractCallTransaction(status, from, to, nonce, value, data, energyLimit, energyPrice);
         }
     }
+
+    private static InternalTransaction fromRlp(SharedRLPList rlpInternalTx) {
+        Objects.requireNonNull(rlpInternalTx);
+        AionAddress from = new AionAddress(rlpInternalTx.get(INDEX_FROM).getRLPData());
+        AionAddress to;
+        boolean isCreate;
+        byte[] rlpTo = rlpInternalTx.get(INDEX_TO).getRLPData();
+        if (rlpTo == null || rlpTo.length == 0) {
+            to = null;
+            isCreate = true;
+        } else {
+            to = new AionAddress(rlpTo);
+            isCreate = false;
+        }
+
+        BigInteger nonce = new BigInteger(1, rlpInternalTx.get(INDEX_NONCE).getRLPData());
+        BigInteger value = new BigInteger(1, rlpInternalTx.get(INDEX_VALUE).getRLPData());
+        byte[] data = rlpInternalTx.get(INDEX_DATA).getRLPData();
+
+        long energyLimit = new BigInteger(1, rlpInternalTx.get(INDEX_LIMIT).getRLPData()).longValue();
+        long energyPrice = new BigInteger(1, rlpInternalTx.get(INDEX_PRICE).getRLPData()).longValue();
+        RejectedStatus status =
+            // checking the length because zero (i.e. false) decodes to empty byte array
+            (rlpInternalTx.get(INDEX_STATUS).getRLPData().length == 1)
+                ? RejectedStatus.REJECTED
+                : RejectedStatus.NOT_REJECTED;
+
+        if (isCreate) {
+            return InternalTransaction.contractCreateTransaction(status, from, nonce, value, data, energyLimit, energyPrice);
+        } else {
+            return InternalTransaction.contractCallTransaction(status, from, to, nonce, value, data, energyLimit, energyPrice);
+        }    }
 
     @Override
     public String toString() {

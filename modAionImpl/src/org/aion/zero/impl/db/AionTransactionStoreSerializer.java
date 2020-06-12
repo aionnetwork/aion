@@ -2,11 +2,12 @@ package org.aion.zero.impl.db;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import org.aion.db.store.Serializer;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.rlp.RLP;
-import org.aion.rlp.RLPList;
+import org.aion.rlp.SharedRLPList;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.slf4j.Logger;
@@ -30,12 +31,13 @@ public class AionTransactionStoreSerializer {
                 @Override
                 public Map<ByteArrayWrapper, AionTxInfo> deserialize(byte[] stream) {
                     try {
-                        RLPList params = RLP.decode2(stream);
-                        RLPList infoList = (RLPList) params.get(0);
+                        SharedRLPList params = RLP.decode2SharedList(stream);
+                        SharedRLPList infoList = (SharedRLPList) params.get(0);
                         Map<ByteArrayWrapper, AionTxInfo> ret = new HashMap<>();
-                        for (int i = 0; i < infoList.size(); i++) {
-                            AionTxInfo info = AionTxInfo.newInstanceFromEncoding(infoList.get(i).getRLPData());
-                            ret.put(info.blockHash, info);
+                        for (org.aion.rlp.RLPElement rlpElement : infoList) {
+                            AionTxInfo info = AionTxInfo
+                                .newInstanceFromEncoding((SharedRLPList) rlpElement);
+                            ret.put(Objects.requireNonNull(info).blockHash, info);
                         }
                         return ret;
                     } catch (Exception e) {

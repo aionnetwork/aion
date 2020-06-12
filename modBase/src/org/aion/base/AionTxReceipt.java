@@ -71,6 +71,32 @@ public class AionTxReceipt {
         rlpEncoded = rlp;
     }
 
+    public AionTxReceipt(SharedRLPList rlpReceipt) {
+
+        postTxState = ArrayUtils.nullToEmpty(rlpReceipt.get(0).getRLPData());
+        bloomFilter = new Bloom(rlpReceipt.get(1).getRLPData());
+        executionResult =
+            (executionResult = rlpReceipt.get(3).getRLPData()) == null
+                ? EMPTY_BYTE_ARRAY
+                : executionResult;
+        energyUsed = ByteUtil.byteArrayToLong(rlpReceipt.get(4).getRLPData());
+
+        if (rlpReceipt.size() > 5) {
+            byte[] errBytes = rlpReceipt.get(5).getRLPData();
+            error = errBytes != null ? new String(errBytes, StandardCharsets.UTF_8) : "";
+        }
+
+        SharedRLPList logs = (SharedRLPList) rlpReceipt.get(2);
+        for (RLPElement log : logs) {
+            Log logInfo = LogUtility.decodeLog((SharedRLPList)log);
+            if (logInfo != null) {
+                logInfoList.add(logInfo);
+            }
+        }
+
+        rlpEncoded = SharedRLPList.getRLPDataCopy(rlpReceipt);
+    }
+
     public AionTxReceipt(byte[] postTxState, Bloom bloomFilter, List<Log> logInfoList) {
         this.postTxState = postTxState;
         this.bloomFilter = bloomFilter;
