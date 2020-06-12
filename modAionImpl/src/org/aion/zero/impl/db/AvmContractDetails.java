@@ -189,7 +189,7 @@ public class AvmContractDetails implements StoredContractDetails {
         byte[] data = storageTrie.get(key.toBytes());
         return (data == null || data.length == 0)
                 ? null
-                : ByteArrayWrapper.wrap(RLP.decode2(data).get(0).getRLPData());
+                : ByteArrayWrapper.wrap(RLP.decode2SharedList(data).get(0).getRLPData());
     }
 
     public InternalVmType getVmType() {
