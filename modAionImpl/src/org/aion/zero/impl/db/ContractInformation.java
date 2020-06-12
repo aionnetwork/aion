@@ -11,6 +11,7 @@ import org.aion.mcf.db.InternalVmType;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPList;
+import org.aion.rlp.SharedRLPList;
 import org.aion.util.types.ByteArrayWrapper;
 
 /**
@@ -108,40 +109,45 @@ public class ContractInformation {
                     // validity check
                     if (rlpEncoded == null || rlpEncoded.length == 0) return null;
 
-                    RLPElement decoded = RLP.decode2(rlpEncoded).get(0);
+                    RLPElement decoded = RLP.decode2SharedList(rlpEncoded).get(0);
 
                     // validity check
-                    if (!(decoded instanceof RLPList)) return null;
+                    if (!(decoded.isList())) return null;
 
                     // create and populate object
                     ContractInformation info = new ContractInformation();
-                    RLPList list = (RLPList) decoded;
 
-                    for (RLPElement e : list) {
+                    for (RLPElement e : (SharedRLPList)decoded) {
                         // validity check
-                        if (!(e instanceof RLPList)) return null;
+                        if (!(e.isList())) return null;
 
-                        RLPList pair = (RLPList) e;
+                        SharedRLPList pair = (SharedRLPList) e;
 
                         // validity check
-                        if (pair.size() != 2
-                                || !(pair.get(1) instanceof RLPList)
-                                || pair.get(0).getRLPData().length != HASH_SIZE) return null;
+                        byte[] codeHash;
+                        if (pair.size() != 2 || !(pair.get(1).isList())) {
+                            return null;
+                        } else {
+                            codeHash = pair.get(0).getRLPData();
+                            if (codeHash.length != HASH_SIZE) {
+                                return null;
+                            }
+                        }
 
-                        Information current = deserializeInformation((RLPList) pair.get(1));
+                        Information current = deserializeInformation((SharedRLPList) pair.get(1));
 
                         // validity check
                         if (current == null) return null;
 
                         info.infoByCodeHash.put(
-                                ByteArrayWrapper.wrap(pair.get(0).getRLPData()), current);
+                                ByteArrayWrapper.wrap(codeHash), current);
                     }
 
                     return info;
                 }
             };
 
-    private static Information deserializeInformation(RLPList list) {
+    private static Information deserializeInformation(SharedRLPList list) {
         // validity check
         if (list.size() != 2) return null;
 
@@ -149,23 +155,30 @@ public class ContractInformation {
 
         // validity check blocks
         RLPElement code = list.get(0);
-        if (!(code instanceof RLPList)) return null;
+        if (!(code.isList())) return null;
 
-        for (RLPElement e : ((RLPList) code)) {
+        for (RLPElement e : ((SharedRLPList) code)) {
             // validity check pair
-            if (!(e instanceof RLPList)) return null;
+            if (!(e.isList())) return null;
 
-            RLPList pair = (RLPList) e;
+            SharedRLPList pair = (SharedRLPList) e;
 
             // validity check hash
-            if (pair.size() != 2 || pair.get(0).getRLPData().length != 32) return null;
+            if (pair.size() != 2) {
+                return null;
+            }
+
+            byte[] key = pair.get(0).getRLPData();
+            if (key.length != HASH_SIZE) {
+                return null;
+            }
 
             // validity check completeness status
             byte[] flag = pair.get(1).getRLPData();
             if (flag.length > 1 || (flag.length == 1 && flag[0] != 1)) return null;
 
-            ByteArrayWrapper key = ByteArrayWrapper.wrap(pair.get(0).getRLPData());
-            info.blocks.put(key, flag.length == 1); // zero (i.e. false) decodes to empty byte array
+            ByteArrayWrapper keyWrap = ByteArrayWrapper.wrap(key);
+            info.blocks.put(keyWrap, flag.length == 1); // zero (i.e. false) decodes to empty byte array
         }
 
         // validity check VM
