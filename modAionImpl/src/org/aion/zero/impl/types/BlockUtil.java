@@ -252,7 +252,7 @@ public final class BlockUtil {
      *     describe a valid block header
      * @implNote Assumes the data is from an unsafe source.
      */
-    public static BlockHeader newHeaderFromUnsafeSource(RLPList rlpList) {
+    public static BlockHeader newHeaderFromUnsafeSource(SharedRLPList rlpList) {
         // return null when given empty bytes
         if (rlpList == null) {
             return null;
@@ -269,7 +269,7 @@ public final class BlockUtil {
                 return null;
             }
         } catch (Exception e) {
-            syncLog.warn("Unable to decode block bytes " + Arrays.toString(rlpList.getRLPData()), e);
+            syncLog.warn("Unable to decode block bytes " + Arrays.toString(SharedRLPList.getRLPDataCopy(rlpList)), e);
             return null;
         }
     }

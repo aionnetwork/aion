@@ -9,6 +9,7 @@ import org.aion.p2p.Ver;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPList;
+import org.aion.rlp.SharedRLPList;
 import org.aion.zero.impl.sync.Act;
 import org.aion.zero.impl.types.BlockUtil;
 import org.slf4j.Logger;
@@ -27,10 +28,10 @@ public final class ResBlocksHeaders extends Msg {
         if (_msgBytes == null || _msgBytes.length == 0) return null;
         else {
             try {
-                RLPList list = (RLPList) RLP.decode2(_msgBytes).get(0);
+                SharedRLPList list = (SharedRLPList) RLP.decode2SharedList(_msgBytes).get(0);
                 List<BlockHeader> blockHeaders = new ArrayList<>();
                 for (RLPElement aList : list) {
-                    blockHeaders.add(BlockUtil.newHeaderFromUnsafeSource((RLPList) aList));
+                    blockHeaders.add(BlockUtil.newHeaderFromUnsafeSource((SharedRLPList) aList));
                 }
                 return new ResBlocksHeaders(blockHeaders);
             } catch (Exception ex) {
