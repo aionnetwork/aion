@@ -77,7 +77,7 @@ public final class BroadcastTxHandler extends Handler {
             List<byte[]> broadCastTx = BroadcastTx.decode(_msgBytes);
             if (broadCastTx.isEmpty()) {
                 p2pMgr.errCheck(_nodeIdHashcode, _displayId);
-                log.debug("<BroadcastTxHandler from: {} empty {}>", _displayId);
+                log.debug("<BroadcastTxHandler from: {} empty>", _displayId);
             }
 
             for (AionTransaction tx : castRawTx(broadCastTx)) {
