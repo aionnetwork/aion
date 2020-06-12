@@ -7,6 +7,7 @@ import org.aion.mcf.db.TransformedCodeInfo;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPList;
+import org.aion.rlp.SharedRLPList;
 import org.aion.util.types.ByteArrayWrapper;
 
 public class TransformedCodeSerializer {
@@ -27,15 +28,14 @@ public class TransformedCodeSerializer {
         return RLP.encodeList(rlpInfo);
     }
 
-    private static Map<Integer, byte[]> decodeInnerMap(RLPList list) {
-
+    private static Map<Integer, byte[]> decodeInnerMap(SharedRLPList list) {
         Map<Integer, byte[]> map = new HashMap<>();
 
-        for (RLPElement e : (list)) {
+        for (RLPElement e : list) {
             // validity check pair
-            if (!(e instanceof RLPList)) { return null; }
+            if (!(e.isList())) { return null; }
 
-            RLPList pair = (RLPList) e;
+            SharedRLPList pair = (SharedRLPList) e;
 
             // validity check
             if (pair.size() != 2) { return null; }
@@ -79,33 +79,37 @@ public class TransformedCodeSerializer {
                 // validity check
                 if (rlpEncoded == null || rlpEncoded.length == 0) { return null; }
 
-                RLPElement decoded = RLP.decode2(rlpEncoded).get(0);
+                RLPElement decoded = RLP.decode2SharedList(rlpEncoded).get(0);
 
                 // validity check
-                if (!(decoded instanceof RLPList)) { return null; }
+                if (!(decoded.isList())) { return null; }
 
                 // create and populate object
                 TransformedCodeInfo info = new TransformedCodeInfo();
-                RLPList list = (RLPList) decoded;
 
-                for (RLPElement e : list) {
+                for (RLPElement e : (SharedRLPList) decoded) {
                     // validity check
-                    if (!(e instanceof RLPList)) { return null; }
+                    if (!(e.isList())) { return null; }
 
-                    RLPList pair = (RLPList) e;
+                    SharedRLPList pair = (SharedRLPList) e;
 
                     // validity check
-                    if (pair.size() != 2
-                        || !(pair.get(1) instanceof RLPList)
-                        || pair.get(0).getRLPData().length != 32) { return null; }
+                    if (pair.size() != 2 || !pair.get(1).isList()) {
+                        return null;
+                    }
 
-                    Map<Integer, byte[]> current = decodeInnerMap((RLPList) pair.get(1));
+                    // validity check
+                    byte[] codeHash = pair.get(0).getRLPData();
+                    if (codeHash.length != 32) {
+                        return null;
+                    }
+
+                    Map<Integer, byte[]> current = decodeInnerMap((SharedRLPList) pair.get(1));
 
                     // validity check
                     if (current == null) { return null; }
 
-                    info.transformedCodeMap
-                        .put(ByteArrayWrapper.wrap(pair.get(0).getRLPData()), current);
+                    info.transformedCodeMap.put(ByteArrayWrapper.wrap(codeHash), current);
                 }
 
                 return info;
