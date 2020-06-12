@@ -197,8 +197,8 @@ public final class BlockUtil {
             return null;
         }
         try {
-            RLPList items = (RLPList) RLP.decode2(bodyBytes).get(0);
-            RLPList transactions = (RLPList) items.get(0);
+            SharedRLPList items = (SharedRLPList) RLP.decode2SharedList(bodyBytes).get(0);
+            SharedRLPList transactions = (SharedRLPList) items.get(0);
             List<AionTransaction> txs = parseTransactions(transactions);
             if (!BlockDetailsValidator.isValidTxTrieRoot(header.getTxTrieRoot(), txs, header.getNumber(), syncLog)) {
                 return null;
@@ -220,8 +220,8 @@ public final class BlockUtil {
         Objects.requireNonNull(bodyBytes);
 
         try {
-            RLPList items = (RLPList) RLP.decode2(bodyBytes).get(0);
-            RLPList transactions = (RLPList) items.get(0);
+            SharedRLPList items = (SharedRLPList) RLP.decode2SharedList(bodyBytes).get(0);
+            SharedRLPList transactions = (SharedRLPList) items.get(0);
             return calcTxTrieRootFromRLP(transactions);
         } catch (Exception e) {
             genLog.warn("Unable to decode block body=" + ByteArrayWrapper.wrap(bodyBytes), e);
@@ -229,11 +229,16 @@ public final class BlockUtil {
         }
     }
 
-    private static byte[] calcTxTrieRootFromRLP(RLPList txTransactions) {
+    private static byte[] calcTxTrieRootFromRLP(SharedRLPList txTransactions) {
         Trie txsState = new TrieImpl(null);
         for (int i = 0; i < txTransactions.size(); i++) {
             RLPElement transactionRaw = txTransactions.get(i);
-            txsState.update(RLP.encodeInt(i), transactionRaw.getRLPData());
+            if (transactionRaw.isList()) {
+                txsState.update(RLP.encodeInt(i), SharedRLPList.getRLPDataCopy(
+                    (SharedRLPList) transactionRaw));
+            } else {
+                throw new IllegalArgumentException("The transaction rlpElement should be a List");
+            }
         }
         return txsState.getRootHash();
     }
