@@ -714,6 +714,28 @@ public class RLPSpecExtraTest {
         assertThat(val.asInt()).isEqualTo(1);
         assertThat(val.asLong()).isEqualTo(1L);
         assertThat(val.asBigInt()).isEqualTo(BigInteger.ONE);
+
+        // test decode2ShreadList
+        SharedRLPList list2 = RLP.decode2SharedList(input);
+        assertThat(list2).isNotNull();
+        assertThat(list2.size()).isEqualTo(1);
+        assertThat(list2.get(0).getRLPData()).isEqualTo(actual);
+
+        RlpTestHelper.recursivePrint(list2);
+        assertThat(result.toString()).isEqualTo(ByteUtil.toHexString(list2.get(0).getRLPData()));
+        System.out.println();
+
+        elm = RLP.decode2OneItem(input, 0);
+        assertThat(elm.getRLPData()).isEqualTo(new byte[] {1});
+
+        // check Value
+        val = Value.fromRlpEncoded(input);
+        assertThat(val.encode()).isEqualTo(input);
+        assertThat(val.length()).isEqualTo(expected.length);
+
+        assertThat(val.asInt()).isEqualTo(1);
+        assertThat(val.asLong()).isEqualTo(1L);
+        assertThat(val.asBigInt()).isEqualTo(BigInteger.ONE);
     }
 
     @Test
@@ -752,6 +774,34 @@ public class RLPSpecExtraTest {
         assertThat(val.asInt()).isEqualTo(new BigInteger(1, expected).intValue());
         assertThat(val.asLong()).isEqualTo(new BigInteger(1, expected).longValue());
         assertThat(val.asBigInt()).isEqualTo(new BigInteger(1, expected));
+
+        // test decode2ShreadList
+        SharedRLPList list2 = RLP.decode2SharedList(input);
+        assertThat(list2).isNotNull();
+        assertThat(list2.size()).isEqualTo(1);
+        assertThat(list2.get(0).getRLPData()).isEqualTo(actual);
+
+        RlpTestHelper.recursivePrint(list2);
+        assertThat(result.toString()).isEqualTo(ByteUtil.toHexString(list2.get(0).getRLPData()));
+        System.out.println();
+
+        elm = RLP.decode2OneItem(input, 1);
+        assertThat(elm.getRLPData()).isEqualTo(new byte[] {1});
+
+        elm = RLP.decode2OneItem(input, 2);
+        assertThat(elm.getRLPData()).isEqualTo(new byte[] {2});
+
+        elm = RLP.decode2OneItem(input, 3);
+        assertThat(elm.getRLPData()).isEqualTo(new byte[] {3});
+
+        // check Value
+        val = Value.fromRlpEncoded(input);
+        assertThat(val.encode()).isEqualTo(input);
+        assertThat(val.length()).isEqualTo(expected.length);
+
+        assertThat(val.asInt()).isEqualTo(new BigInteger(1, expected).intValue());
+        assertThat(val.asLong()).isEqualTo(new BigInteger(1, expected).longValue());
+        assertThat(val.asBigInt()).isEqualTo(new BigInteger(1, expected));
     }
 
     @Test
@@ -782,6 +832,27 @@ public class RLPSpecExtraTest {
         assertThat(val.encode()).isEqualTo(input);
 
         List<Object> valAsList = val.asList();
+        assertThat(valAsList.size()).isEqualTo(expected.length);
+        assertThat(val.length()).isEqualTo(expected.length);
+        assertThat(byteArrayToInt((byte[]) valAsList.get(0))).isEqualTo(expected[0]);
+
+        // test decode2ShreadList
+        SharedRLPList list2 = RLP.decode2SharedList(input);
+        assertThat(list2).isNotNull();
+        assertThat(list2.size()).isEqualTo(1);
+        assertThat(list2.get(0).getRLPData()).isEqualTo(input);
+
+        RlpTestHelper.recursivePrint(list);
+        System.out.println();
+
+        elm = RLP.decode2OneItem(input, 1);
+        assertThat(elm.getRLPData()).isEqualTo(new byte[] {1});
+
+        // check Value
+        val = Value.fromRlpEncoded(input);
+        assertThat(val.encode()).isEqualTo(input);
+
+        valAsList = val.asList();
         assertThat(valAsList.size()).isEqualTo(expected.length);
         assertThat(val.length()).isEqualTo(expected.length);
         assertThat(byteArrayToInt((byte[]) valAsList.get(0))).isEqualTo(expected[0]);
@@ -854,12 +925,17 @@ public class RLPSpecExtraTest {
     @Test
     public void testDecode_ToNull() {
         assertThat(RLP.decode(null, 0)).isNull();
-
         assertThat(RLP.decode(new byte[0], 0)).isNull();
 
         assertThat(RLP.decode2(null)).isEmpty();
-
         assertThat(RLP.decode2(new byte[0])).isEmpty();
+
+        assertThat(RLP.decode2SharedList(new byte[0])).isEmpty();
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testDecode_Null() {
+        assertThat(RLP.decode2SharedList(null)).isEmpty();
     }
 
     @Test(expected = RuntimeException.class)
