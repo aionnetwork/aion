@@ -16,7 +16,6 @@ import org.aion.avm.stub.AvmVersion;
 import org.aion.avm.stub.IAionVirtualMachine;
 import org.aion.avm.stub.IAvmExternalState;
 import org.aion.avm.stub.IAvmFutureResult;
-import org.aion.base.AccountState;
 import org.aion.base.AionTransaction;
 import org.aion.base.AionTxExecSummary;
 import org.aion.base.AionTxReceipt;
@@ -64,7 +63,7 @@ public final class AvmTransactionExecutor {
      * @return the execution summaries of the transactions.
      * @throws VmFatalException If a fatal error occurred and the kernel must be shut down.
      */
-    public static List<AionTxExecSummary> executeTransactions(RepositoryCache<AccountState> repository, BigInteger blockDifficulty, long blockNumber, long blockTimestamp, long blockEnergyLimit, AionAddress miner, AionTransaction[] transactions, PostExecutionWork postExecutionWork, boolean decrementBlockEnergyLimit, boolean allowNonceIncrement, boolean isLocalCall, long remainingBlockEnergy, AvmExecutionType executionType, long cachedBlockNumber, boolean unityForkEnabled, boolean signatureSchemeSwapEnabled) throws VmFatalException {
+    public static List<AionTxExecSummary> executeTransactions(RepositoryCache repository, BigInteger blockDifficulty, long blockNumber, long blockTimestamp, long blockEnergyLimit, AionAddress miner, AionTransaction[] transactions, PostExecutionWork postExecutionWork, boolean decrementBlockEnergyLimit, boolean allowNonceIncrement, boolean isLocalCall, long remainingBlockEnergy, AvmExecutionType executionType, long cachedBlockNumber, boolean unityForkEnabled, boolean signatureSchemeSwapEnabled) throws VmFatalException {
         List<AionTxExecSummary> transactionSummaries = new ArrayList<>();
         long blockEnergy = remainingBlockEnergy;
 
@@ -211,7 +210,7 @@ public final class AvmTransactionExecutor {
      * @param isLocalCall Whether this is a local call (ie. is to cause no state changes).
      * @return the execution summary.
      */
-    private static AionTxExecSummary buildSummaryAndUpdateState(IAvmFutureResult future, AionTransaction transaction, TransactionResult result, AvmVersion avmVersion, RepositoryCache<AccountState> repository, BigInteger blockDifficulty, long blockNumber, long blockTimestamp, long blockEnergyLimit, AionAddress miner, boolean allowNonceIncrement, boolean isLocalCall) {
+    private static AionTxExecSummary buildSummaryAndUpdateState(IAvmFutureResult future, AionTransaction transaction, TransactionResult result, AvmVersion avmVersion, RepositoryCache repository, BigInteger blockDifficulty, long blockNumber, long blockTimestamp, long blockEnergyLimit, AionAddress miner, boolean allowNonceIncrement, boolean isLocalCall) {
         AionTxExecSummary summary = buildTransactionSummary(transaction, result);
 
         // Update the repository by committing any changes in the Avm so long as the transaction was not rejected.
@@ -254,7 +253,7 @@ public final class AvmTransactionExecutor {
      * @param unityForkEnabled The unityFork feature enabled/disabled.
      * @return the future execution results.
      */
-    private static IAvmFutureResult[] invokeAvm(AvmVersion versionToUse, RepositoryCache<AccountState> repository, BigInteger blockDifficulty, long blockNumber, long blockTimestamp, long blockEnergyLimit, AionAddress miner, AionTransaction[] transactions, boolean allowNonceIncrement, boolean isLocalCall, AvmExecutionType executionType, long cachedBlockNumber, boolean unityForkEnabled) {
+    private static IAvmFutureResult[] invokeAvm(AvmVersion versionToUse, RepositoryCache repository, BigInteger blockDifficulty, long blockNumber, long blockTimestamp, long blockEnergyLimit, AionAddress miner, AionTransaction[] transactions, boolean allowNonceIncrement, boolean isLocalCall, AvmExecutionType executionType, long cachedBlockNumber, boolean unityForkEnabled) {
         IAvmExternalState externalState = AvmProvider.newExternalStateBuilder(versionToUse)
             .withRepository(repository.startTracking())
             .withMiner(miner)

@@ -152,7 +152,7 @@ public class OldTxExecutorTest {
         MiningBlock block = createDummyBlock();
 
         AionRepositoryImpl repoTop = blockchain.getRepository();
-        RepositoryCache<AccountState> repo = repoTop.startTracking();
+        RepositoryCache repo = repoTop.startTracking();
         repo.addBalance(tx.getSenderAddress(), BigInteger.valueOf(500_000L).multiply(BigInteger.valueOf(tx.getEnergyPrice())));
 
         AionTxReceipt receipt = executeTransaction(repo, block, tx).getReceipt();

@@ -9,7 +9,7 @@ import org.aion.util.types.ByteArrayWrapper;
  *
  * @implNote Tracking a repository should be done through implementing this interface.
  */
-public interface RepositoryCache<AS> extends Repository<AS> {
+public interface RepositoryCache extends Repository {
 
     /**
      * Creates a new account state in the database or cache.

@@ -25,20 +25,20 @@ import org.aion.util.types.ByteArrayWrapper;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 
-public final class AionRepositoryCache implements RepositoryCache<AccountState> {
+public final class AionRepositoryCache implements RepositoryCache {
 
     // Logger
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.DB.name());
 
     /** the repository being tracked */
-    private final Repository<AccountState> repository;
+    private final Repository repository;
 
     /** local accounts cache */
     @VisibleForTesting
     final Map<AionAddress, AccountState> cachedAccounts;
     /** local contract details cache */
     @VisibleForTesting
-    final Map<AionAddress, InnerContractDetails> cachedDetails;
+    final Map<AionAddress, ContractDetails> cachedDetails;
     /** local transformed code cache */
     private final Map<AionAddress, TransformedCodeInfo> cachedTransformedCode;
 
@@ -153,7 +153,7 @@ public final class AionRepositoryCache implements RepositoryCache<AccountState> 
     }
 
     private InnerContractDetails getInnerContractDetails(AionAddress address) {
-        InnerContractDetails contractDetails = this.cachedDetails.get(address);
+        InnerContractDetails contractDetails = (InnerContractDetails) this.cachedDetails.get(address);
 
         if (contractDetails == null) {
             Pair<AccountState, InnerContractDetails> pair = getAccountStateFromParent(address);
@@ -496,8 +496,8 @@ public final class AionRepositoryCache implements RepositoryCache<AccountState> 
                 }
             }
             // determine which contracts should get stored
-            for (Map.Entry<AionAddress, InnerContractDetails> entry : cachedDetails.entrySet()) {
-                InnerContractDetails contractDetailsCache = entry.getValue();
+            for (Map.Entry<AionAddress, ContractDetails> entry : cachedDetails.entrySet()) {
+                InnerContractDetails contractDetailsCache = (InnerContractDetails) entry.getValue();
                 contractDetailsCache.commit();
 
                 if (contractDetailsCache.origContract == null && other.hasContractDetails(entry.getKey())) {
@@ -629,7 +629,7 @@ public final class AionRepositoryCache implements RepositoryCache<AccountState> 
         s.append("cachedDetails [");
         if (cachedDetails != null && !cachedDetails.isEmpty()) {
             s.append("\n");
-            for (Map.Entry<AionAddress, InnerContractDetails> ca : cachedDetails.entrySet()) {
+            for (Map.Entry<AionAddress, ContractDetails> ca : cachedDetails.entrySet()) {
                 s.append(ca.getKey()).append("\n").append(ca.getValue()).append("\n");
             }
         } else {

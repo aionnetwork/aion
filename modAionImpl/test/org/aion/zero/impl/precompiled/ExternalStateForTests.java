@@ -2,7 +2,6 @@ package org.aion.zero.impl.precompiled;
 
 import java.math.BigInteger;
 import java.util.Properties;
-import org.aion.base.AccountState;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
 import org.aion.zero.impl.config.CfgPrune;
@@ -22,9 +21,9 @@ import org.aion.zero.impl.db.RepositoryConfig;
  * A basic testing implementation of the interface.
  */
 public final class ExternalStateForTests implements IExternalStateForPrecompiled {
-    private final RepositoryCache<AccountState> repository;
+    private final RepositoryCache repository;
 
-    private ExternalStateForTests(RepositoryCache<AccountState> repository) {
+    private ExternalStateForTests(RepositoryCache repository) {
         this.repository = repository;
     }
 
@@ -52,7 +51,7 @@ public final class ExternalStateForTests implements IExternalStateForPrecompiled
     }
 
     public static ExternalStateForTests usingRepository(
-        RepositoryCache<AccountState> repository) {
+        RepositoryCache repository) {
         return new ExternalStateForTests(repository);
     }
 

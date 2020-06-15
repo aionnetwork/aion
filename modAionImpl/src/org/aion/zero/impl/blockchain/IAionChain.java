@@ -21,11 +21,11 @@ public interface IAionChain  extends RepoState {
 
     AionTxReceipt callConstant(AionTransaction tx, Block block);
 
-    Repository<?> getRepository();
+    Repository getRepository();
 
-    Repository<?> getPendingState();
+    Repository getPendingState();
 
-    Repository<?> getSnapshotTo(byte[] root);
+    Repository getSnapshotTo(byte[] root);
 
     List<AionTransaction> getWireTransactions();
 

@@ -63,7 +63,7 @@ public final class AionPendingStateImpl implements IPendingState {
     private final AtomicReference<Block> currentBestBlock;
     private final PendingTxCacheV1 pendingTxCache;
 
-    private RepositoryCache<AccountState> pendingState;
+    private RepositoryCache pendingState;
 
     /**
      * This buffer stores txs that come in with double the energy price as an existing tx with the same nonce
@@ -181,7 +181,7 @@ public final class AionPendingStateImpl implements IPendingState {
         }
     }
 
-    public synchronized RepositoryCache<?> getRepository() {
+    public synchronized RepositoryCache getRepository() {
         // Todo : no class use this method.
         return pendingState;
     }

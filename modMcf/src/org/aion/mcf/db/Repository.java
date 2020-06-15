@@ -2,19 +2,17 @@ package org.aion.mcf.db;
 
 import java.math.BigInteger;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import org.aion.base.AccountState;
 import org.aion.types.AionAddress;
 import org.aion.util.types.ByteArrayWrapper;
-import org.apache.commons.lang3.tuple.Pair;
 
 /**
  * Database-like functionality.
  *
  * @apiNote Allows only batch operations on data.
  */
-public interface Repository<AS> {
+public interface Repository {
 
     /**
      * Creates a tracker repository for caching future changes.
@@ -33,7 +31,7 @@ public interface Repository<AS> {
      * @param contractDetails cached contract details
      */
     void updateBatch(
-            Map<AionAddress, AS> accountStates,
+            Map<AionAddress, AccountState> accountStates,
             Map<AionAddress, ContractDetails> contractDetails,
             Map<AionAddress, TransformedCodeInfo> transformedCodeCache);
 
@@ -151,10 +149,10 @@ public interface Repository<AS> {
      * Retrieves the current state of the account associated with the given address.
      *
      * @param address the address of the account of interest
-     * @return a {@link AS} object representing the account state as is stored in the database or
+     * @return a {@link AccountState} object representing the account state as is stored in the database or
      *     cache
      */
-    AS getAccountState(AionAddress address);
+    AccountState getAccountState(AionAddress address);
 
     /**
      * Retrieves the current balance of the account associated with the given address.

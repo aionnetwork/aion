@@ -5,7 +5,6 @@ import org.aion.avm.stub.IAvmExternalState;
 import org.aion.avm.stub.IEnergyRules;
 import org.aion.avm.stub.IAvmExternalStateBuilder;
 import org.aion.avm.version2.internal.ExternalStateForAvm;
-import org.aion.base.AccountState;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.types.AionAddress;
 
@@ -13,7 +12,7 @@ import org.aion.types.AionAddress;
  * Builds a new {@link IAvmExternalState} instance.
  */
 public final class AvmExternalStateBuilder implements IAvmExternalStateBuilder {
-    private RepositoryCache<AccountState> repository = null;
+    private RepositoryCache repository = null;
     private BigInteger difficulty = null;
     private Long blockNumber = null;
     private Long timestamp = null;
@@ -24,7 +23,7 @@ public final class AvmExternalStateBuilder implements IAvmExternalStateBuilder {
     private Boolean isLocalCall = null;
 
     @Override
-    public IAvmExternalStateBuilder withRepository(RepositoryCache<AccountState> repository) {
+    public IAvmExternalStateBuilder withRepository(RepositoryCache repository) {
         this.repository = repository;
         return this;
     }

@@ -1,6 +1,5 @@
 package org.aion.zero.impl.vm.common;
 
-import org.aion.base.AccountState;
 import org.aion.base.AionTransaction;
 import org.aion.base.AionTxExecSummary;
 import org.aion.mcf.db.Repository;
@@ -27,5 +26,5 @@ public interface PostExecutionLogic {
      * @param summary The transaction execution summary.
      * @param transaction The transaction.
      */
-    void apply(Repository repository, RepositoryCache<AccountState> repositoryChild, AionTxExecSummary summary, AionTransaction transaction);
+    void apply(Repository repository, RepositoryCache repositoryChild, AionTxExecSummary summary, AionTransaction transaction);
 }

@@ -229,7 +229,7 @@ public class AionRepositoryCacheTest {
         byte[] codeHash = h256(code);
 
         // initialize contract in the repository
-        RepositoryCache<AccountState> tempCache = repository.startTracking();
+        RepositoryCache tempCache = repository.startTracking();
         tempCache.createAccount(address);
         tempCache.saveCode(address, code);
         tempCache.saveVmType(address, InternalVmType.FVM);
@@ -278,7 +278,7 @@ public class AionRepositoryCacheTest {
         byte[] codeHash = h256(code);
 
         // initialize contract in the repository
-        RepositoryCache<AccountState> tempCache = repository.startTracking();
+        RepositoryCache tempCache = repository.startTracking();
         tempCache.createAccount(address);
         tempCache.saveCode(address, code);
         tempCache.saveVmType(address, InternalVmType.FVM);

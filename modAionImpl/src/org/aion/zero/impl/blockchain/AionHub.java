@@ -11,6 +11,7 @@ import java.util.Properties;
 import java.util.ServiceLoader;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicBoolean;
+import org.aion.base.AccountState;
 import org.aion.base.AionTransaction;
 import org.aion.base.AionTxReceipt;
 import org.aion.base.TransactionTypeRule;
