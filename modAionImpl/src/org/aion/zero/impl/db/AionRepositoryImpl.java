@@ -63,6 +63,7 @@ import org.aion.mcf.db.Repository;
 import org.aion.mcf.db.RepositoryCache;
 import org.aion.mcf.db.TransformedCodeInfo;
 import org.aion.mcf.db.exception.InvalidFileTypeException;
+import org.aion.rlp.SharedRLPList;
 import org.aion.util.types.AddressUtils;
 import org.aion.util.types.DataWord;
 import org.aion.zero.impl.config.CfgDb.Props;
@@ -74,7 +75,6 @@ import org.aion.p2p.V1Constants;
 import org.aion.precompiled.ContractInfo;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
-import org.aion.rlp.RLPList;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
@@ -1197,12 +1197,34 @@ public final class AionRepositoryImpl implements Repository<AccountState> {
 
     @VisibleForTesting
     public void loadImportableState(byte[] fullState, DatabaseType dbType) {
-        RLPList data = RLP.decode2(fullState);
-        RLPList elements = (RLPList) data.get(0);
-        for (RLPElement element : elements) {
-            data = (RLPList) element;
-            importTrieNode(data.get(0).getRLPData(), data.get(1).getRLPData(), dbType);
+        SharedRLPList data = RLP.decode2SharedList(fullState);
+        RLPElement elements = data.get(0);
+        if (elements.isList()) {
+            for (RLPElement element : (SharedRLPList)elements) {
+                if (element.isList()) {
+                    byte[] data0;
+                    if (data.get(0).isList()) {
+                        data0 = SharedRLPList.getRLPDataCopy((SharedRLPList) data.get(0));
+                    } else {
+                        data0 = data.get(0).getRLPData();
+                    }
+
+                    byte[] data1;
+                    if (data.get(1).isList()) {
+                        data1 = SharedRLPList.getRLPDataCopy((SharedRLPList) data.get(1));
+                    } else {
+                        data1 = data.get(1).getRLPData();
+                    }
+
+                    importTrieNode(data0, data1, dbType);
+                } else {
+                    throw new IllegalStateException();
+                }
+            }
+        } else {
+            throw new IllegalStateException();
         }
+
     }
 
     @VisibleForTesting
