@@ -2,7 +2,8 @@ package org.aion.zero.impl.keystore;
 
 import java.io.UnsupportedEncodingException;
 import org.aion.rlp.RLP;
-import org.aion.rlp.RLPList;
+import org.aion.rlp.RLPElement;
+import org.aion.rlp.SharedRLPList;
 import org.aion.util.bytes.ByteUtil;
 
 public class KdfParams {
@@ -27,7 +28,12 @@ public class KdfParams {
     }
 
     public static KdfParams parse(byte[] bytes) throws UnsupportedEncodingException {
-        RLPList list = (RLPList) RLP.decode2(bytes).get(0);
+        RLPElement element = RLP.decode2SharedList(bytes).get(0);
+        if (!element.isList()) {
+            throw new IllegalArgumentException("The keystore decoded rlp element is not a list");
+        }
+
+        SharedRLPList list = (SharedRLPList) element;
         KdfParams kdfParams = new KdfParams();
         kdfParams.setC(ByteUtil.byteArrayToInt(list.get(0).getRLPData()));
         kdfParams.setDklen(ByteUtil.byteArrayToInt(list.get(1).getRLPData()));

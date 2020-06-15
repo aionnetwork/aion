@@ -2,7 +2,8 @@ package org.aion.zero.impl.keystore;
 
 import java.io.UnsupportedEncodingException;
 import org.aion.rlp.RLP;
-import org.aion.rlp.RLPList;
+import org.aion.rlp.RLPElement;
+import org.aion.rlp.SharedRLPList;
 
 public class CipherParams {
 
@@ -16,7 +17,12 @@ public class CipherParams {
     }
 
     public static CipherParams parse(byte[] bytes) throws UnsupportedEncodingException {
-        RLPList list = (RLPList) RLP.decode2(bytes).get(0);
+        RLPElement element = RLP.decode2SharedList(bytes).get(0);
+        if (!element.isList()) {
+            throw new IllegalArgumentException("The keystore decoded rlp element is not a list");
+        }
+
+        SharedRLPList list = (SharedRLPList) element;
         CipherParams cp = new CipherParams();
         cp.setIv(new String(list.get(0).getRLPData(), "US-ASCII"));
         return cp;
