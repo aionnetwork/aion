@@ -19,6 +19,7 @@ import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPItem;
 import org.aion.rlp.RLPList;
 import org.aion.rlp.SharedRLPItem;
+import org.aion.rlp.SharedRLPList;
 import org.aion.types.AionAddress;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.db.DetailsDataStore.RLPContractDetails;
@@ -334,7 +335,7 @@ public class AvmContractDetailsTest {
         details.setCode(code);
 
         // ensure correct size after VM type is set
-        RLPList data = (RLPList) RLP.decode2(details.getEncoded()).get(0);
+        SharedRLPList data = (SharedRLPList) RLP.decode2SharedList(details.getEncoded()).get(0);
         assertThat(data.size()).isEqualTo(3);
     }
 }

@@ -58,12 +58,7 @@ public class AionTransactionTest {
                         nrgPrice,
                         type, null);
 
-        AionTransaction tx2 = TxUtil.decode(tx.getEncoded());
-
-        assertNotNull(tx2);
-        assertTransactionEquals(tx, tx2);
-
-        tx2 = TxUtil.decodeUsingRlpSharedList(tx.getEncoded());
+        AionTransaction tx2 = TxUtil.decodeUsingRlpSharedList(tx.getEncoded());
         assertNotNull(tx2);
         assertTransactionEquals(tx, tx2);
     }
@@ -159,11 +154,7 @@ public class AionTransactionTest {
                 beaconHash
         );
 
-        AionTransaction tx2 = TxUtil.decode(tx.getEncoded());
-        assertNotNull(tx2);
-        assertTransactionEquals(tx, tx2);
-
-        tx2 = TxUtil.decodeUsingRlpSharedList(tx.getEncoded());
+        AionTransaction tx2 = TxUtil.decodeUsingRlpSharedList(tx.getEncoded());
         assertNotNull(tx2);
         assertTransactionEquals(tx, tx2);
     }
@@ -198,11 +189,7 @@ public class AionTransactionTest {
                 decoded.size() - 1
         );
 
-        AionTransaction tx2 = TxUtil.decode(tx.getEncoded());
-        assertNotNull(tx2);
-        assertTransactionEquals(tx, tx2);
-
-        tx2 = TxUtil.decodeUsingRlpSharedList(tx.getEncoded());
+        AionTransaction tx2 = TxUtil.decodeUsingRlpSharedList(tx.getEncoded());
         assertNotNull(tx2);
         assertTransactionEquals(tx, tx2);
     }

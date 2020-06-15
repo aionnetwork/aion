@@ -12,7 +12,6 @@ import org.aion.base.ConstantUtil;
 import org.aion.crypto.HashUtil;
 import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.rlp.RLP;
-import org.aion.rlp.RLPList;
 import org.aion.rlp.SharedRLPList;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
@@ -427,7 +426,7 @@ public final class MiningBlockHeader implements BlockHeader {
                 throw new NullPointerException("rlpEncoded data can not be null");
             }
 
-            return withRlpList((RLPList) RLP.decode2(rlpEncoded).get(0));
+            return withRlpList((SharedRLPList) RLP.decode2SharedList(rlpEncoded).get(0));
         }
 
         /**
@@ -436,41 +435,6 @@ public final class MiningBlockHeader implements BlockHeader {
          * @param rlpHeader the rlpDecoded block header data
          * @return the Builder
          */
-        public Builder withRlpList(RLPList rlpHeader) {
-            if (rlpHeader == null) {
-                throw new NullPointerException("rlpHeader can not be null");
-            }
-
-            if (isFromUnsafeSource) {
-                byte[] sealType = rlpHeader.get(RPL_BH_SEALTYPE).getRLPData();
-
-                if (sealType == null || sealType.length != 1) {
-                    throw new IllegalArgumentException("Invalid Sealtype data length");
-                }
-
-                if (sealType[0] != Seal.PROOF_OF_WORK.getSealId()) {
-                    throw new IllegalArgumentException("Invalid Seal type");
-                }
-            }
-
-            withNumber(rlpHeader.get(RLP_BH_NUMBER).getRLPData());
-            withParentHash(rlpHeader.get(RLP_BH_PARENTHASH).getRLPData());
-            withCoinbase(new AionAddress(rlpHeader.get(RLP_BH_COINBASE).getRLPData()));
-            withStateRoot(rlpHeader.get(RLP_BH_STATEROOT).getRLPData());
-            withTxTrieRoot(rlpHeader.get(RLP_BH_TXTRIE).getRLPData());
-            withReceiptTrieRoot(rlpHeader.get(RLP_BH_RECEIPTTRIE).getRLPData());
-            withLogsBloom(rlpHeader.get(RLP_BH_LOGSBLOOM).getRLPData());
-            withDifficulty(rlpHeader.get(RLP_BH_DIFFICULTY).getRLPData());
-            withExtraData(rlpHeader.get(RLP_BH_EXTRADATA).getRLPData());
-            withEnergyConsumed(rlpHeader.get(RLP_BH_NRG_CONSUMED).getRLPData());
-            withEnergyLimit(rlpHeader.get(RLP_BH_NRG_LIMIT).getRLPData());
-            withTimestamp(rlpHeader.get(RLP_BH_TIMESTAMP).getRLPData());
-            withNonce(rlpHeader.get(RLP_BH_NONCE).getRLPData());
-            withSolution(rlpHeader.get(RLP_BH_SOLUTION).getRLPData());
-
-            return this;
-        }
-
         public Builder withRlpList(SharedRLPList rlpHeader) {
             if (rlpHeader == null) {
                 throw new NullPointerException("rlpHeader can not be null");

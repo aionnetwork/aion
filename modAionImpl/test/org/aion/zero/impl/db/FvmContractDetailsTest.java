@@ -224,7 +224,7 @@ public class FvmContractDetailsTest {
         details.setCode(code);
 
         // ensure correct size after VM type is set
-        RLPList data = (RLPList) RLP.decode2(details.getEncoded()).get(0);
+        SharedRLPList data = (SharedRLPList) RLP.decode2SharedList(details.getEncoded()).get(0);
         assertThat(data.size()).isEqualTo(3);
     }
 

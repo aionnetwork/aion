@@ -16,7 +16,6 @@ import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.mcf.blockchain.BlockHeader.Seal;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
-import org.aion.rlp.RLPList;
 import org.aion.rlp.SharedRLPList;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.zero.impl.trie.Trie;
@@ -109,38 +108,6 @@ public final class BlockUtil {
      *     valid block
      * @implNote Assumes the data is from an unsafe source.
      */
-    public static Block newBlockFromUnsafeSource(RLPList rlpList) {
-        // return null when given empty bytes
-        if (rlpList == null || rlpList.size() != 2) {
-            return null;
-        }
-        try {
-            // parse header
-            RLPList headerRLP = (RLPList) rlpList.get(0);
-            byte[] type = headerRLP.get(0).getRLPData();
-            RLPList transactionsRLP = (RLPList) rlpList.get(1);
-            List<AionTransaction> txs = parseTransactions(transactionsRLP);
-            if (type[0] == Seal.PROOF_OF_WORK.getSealId()) {
-                MiningBlockHeader miningHeader = MiningBlockHeader.Builder.newInstance(true).withRlpList(headerRLP).build();
-                if (!BlockDetailsValidator.isValidTxTrieRoot(miningHeader.getTxTrieRoot(), txs, miningHeader.getNumber(), syncLog)) {
-                    return null;
-                }
-                return new MiningBlock(miningHeader, txs);
-            } else if (type[0] == Seal.PROOF_OF_STAKE.getSealId()) {
-                StakingBlockHeader stakingHeader = StakingBlockHeader.Builder.newInstance(true).withRlpList(headerRLP).build();
-                if (!BlockDetailsValidator.isValidTxTrieRoot(stakingHeader.getTxTrieRoot(), txs, stakingHeader.getNumber(), syncLog)) {
-                    return null;
-                }
-                return new StakingBlock(stakingHeader, txs);
-            } else {
-                return null;
-            }
-        } catch (Exception e) {
-            syncLog.warn("Unable to decode block bytes " + Arrays.toString(rlpList.getRLPData()), e);
-            return null;
-        }
-    }
-
     public static Block newBlockFromUnsafeSource(SharedRLPList rlpList) {
         // return null when given empty bytes
         if (rlpList == null || rlpList.size() != 2) {
@@ -275,15 +242,6 @@ public final class BlockUtil {
     }
 
     /** Decodes the give transactions. */
-    private static List<AionTransaction> parseTransactions(RLPList txTransactions) {
-        List<AionTransaction> transactionsList = new ArrayList<>();
-        for (int i = 0; i < txTransactions.size(); i++) {
-            RLPElement transactionRaw = txTransactions.get(i);
-            transactionsList.add(TxUtil.decode(transactionRaw.getRLPData()));
-        }
-        return transactionsList;
-    }
-
     private static List<AionTransaction> parseTransactions(SharedRLPList rlpTxs) {
         List<AionTransaction> transactionsList = new ArrayList<>();
         for (RLPElement rlpTx : rlpTxs) {

@@ -79,15 +79,6 @@ public class AionTxInfo {
      *       are stored.
      * </ol>
      */
-    public static AionTxInfo newInstanceFromEncoding(byte[] rlp) {
-        try {
-            return decode(rlp);
-        } catch (Exception e) {
-            LOG.error("The given RLP encoding is not a valid AionTxInfo object.", e);
-            return null;
-        }
-    }
-
     public static AionTxInfo newInstanceFromEncoding(SharedRLPList rlpList) {
         try {
             return decodeToTxInfo(rlpList);
@@ -134,53 +125,6 @@ public class AionTxInfo {
                 SharedRLPList internalTxRlp = (SharedRLPList) rlpTxInfo.get(INDEX_INTERNAL_TX);
                 for (RLPElement item : internalTxRlp) {
                     internalTransactions.add(fromRlp((SharedRLPList) item));
-                }
-                break;
-            default:
-                // incorrect encoding
-                return null;
-        }
-
-        return new AionTxInfo(receipt, blockHash, index, internalTransactions, createdWithInternalTx);
-    }
-
-    private static AionTxInfo decode(byte[] rlp) {
-        RLPList params = RLP.decode2(rlp);
-        RLPList txInfo = (RLPList) params.get(0);
-
-        AionTxReceipt receipt = new AionTxReceipt(txInfo.get(INDEX_RECEIPT).getRLPData());
-        ByteArrayWrapper blockHash = ByteArrayWrapper.wrap(txInfo.get(INDEX_BLOCK_HASH).getRLPData());
-
-        int index;
-        RLPItem indexRLP = (RLPItem) txInfo.get(INDEX_TX_INDEX);
-        if (indexRLP.getRLPData() == null) {
-            index = 0;
-        } else {
-            index = new BigInteger(1, indexRLP.getRLPData()).intValue();
-        }
-
-        boolean createdWithInternalTx;
-        List<InternalTransaction> internalTransactions;
-
-        switch (txInfo.size()) {
-            case SIZE_OF_OLD_ENCODING:
-                // old encodings are incomplete since internal tx were not stored
-                createdWithInternalTx = false;
-                internalTransactions = null;
-                break;
-            case SIZE_WITH_BASE_DATA:
-                // read the completeness flag from storage
-                createdWithInternalTx = txInfo.get(INDEX_CREATE_FLAG).getRLPData().length == 1;
-                internalTransactions = null;
-                break;
-            case SIZE_WITH_INTERNAL_TRANSACTIONS:
-                // read the completeness flag from storage
-                createdWithInternalTx = txInfo.get(INDEX_CREATE_FLAG).getRLPData().length == 1;
-                // decode the internal transactions
-                internalTransactions = new ArrayList<>();
-                RLPList internalTxRlp = (RLPList) txInfo.get(INDEX_INTERNAL_TX);
-                for (RLPElement item : internalTxRlp) {
-                    internalTransactions.add(fromRlp((RLPList) item));
                 }
                 break;
             default:
