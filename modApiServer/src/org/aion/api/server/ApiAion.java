@@ -573,7 +573,7 @@ public abstract class ApiAion extends Api {
             return (new ApiTxResponse(TxResponse.INVALID_TX));
         }
 
-        AionTransaction tx = TxUtil.decode(signedTx);
+        AionTransaction tx = TxUtil.decodeUsingRlpSharedList(signedTx);
         if (tx == null) {
             return (new ApiTxResponse(TxResponse.INVALID_TX));
         }

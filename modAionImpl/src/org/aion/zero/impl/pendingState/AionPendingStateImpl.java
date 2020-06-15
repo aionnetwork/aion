@@ -17,6 +17,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.aion.rlp.RLP;
+import org.aion.rlp.SharedRLPList;
 import org.aion.txpool.Constant.TXPOOL_PROPERTY;
 import org.aion.txpool.v1.TxPoolV1;
 import org.aion.util.types.ByteArrayWrapper;
@@ -991,7 +993,7 @@ public final class AionPendingStateImpl implements IPendingState {
         List<AionTransaction> pendingTx = new ArrayList<>();
         for (byte[] b : pendingCacheTxBytes) {
             try {
-                pendingTx.add(TxUtil.decode(b));
+                pendingTx.add(TxUtil.decodeUsingRlpSharedList(b));
             } catch (Exception e) {
                 LOGGER_TX.error("loadingPendingCacheTx error ", e);
             }
@@ -1020,7 +1022,7 @@ public final class AionPendingStateImpl implements IPendingState {
         List<AionTransaction> pendingTx = new ArrayList<>();
         for (byte[] b : pendingPoolTxBytes) {
             try {
-                pendingTx.add(TxUtil.decode(b));
+                pendingTx.add(TxUtil.decodeUsingRlpSharedList(b));
             } catch (Exception e) {
                 LOGGER_TX.error("loadingCachePendingTx error ", e);
             }

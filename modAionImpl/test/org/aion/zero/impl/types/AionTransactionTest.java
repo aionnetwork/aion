@@ -12,7 +12,7 @@ import org.aion.base.TxUtil;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.rlp.RLP;
-import org.aion.rlp.RLPList;
+import org.aion.rlp.SharedRLPList;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.types.DataWord;
 import org.aion.types.AionAddress;
@@ -60,6 +60,10 @@ public class AionTransactionTest {
 
         AionTransaction tx2 = TxUtil.decode(tx.getEncoded());
 
+        assertNotNull(tx2);
+        assertTransactionEquals(tx, tx2);
+
+        tx2 = TxUtil.decodeUsingRlpSharedList(tx.getEncoded());
         assertNotNull(tx2);
         assertTransactionEquals(tx, tx2);
     }
@@ -144,7 +148,7 @@ public class AionTransactionTest {
                 beaconHash,
                 tx.getBeaconHash());
 
-        RLPList decoded = (RLPList) RLP.decode2(tx.getEncoded()).get(0);
+        SharedRLPList decoded = (SharedRLPList) RLP.decode2SharedList(tx.getEncoded()).get(0);
         assertEquals("wrong number of elements in RLP encoding of AionTransaction with beacon hash",
                 TxUtil.RLP_TX_BEACON_HASH,
                 decoded.size() - 1
@@ -156,6 +160,10 @@ public class AionTransactionTest {
         );
 
         AionTransaction tx2 = TxUtil.decode(tx.getEncoded());
+        assertNotNull(tx2);
+        assertTransactionEquals(tx, tx2);
+
+        tx2 = TxUtil.decodeUsingRlpSharedList(tx.getEncoded());
         assertNotNull(tx2);
         assertTransactionEquals(tx, tx2);
     }
@@ -184,13 +192,17 @@ public class AionTransactionTest {
 
         assertNull("beacon hash should be null", tx.getBeaconHash());
 
-        RLPList decoded = (RLPList) RLP.decode2(tx.getEncoded()).get(0);
+        SharedRLPList decoded = (SharedRLPList) RLP.decode2SharedList(tx.getEncoded()).get(0);
         assertEquals("wrong number of elements in RLP encoding of AionTransaction without beacon hash",
                 TxUtil.RLP_TX_SIG,
                 decoded.size() - 1
         );
 
         AionTransaction tx2 = TxUtil.decode(tx.getEncoded());
+        assertNotNull(tx2);
+        assertTransactionEquals(tx, tx2);
+
+        tx2 = TxUtil.decodeUsingRlpSharedList(tx.getEncoded());
         assertNotNull(tx2);
         assertTransactionEquals(tx, tx2);
     }

@@ -8,6 +8,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import org.aion.base.AionTransaction;
 import org.aion.base.TxUtil;
+import org.aion.rlp.RLP;
+import org.aion.rlp.SharedRLPList;
 import org.aion.zero.impl.pendingState.AionPendingStateImpl;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Handler;
@@ -98,7 +100,7 @@ public final class BroadcastTxHandler extends Handler {
 
         for (byte[] raw : broadCastTx) {
             try {
-                rtn.add(TxUtil.decode(raw));
+                rtn.add(TxUtil.decodeUsingRlpSharedList(raw));
             } catch (Exception e) {
                 // do nothing, invalid transaction from bad peer
                 log.debug("castRawTx exception!" + e);
