@@ -66,9 +66,6 @@ import org.aion.zero.impl.trie.scan.TraceAllNodes;
  * @since 20.05.2014
  */
 public class TrieImpl implements Trie {
-    private static final byte PAIR_SIZE = 2;
-    private static final byte LIST_SIZE = 17;
-
     private Object root;
     private Cache cache;
 
@@ -254,7 +251,7 @@ public class TrieImpl implements Trie {
                 return null;
             }
 
-            if (currentNode.length() == PAIR_SIZE) {
+            if (currentNode.length() == Node.PAIR_SIZE) {
                 // Decode the key
                 byte[] k = unpackToNibbles(currentNode.get(0).asBytes());
                 Object v = currentNode.get(1).asObj();
@@ -297,7 +294,7 @@ public class TrieImpl implements Trie {
         }
 
         // Check for "special" 2 slice type node
-        if (currentNode.length() == PAIR_SIZE) {
+        if (currentNode.length() == Node.PAIR_SIZE) {
             // Decode the key
             byte[] k = unpackToNibbles(currentNode.get(0).asBytes());
             Object v = currentNode.get(1).asObj();
@@ -324,7 +321,7 @@ public class TrieImpl implements Trie {
                         this.insert("", copyOfRange(key, matchingLength + 1, key.length), value);
 
                 // Create an expanded slice
-                Object[] scaledSlice = emptyStringSlice(LIST_SIZE);
+                Object[] scaledSlice = emptyStringSlice(Node.BRANCH_SIZE);
 
                 // Set the copied and new node
                 scaledSlice[k[matchingLength]] = oldNode;
@@ -380,7 +377,7 @@ public class TrieImpl implements Trie {
         }
 
         // Check for "special" 2 slice type node
-        if (currentNode.length() == PAIR_SIZE) {
+        if (currentNode.length() == Node.PAIR_SIZE) {
             // Decode the key
             byte[] k = unpackToNibbles(currentNode.get(0).asBytes());
             Object v = currentNode.get(1).asObj();
@@ -393,7 +390,7 @@ public class TrieImpl implements Trie {
                 Value child = this.getNode(hash);
 
                 Object newNode;
-                if (child.length() == PAIR_SIZE) {
+                if (child.length() == Node.PAIR_SIZE) {
                     byte[] newKey = concatenate(k, unpackToNibbles(child.get(0).asBytes()));
                     newNode = new Object[] {packNibbles(newKey), child.get(1).asObj()};
                 } else {
@@ -412,7 +409,7 @@ public class TrieImpl implements Trie {
             itemList[key[0]] = this.delete(itemList[key[0]], copyOfRange(key, 1, key.length));
 
             byte amount = -1;
-            for (byte i = 0; i < LIST_SIZE; i++) {
+            for (byte i = 0; i < Node.BRANCH_SIZE; i++) {
                 if (itemList[i] != "") {
                     if (amount == -1) {
                         amount = i;
@@ -427,10 +424,10 @@ public class TrieImpl implements Trie {
                 newNode = new Object[] {packNibbles(new byte[] {16}), itemList[amount]};
             } else if (amount >= 0) {
                 Value child = this.getNode(itemList[amount]);
-                if (child.length() == PAIR_SIZE) {
+                if (child.length() == Node.PAIR_SIZE) {
                     key = concatenate(new byte[] {amount}, unpackToNibbles(child.get(0).asBytes()));
                     newNode = new Object[] {packNibbles(key), child.get(1).asObj()};
-                } else if (child.length() == LIST_SIZE) {
+                } else if (child.length() == Node.BRANCH_SIZE) {
                     newNode = new Object[] {packNibbles(new byte[] {amount}), itemList[amount]};
                 }
             } else {
@@ -497,8 +494,8 @@ public class TrieImpl implements Trie {
     }
 
     private static Object[] copyNode(Value currentNode) {
-        Object[] itemList = emptyStringSlice(LIST_SIZE);
-        for (int i = 0; i < LIST_SIZE; i++) {
+        Object[] itemList = emptyStringSlice(Node.BRANCH_SIZE);
+        for (int i = 0; i < Node.BRANCH_SIZE; i++) {
             Object cpy = currentNode.get(i).asObj();
             if (cpy != null) {
                 itemList[i] = cpy;
@@ -936,13 +933,13 @@ public class TrieImpl implements Trie {
             hashes.add(node.asBytes());
         } else if (node.isList()) {
             List<Object> siblings = node.asList();
-            if (siblings.size() == PAIR_SIZE) {
+            if (siblings.size() == Node.PAIR_SIZE) {
                 Value val = new Value(siblings.get(1));
                 if (val.isHashCode() && !hasTerminator((byte[]) siblings.get(0))) {
                     hashes.add(val.asBytes());
                 }
             } else {
-                for (int j = 0; j < LIST_SIZE; ++j) {
+                for (int j = 0; j < Node.BRANCH_SIZE; ++j) {
                     Value val = new Value(siblings.get(j));
                     if (val.isHashCode()) {
                         hashes.add(val.asBytes());

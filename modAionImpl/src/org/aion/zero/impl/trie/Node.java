@@ -45,7 +45,7 @@ public class Node {
     private AtomicReference<List<Object>> items = new AtomicReference<>(null);
     private Value key = null;
 
-    private static final int PAIR_SIZE = 2;
+    static final int PAIR_SIZE = 2;
     static final int BRANCH_SIZE = 17;
 
     public Node(Value val) {
