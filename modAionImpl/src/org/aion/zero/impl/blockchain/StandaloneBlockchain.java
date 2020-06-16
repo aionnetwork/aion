@@ -390,7 +390,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                 bc.setTotalDifficulty(totalDiff);
                 bc.getRepository().loadImportableState(trieData, DatabaseType.STATE);
                 bc.getRepository().getWorldState().setRoot(best.getStateRoot());
-                bc.getRepository().getWorldState().sync(false);
+                bc.getRepository().getWorldState().syncWithoutFlush();
             }
 
             // set contract details

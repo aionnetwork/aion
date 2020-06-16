@@ -3,6 +3,7 @@ package org.aion.zero.impl.trie;
 import static org.aion.rlp.Value.fromRlpEncoded;
 import static org.aion.util.types.ByteArrayWrapper.wrap;
 
+import com.google.common.annotations.VisibleForTesting;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -103,54 +104,74 @@ public class Cache {
         }
     }
 
-    public void commit(boolean flushCache) {
+    public void commitWithoutFlush() {
         lock.lock();
         try {
-            // Don't try to commit if it isn't dirty
-            if ((dataSource == null) || !this.isDirty) {
-                // clear cache when flush requested
-                if (flushCache) {
-                    this.nodes.clear();
-                }
-                return;
-            }
+            commit(false);
+        } finally{
+            lock.unlock();
+        }
+    }
 
-            // long start = System.nanoTime();
-            // int batchMemorySize = 0;
-            Map<byte[], byte[]> batch = new HashMap<>();
-            List<byte[]> deleteBatch = new ArrayList<>();
-            for (ByteArrayWrapper nodeKey : this.nodes.keySet()) {
-                Node node = this.nodes.get(nodeKey);
+    @VisibleForTesting
+    public void commitForTest() {
+        lock.lock();
+        try {
+            commit(true);
+        } finally{
+            lock.unlock();
+        }
+    }
 
-                if (node == null || node.isDirty()) {
-                    byte[] value;
-                    if (node != null) {
-                        node.setDirty(false);
-                        value = node.getValue().encode();
-                    } else {
-                        value = null;
-                    }
+    public void commit() {
+        lock.lock();
+        try {
+            commit(!isDirty || nodes.size() > 20);
+        } finally{
+            lock.unlock();
+        }
+    }
 
-                    byte[] key = nodeKey.toBytes();
-
-                    batch.put(key, value);
-                    // batchMemorySize += length(key, value);
-                }
-            }
-            for (ByteArrayWrapper removedNode : removedNodes) {
-                deleteBatch.add(removedNode.toBytes());
-            }
-
-            this.dataSource.putBatch(batch);
-            this.dataSource.deleteBatch(deleteBatch);
-            this.isDirty = false;
+    private void commit(boolean flushCache) {
+        // Don't try to commit if it isn't dirty
+        if ((dataSource == null) || !this.isDirty) {
+            // clear cache when flush requested
             if (flushCache) {
                 this.nodes.clear();
             }
-            this.removedNodes.clear();
-        } finally {
-            lock.unlock();
+            return;
         }
+
+        Map<byte[], byte[]> batch = new HashMap<>();
+        List<byte[]> deleteBatch = new ArrayList<>();
+        for (ByteArrayWrapper nodeKey : this.nodes.keySet()) {
+            Node node = this.nodes.get(nodeKey);
+
+            if (node == null || node.isDirty()) {
+                byte[] value;
+                if (node != null) {
+                    node.setDirty(false);
+                    value = node.getValue().encode();
+                } else {
+                    value = null;
+                }
+
+                byte[] key = nodeKey.toBytes();
+
+                batch.put(key, value);
+            }
+        }
+        for (ByteArrayWrapper removedNode : removedNodes) {
+            deleteBatch.add(removedNode.toBytes());
+        }
+
+        this.dataSource.putBatch(batch);
+        this.dataSource.deleteBatch(deleteBatch);
+        this.isDirty = false;
+        if (flushCache) {
+            this.nodes.clear();
+        }
+        this.removedNodes.clear();
     }
 
     public boolean isDirty() {

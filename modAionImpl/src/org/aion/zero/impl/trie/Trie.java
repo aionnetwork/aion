@@ -59,7 +59,7 @@ public interface Trie {
     /** Commit all the changes until now */
     void sync();
 
-    void sync(boolean flushCache);
+    void syncWithoutFlush();
 
     // never used
     //    /** Discard all the changes until now */

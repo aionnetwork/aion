@@ -936,7 +936,7 @@ public class TrieTest {
         for (Map.Entry<ByteArrayWrapper, byte[]> e : getSampleTrieUpdates().entrySet()) {
             trie.update(e.getKey().toBytes(), e.getValue());
         }
-        trie.getCache().commit(true);
+        trie.getCache().commitForTest();
 
         byte[] root = trie.getRootHash();
 
@@ -953,7 +953,7 @@ public class TrieTest {
         for (Map.Entry<ByteArrayWrapper, byte[]> e : getSampleTrieUpdates().entrySet()) {
             trie.update(e.getKey().toBytes(), e.getValue());
         }
-        trie.getCache().commit(true);
+        trie.getCache().commitForTest();
 
         byte[] root = trie.getRootHash();
         byte[] value = mockDB.get(root).get();
@@ -971,7 +971,7 @@ public class TrieTest {
         for (Map.Entry<ByteArrayWrapper, byte[]> e : getSampleTrieUpdates().entrySet()) {
             trie.update(e.getKey().toBytes(), e.getValue());
         }
-        trie.getCache().commit(true);
+        trie.getCache().commitForTest();
 
         byte[] root = trie.getRootHash();
         // System.out.println(trie.getTrieDump(root));
@@ -1007,7 +1007,7 @@ public class TrieTest {
         for (Map.Entry<ByteArrayWrapper, byte[]> e : getSampleTrieUpdates().entrySet()) {
             trie.update(e.getKey().toBytes(), e.getValue());
         }
-        trie.getCache().commit(true);
+        trie.getCache().commitForTest();
 
         byte[] root = trie.getRootHash();
         // System.out.println(trie.getTrieDump(root));
@@ -1044,7 +1044,7 @@ public class TrieTest {
         for (Map.Entry<ByteArrayWrapper, byte[]> e : getSampleTrieUpdates().entrySet()) {
             trie.update(e.getKey().toBytes(), e.getValue());
         }
-        trie.getCache().commit(true);
+        trie.getCache().commitForTest();
 
         byte[] root = trie.getRootHash();
         byte[] value = mockDB.get(root).get();
@@ -1074,7 +1074,7 @@ public class TrieTest {
         for (Map.Entry<ByteArrayWrapper, byte[]> e : getSampleTrieUpdates().entrySet()) {
             trie.update(e.getKey().toBytes(), e.getValue());
         }
-        trie.getCache().commit(true);
+        trie.getCache().commitForTest();
 
         byte[] value, root = trie.getRootHash();
         Set<ByteArrayWrapper> allKeys = trie.getTrieKeys(root);
