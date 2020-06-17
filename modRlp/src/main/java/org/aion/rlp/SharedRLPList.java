@@ -68,4 +68,24 @@ public class SharedRLPList extends ArrayList<RLPElement> implements RLPElement {
         System.arraycopy(list.rlpData, list.pos, result, 0, list.length);
         return result;
     }
+
+    public static Object getDecode(RLPElement encodedData) {
+        if (encodedData.isList()) {
+            SharedRLPList list = (SharedRLPList)encodedData;
+            Object[] objs = new Object[list.size()];
+            for (int i=0; i<list.size(); i++) {
+                RLPElement e = list.get(i);
+                if (e.isList()) {
+                    objs[i] = getDecode(e);
+                } else {
+                    byte[] rlpData = e.getRLPData();
+                    objs[i] = (rlpData.length == 0 ? "" : rlpData);
+                }
+            }
+            return objs;
+        } else {
+            byte[] rlpData = encodedData.getRLPData();
+            return rlpData.length == 0 ? "" : rlpData;
+        }
+    }
 }

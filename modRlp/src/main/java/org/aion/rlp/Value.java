@@ -164,7 +164,13 @@ public class Value {
 
     private void decode() {
         if (!this.decoded) {
-            this.value = RLP.decode(rlp, 0).getDecoded();
+            SharedRLPList decodedList = RLP.decode2SharedList(rlp);
+            if (decodedList.isEmpty()) {
+                this.value = "";
+            } else {
+                this.value = SharedRLPList.getDecode(decodedList.get(0));
+            }
+
             this.decoded = true;
         }
     }
