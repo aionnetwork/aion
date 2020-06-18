@@ -487,10 +487,19 @@ public class TrieImpl implements Trie {
     }
 
     private static boolean isEmptyNode(Object node) {
-        Value n = new Value(node);
-        return (node == null
-                || (n.isString() && (n.asString().isEmpty() || n.get(0).isNull()))
-                || n.length() == 0);
+        if (node == null) {
+            return true;
+        } else if (node instanceof String) {
+            return ((String) node).isEmpty();
+        } else if (node instanceof Object[]) {
+            return (((Object[])node).length == 0 || ((Object[])node)[0] == null);
+        } else if (node instanceof byte[]) {
+            return ((byte[]) node).length == 0;
+        } else if (node instanceof Value) {
+            return (((Value)node).length() == 0 || ((Value)node).get(0).isNull());
+        } else {
+            throw new IllegalStateException("Invalid node class type:" + node.getClass().getCanonicalName());
+        }
     }
 
     private static Object[] copyNode(Value currentNode) {
