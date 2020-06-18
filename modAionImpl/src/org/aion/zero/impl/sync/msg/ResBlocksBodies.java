@@ -7,7 +7,6 @@ import org.aion.p2p.Msg;
 import org.aion.p2p.Ver;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
-import org.aion.rlp.RLPList;
 import org.aion.rlp.SharedRLPList;
 import org.aion.zero.impl.sync.Act;
 
@@ -17,21 +16,11 @@ import org.aion.zero.impl.sync.Act;
  */
 public final class ResBlocksBodies extends Msg {
 
-    private final List<byte[]> blocksBodies;
+    private final Object[] blocksBodies;
 
-    public ResBlocksBodies(final List<byte[]> _blocksBodies) {
+    public ResBlocksBodies(final Object[] _blocksBodies) {
         super(Ver.V0, Ctrl.SYNC, Act.RES_BLOCKS_BODIES);
         blocksBodies = _blocksBodies;
-    }
-
-    public static ResBlocksBodies decode(final byte[] _msgBytes) {
-        RLPList paramsList = (RLPList) RLP.decode2(_msgBytes).get(0);
-        List<byte[]> blocksBodies = new ArrayList<>();
-        for (RLPElement aParamsList : paramsList) {
-            RLPList rlpData = ((RLPList) aParamsList);
-            blocksBodies.add(rlpData.getRLPData());
-        }
-        return new ResBlocksBodies(blocksBodies);
     }
 
     public static ResBlocksBodies decodeUsingRef(final byte[] _msgBytes) {
@@ -41,25 +30,37 @@ public final class ResBlocksBodies extends Msg {
         } else {
             RLPElement element = list.get(0);
             if (element.isList()) {
-                List<byte[]> blocksBodies = new ArrayList<>();
-                for (RLPElement aParamsList : (SharedRLPList)element) {
-                    if (aParamsList.isList()) {
-                        blocksBodies.add(SharedRLPList.getRLPDataCopy((SharedRLPList) aParamsList));
-                    }
-                }
-                return new ResBlocksBodies(blocksBodies);
+                return new ResBlocksBodies(((SharedRLPList)element).toArray());
             } else {
                 return new ResBlocksBodies(null);
             }
         }
     }
 
-    public List<byte[]> getBlocksBodies() {
-        return this.blocksBodies;
+    public List<SharedRLPList> getBlocksBodies() {
+        List<SharedRLPList> res = new ArrayList<>();
+        for (Object o : blocksBodies) {
+            if (o instanceof byte[]) {
+                res.add(RLP.decode2SharedList((byte[]) o));
+            } else {
+                res.add((SharedRLPList) o);
+            }
+        }
+
+        return res;
     }
 
     @Override
     public byte[] encode() {
-        return RLP.encodeList(this.blocksBodies.toArray(new byte[this.blocksBodies.size()][]));
+        byte[][] rawContain = new byte[blocksBodies.length][];
+        for (int i=0; i<blocksBodies.length; i++) {
+            Object o = blocksBodies[i];
+            if (o instanceof byte[]) {
+                rawContain[i] = (byte[]) o;
+            } else {
+                rawContain[i] = SharedRLPList.getRLPDataCopy((SharedRLPList) o);
+            }
+        }
+        return RLP.encodeList(rawContain);
     }
 }

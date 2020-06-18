@@ -5,7 +5,7 @@ import org.aion.p2p.Ctrl;
 import org.aion.p2p.Handler;
 import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.Ver;
-import org.aion.util.bytes.ByteUtil;
+import org.aion.rlp.SharedRLPList;
 import org.aion.zero.impl.sync.Act;
 import org.aion.zero.impl.sync.SyncMgr;
 import org.aion.zero.impl.sync.msg.ResBlocksBodies;
@@ -47,24 +47,18 @@ public final class ResBlocksBodiesHandler extends Handler {
         surveyLog.debug("Receive Stage 4: decode bodies, duration = {} ns.", duration);
 
         startTime = System.nanoTime();
-        List<byte[]> bodies = resBlocksBodies.getBlocksBodies();
-        if (bodies == null) {
-            log.error("<res-bodies decoder-error from {}, len: {}>", _displayId, _msgBytes.length);
-            p2pMgr.errCheck(_nodeIdHashcode, _displayId);
-            log.trace("res-bodies dump: {}", ByteUtil.toHexString(_msgBytes));
-        } else {
-            this.syncMgr
-                    .getSyncStats()
-                    .updateResponseTime(_displayId, System.nanoTime(), RequestType.BODIES);
+        List<SharedRLPList> bodies = resBlocksBodies.getBlocksBodies();
+        this.syncMgr
+                .getSyncStats()
+                .updateResponseTime(_displayId, System.nanoTime(), RequestType.BODIES);
 
-            if (bodies.isEmpty()) {
-                p2pMgr.errCheck(_nodeIdHashcode, _displayId);
-                log.error("<res-bodies-empty node={}>", _displayId);
-            } else {
-                syncMgr.getSyncStats()
-                        .updatePeerBlocks(_displayId, bodies.size(), BlockType.RECEIVED);
-                syncMgr.validateAndAddBlocks(_nodeIdHashcode, _displayId, bodies);
-            }
+        if (bodies.size() == 0) {
+            p2pMgr.errCheck(_nodeIdHashcode, _displayId);
+            log.error("<res-bodies-empty node={}>", _displayId);
+        } else {
+            syncMgr.getSyncStats()
+                    .updatePeerBlocks(_displayId, bodies.size(), BlockType.RECEIVED);
+            syncMgr.validateAndAddBlocks(_nodeIdHashcode, _displayId, bodies);
         }
         duration = System.nanoTime() - startTime;
         surveyLog.debug("Receive Stage 5: validate bodies, duration = {} ns.", duration);

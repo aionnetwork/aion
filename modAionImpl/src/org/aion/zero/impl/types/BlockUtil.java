@@ -153,20 +153,18 @@ public final class BlockUtil {
      * invalid data.
      *
      * @param header the block header
-     * @param bodyBytes the body of the block; can be an empty byte array when there are no
+     * @param txList the body of the block; can be an empty byte array when there are no
      *     transactions in the block
      * @return a new instance of a block or {@code null} when given invalid data
      * @implNote Assumes the body data is from an unsafe source.
      */
-    public static Block newBlockWithHeaderFromUnsafeSource(BlockHeader header, byte[] bodyBytes) {
+    public static Block newBlockWithHeaderFromUnsafeSource(BlockHeader header, SharedRLPList txList) {
         // return null when given empty bytes
-        if (header == null || bodyBytes == null) {
+        if (header == null || txList == null) {
             return null;
         }
         try {
-            SharedRLPList items = (SharedRLPList) RLP.decode2SharedList(bodyBytes).get(0);
-            SharedRLPList transactions = (SharedRLPList) items.get(0);
-            List<AionTransaction> txs = parseTransactions(transactions);
+            List<AionTransaction> txs = parseTransactions(txList);
             if (!BlockDetailsValidator.isValidTxTrieRoot(header.getTxTrieRoot(), txs, header.getNumber(), syncLog)) {
                 return null;
             }
@@ -183,15 +181,14 @@ public final class BlockUtil {
         }
     }
 
-    public static byte[] getTxTrieRootFromUnsafeSource(byte[] bodyBytes) {
-        Objects.requireNonNull(bodyBytes);
+    public static byte[] getTxTrieRootFromUnsafeSource(SharedRLPList txList) {
+        Objects.requireNonNull(txList);
 
         try {
-            SharedRLPList items = (SharedRLPList) RLP.decode2SharedList(bodyBytes).get(0);
-            SharedRLPList transactions = (SharedRLPList) items.get(0);
-            return calcTxTrieRootFromRLP(transactions);
+            return calcTxTrieRootFromRLP((SharedRLPList) txList.get(0));
         } catch (Exception e) {
-            genLog.warn("Unable to decode block body=" + ByteArrayWrapper.wrap(bodyBytes), e);
+            genLog.warn("Unable to decode block body=" + ByteArrayWrapper.wrap(SharedRLPList.getRLPDataCopy(
+                (SharedRLPList) txList.get(0))), e);
             return null;
         }
     }

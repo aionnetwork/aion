@@ -26,6 +26,7 @@ import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.Block;
 import org.aion.mcf.blockchain.BlockHeader;
 import org.aion.p2p.INode;
+import org.aion.rlp.SharedRLPList;
 import org.aion.zero.impl.config.StatsType;
 import org.aion.p2p.IP2pMgr;
 import org.aion.util.conversions.Hex;
@@ -373,8 +374,7 @@ public final class SyncMgr {
      * @param _bodies List<byte[]> Assemble and validate blocks batch and add batch to import queue
      *     from network response blocks bodies
      */
-    public void validateAndAddBlocks(
-            int _nodeIdHashcode, String _displayId, final List<byte[]> _bodies) {
+    public void validateAndAddBlocks(int _nodeIdHashcode, String _displayId, final List<SharedRLPList> _bodies) {
         if (_bodies == null) return;
         log.debug("<received-bodies size={} node={}>", _bodies.size(), _displayId);
 
@@ -389,9 +389,10 @@ public final class SyncMgr {
         // assemble batch
         List<Block> blocks = new ArrayList<>(_bodies.size());
         Iterator<BlockHeader> headerIt = headers.iterator();
-        Iterator<byte[]> bodyIt = _bodies.iterator();
+        Iterator<SharedRLPList> bodyIt = _bodies.iterator();
         while (headerIt.hasNext() && bodyIt.hasNext()) {
-            Block block = BlockUtil.newBlockWithHeaderFromUnsafeSource(headerIt.next(), bodyIt.next());
+            Block block = BlockUtil.newBlockWithHeaderFromUnsafeSource(headerIt.next(),
+                (SharedRLPList) bodyIt.next().get(0));
             if (block == null) {
                 log.debug("<assemble-and-validate-blocks node={} size={}>", _displayId, _bodies.size());
                 break;

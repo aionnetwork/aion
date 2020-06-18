@@ -105,7 +105,7 @@ public final class ReqBlocksBodiesHandler extends Handler {
                 blockBodies.add(blockBytesForadd);
             }
 
-            this.p2pMgr.send(_nodeIdHashcode, _displayId, new ResBlocksBodies(blockBodies));
+            this.p2pMgr.send(_nodeIdHashcode, _displayId, new ResBlocksBodies(blockBodies.toArray()));
             this.syncMgr
                     .getSyncStats()
                     .updateTotalBlockRequestsByPeer(_displayId, blockBodies.size());
