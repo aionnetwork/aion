@@ -133,4 +133,44 @@ public class Node {
     public String toString() {
         return "[" + dirty + ", " + value + "]";
     }
+
+    // Created an array of empty elements of required length
+    static Object[] createSlices() {
+        Object[] slice = new Object[BRANCH_SIZE];
+        for (int i = 0; i < BRANCH_SIZE; i++) {
+            slice[i] = "";
+        }
+        return slice;
+    }
+
+    static Object[] clone(Value currentNode) {
+        Objects.requireNonNull(currentNode);
+
+        Object[] itemList = createSlices();
+        currentNode.asList();
+        int index = 0;
+        for (Object o : currentNode.asList()) {
+            if (o != null) {
+                itemList[index++] = o;
+            }
+        }
+
+        return itemList;
+    }
+
+    static boolean isEmptyNode(Object node) {
+        if (node == null) {
+            return true;
+        } else if (node instanceof String) {
+            return ((String) node).isEmpty();
+        } else if (node instanceof Object[]) {
+            return (((Object[])node).length == 0 || ((Object[])node)[0] == null);
+        } else if (node instanceof byte[]) {
+            return ((byte[]) node).length == 0;
+        } else if (node instanceof Value) {
+            return (((Value)node).length() == 0 || ((Value)node).get(0).isNull());
+        } else {
+            throw new IllegalStateException("Invalid node class type:" + node.getClass().getCanonicalName());
+        }
+    }
 }

@@ -8,6 +8,7 @@ import static org.aion.rlp.CompactEncoder.unpackToNibbles;
 import static org.aion.rlp.RLP.calcElementPrefixSize;
 import static org.aion.util.bytes.ByteUtil.matchingNibbleLength;
 import static org.aion.util.types.ByteArrayWrapper.wrap;
+import static org.aion.zero.impl.trie.Node.isEmptyNode;
 import static org.spongycastle.util.Arrays.concatenate;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -327,7 +328,7 @@ public class TrieImpl implements Trie {
                         this.insert("", copyOfRange(key, matchingLength + 1, key.length), value);
 
                 // Create an expanded slice
-                Object[] scaledSlice = emptyStringSlice(Node.BRANCH_SIZE);
+                Object[] scaledSlice = Node.createSlices();
 
                 // Set the copied and new node
                 scaledSlice[k[matchingLength]] = oldNode;
@@ -347,8 +348,8 @@ public class TrieImpl implements Trie {
             }
         } else {
 
-            // Copy the current node over to the new node
-            Object[] newNode = copyNode(currentNode);
+            // clone the current node over to the new node
+            Object[] newNode = Node.clone(currentNode);
 
             // Replace the first nibble in the key
             newNode[key[0]] =
@@ -408,8 +409,8 @@ public class TrieImpl implements Trie {
                 return node;
             }
         } else {
-            // Copy the current node over to a new node
-            Object[] itemList = copyNode(currentNode);
+            // clone the current node over to a new node
+            Object[] itemList = Node.clone(currentNode);
 
             // Replace the first nibble in the key
             itemList[key[0]] = this.delete(itemList[key[0]], copyOfRange(key, 1, key.length));
@@ -492,33 +493,6 @@ public class TrieImpl implements Trie {
         return node;
     }
 
-    private static boolean isEmptyNode(Object node) {
-        if (node == null) {
-            return true;
-        } else if (node instanceof String) {
-            return ((String) node).isEmpty();
-        } else if (node instanceof Object[]) {
-            return (((Object[])node).length == 0 || ((Object[])node)[0] == null);
-        } else if (node instanceof byte[]) {
-            return ((byte[]) node).length == 0;
-        } else if (node instanceof Value) {
-            return (((Value)node).length() == 0 || ((Value)node).get(0).isNull());
-        } else {
-            throw new IllegalStateException("Invalid node class type:" + node.getClass().getCanonicalName());
-        }
-    }
-
-    private static Object[] copyNode(Value currentNode) {
-        Object[] itemList = emptyStringSlice(Node.BRANCH_SIZE);
-        for (int i = 0; i < Node.BRANCH_SIZE; i++) {
-            Object cpy = currentNode.get(i).asObj();
-            if (cpy != null) {
-                itemList[i] = cpy;
-            }
-        }
-        return itemList;
-    }
-
     // Simple compare function which compares two tries based on their stateRoot
     @Override
     public boolean equals(Object trie) {
@@ -553,15 +527,6 @@ public class TrieImpl implements Trie {
     }
 
     /** ****************************** Utility functions * ***************************** */
-    // Created an array of empty elements of required length
-    private static Object[] emptyStringSlice(int l) {
-        Object[] slice = new Object[l];
-        for (int i = 0; i < l; i++) {
-            slice[i] = "";
-        }
-        return slice;
-    }
-
     private void scanTree(byte[] hash, ScanAction scanAction) {
         Node node = this.getCache().get(hash);
         if (node == null) {
