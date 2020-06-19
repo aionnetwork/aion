@@ -236,10 +236,9 @@ public class TrieImpl implements Trie {
             || (root instanceof String && "".equals(root))) {
             return ConstantUtil.EMPTY_TRIE_HASH;
         } else if (root instanceof byte[]) {
-            return (byte[]) this.getRoot();
+            return (byte[])root;
         } else {
-            Value rootValue = new Value(this.getRoot());
-            return HashUtil.h256(rootValue.encode());
+            return HashUtil.h256(RLP.encode(root));
         }
     }
 
