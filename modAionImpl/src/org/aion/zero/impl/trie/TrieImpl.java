@@ -478,12 +478,12 @@ public class TrieImpl implements Trie {
         Value value = new Value(node);
         byte[] enc = value.encode();
         if (enc.length >= ByteUtil.EMPTY_WORD.length) {
-            byte[] sha = HashUtil.h256(value.encode());
+            byte[] sha = HashUtil.h256(enc);
             this.cache.put(ByteArrayWrapper.wrap(sha), new Node(value, true));
             return sha;
         }
 
-        return value;
+        return node;
     }
 
     private static boolean isEmptyNode(Object node) {
