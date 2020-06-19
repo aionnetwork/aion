@@ -147,8 +147,15 @@ public class TrieImpl implements Trie {
         lock.lock();
         try {
             byte[] k = binToNibbles(key);
-            Value c = new Value(this.get(this.root, k));
-            return c.asBytes();
+            Object o = this.get(this.root, k);
+            if (o instanceof String) {
+                return ((String)o).getBytes();
+            } else if (o instanceof byte[]){
+                return (byte[]) o;
+            } else {
+                // TODO: do we really need to check this case?
+                return ByteUtil.EMPTY_BYTE_ARRAY;
+            }
         } finally {
             lock.unlock();
         }
