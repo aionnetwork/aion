@@ -4,7 +4,6 @@ import static org.aion.rlp.CompactEncoder.hasTerminator;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.atomic.AtomicReference;
 import org.aion.rlp.Value;
 
 /**
@@ -42,7 +41,7 @@ public class Node {
     /* RLP encoded value of the Trie-node */
     private final Value value;
     private boolean dirty;
-    private AtomicReference<List<Object>> items = new AtomicReference<>(null);
+    private List<Object> items;
     private Value key = null;
 
     static final int PAIR_SIZE = 2;
@@ -75,43 +74,37 @@ public class Node {
     }
 
     public boolean isPair() {
-        if (items.get() != null) {
-            return items.get().size() == PAIR_SIZE;
+        if (items != null) {
+            return items.size() == PAIR_SIZE;
         } else if (value.isList()) {
-            items.set(value.asList());
-            return items.get().size() == PAIR_SIZE;
+            items = value.asList();
+            return items.size() == PAIR_SIZE;
         } else {
             return false;
         }
     }
 
     public boolean isBranch() {
-        if (items.get() != null) {
-            return items.get().size() == BRANCH_SIZE;
+        if (items != null) {
+            return items.size() == BRANCH_SIZE;
         } else if (value.isList()) {
-            items.set(value.asList());
-            return items.get().size() == BRANCH_SIZE;
+            items = value.asList();
+            return items.size() == BRANCH_SIZE;
         } else {
             return false;
         }
     }
 
     public boolean isExtension() {
-        assert isPair();
         if (key == null) {
-            key = new Value(items.get().get(1));
+            key = new Value(items.get(1));
         }
 
-        return key.isHashCode() && !hasTerminator((byte[]) items.get().get(0));
+        return key.isHashCode() && !hasTerminator((byte[]) items.get(0));
     }
 
     public boolean isEmpty() {
         return value.length() == 0 || (value.isString() && (value.asString().isEmpty()) || value.get(0).isNull());
-    }
-
-    public byte[] getEncodedPath() {
-        assert isPair();
-        return (byte[]) items.get().get(0);
     }
 
     /**
@@ -124,9 +117,8 @@ public class Node {
     }
 
     public Value getBranchItem(int index) {
-        assert isBranch();
         assert index >= 0 && index < BRANCH_SIZE;
-        return new Value(items.get().get(index));
+        return new Value(items.get(index));
     }
 
     @Override
