@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.locks.ReentrantLock;
 import org.aion.db.impl.ByteArrayKeyValueStore;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
@@ -30,21 +29,14 @@ public class Cache {
     private Set<ByteArrayWrapper> removedNodes = new HashSet<>();
     private boolean isDirty;
 
-    private ReentrantLock lock = new ReentrantLock();
-
     public Cache(ByteArrayKeyValueStore dataSource) {
         this.dataSource = dataSource;
     }
 
     public void markRemoved(byte[] key) {
-        lock.lock();
-        try {
-            ByteArrayWrapper keyW = ByteArrayWrapper.wrap(key);
-            removedNodes.add(keyW);
-            nodes.remove(keyW);
-        } finally {
-            lock.unlock();
-        }
+        ByteArrayWrapper keyW = ByteArrayWrapper.wrap(key);
+        removedNodes.add(keyW);
+        nodes.remove(keyW);
     }
 
     /**
@@ -56,80 +48,50 @@ public class Cache {
      * @return keccak hash of RLP encoded node if length &gt; 32 otherwise return node itself
      */
     void put(ByteArrayWrapper key, Node node) {
-        lock.lock();
-        try {
-            this.nodes.put(key, node);
-            this.removedNodes.remove(key);
-            this.isDirty = true;
-        } finally {
-            lock.unlock();
-        }
+        this.nodes.put(key, node);
+        this.removedNodes.remove(key);
+        this.isDirty = true;
     }
 
     public Node get(byte[] key) {
-        lock.lock();
-        try {
-            ByteArrayWrapper wrappedKey = wrap(key);
-            Node node = nodes.get(wrappedKey);
-            if (node != null) {
-                // cachehits++;
+        ByteArrayWrapper wrappedKey = wrap(key);
+        Node node = nodes.get(wrappedKey);
+        if (node != null) {
+            // cachehits++;
+            return node;
+        } else if (this.dataSource != null) {
+            Optional<byte[]> data = this.dataSource.get(key);
+            if (data.isPresent()) {
+                // dbhits++;
+                node = new Node(fromRlpEncoded(data.get()), false);
+                nodes.put(wrappedKey, node);
                 return node;
-            } else if (this.dataSource != null) {
-                Optional<byte[]> data = this.dataSource.get(key);
-                if (data.isPresent()) {
-                    // dbhits++;
-                    node = new Node(fromRlpEncoded(data.get()), false);
-                    nodes.put(wrappedKey, node);
-                    return node;
-                }
             }
-
-            return null;
-        } finally {
-            lock.unlock();
         }
+
+        return null;
     }
 
     public void delete(byte[] key) {
-        lock.lock();
-        try {
-            ByteArrayWrapper wrappedKey = wrap(key);
-            this.nodes.remove(wrappedKey);
+        ByteArrayWrapper wrappedKey = wrap(key);
+        this.nodes.remove(wrappedKey);
 
-            if (dataSource != null) {
-                this.dataSource.delete(key);
-            }
-        } finally {
-            lock.unlock();
+        if (dataSource != null) {
+            this.dataSource.delete(key);
         }
     }
 
     public void commitWithoutFlush() {
-        lock.lock();
-        try {
             commit(false);
-        } finally{
-            lock.unlock();
-        }
     }
 
     @VisibleForTesting
     public void commitForTest() {
-        lock.lock();
-        try {
-            commit(true);
-        } finally{
-            lock.unlock();
-        }
+        commit(true);
     }
 
     public void commit() {
-        lock.lock();
-        try {
-            commit(!isDirty || nodes.size() > 20);
-        } finally{
-            lock.unlock();
-        }
+        commit(!isDirty || nodes.size() > 20);
     }
 
     private void commit(boolean flushCache) {
@@ -175,77 +137,52 @@ public class Cache {
     }
 
     public boolean isDirty() {
-        lock.lock();
-        try {
-            return isDirty;
-        } finally {
-            lock.unlock();
-        }
+        return isDirty;
     }
 
     public Map<ByteArrayWrapper, Node> getNodes() {
-        lock.lock();
-        try {
-            return nodes;
-        } finally {
-            lock.unlock();
-        }
+        return nodes;
     }
 
     public ByteArrayKeyValueStore getDb() {
-        lock.lock();
-        try {
-            return dataSource;
-        } finally {
-            lock.unlock();
-        }
+        return dataSource;
     }
 
     @SuppressWarnings("OptionalGetWithoutIsPresent")
     public void setDB(ByteArrayKeyValueStore kvds) {
-        lock.lock();
-        try {
-            if (this.dataSource == kvds) {
-                return;
-            }
-
-            Map<byte[], byte[]> rows = new HashMap<>();
-            if (this.dataSource == null) {
-                for (ByteArrayWrapper key : nodes.keySet()) {
-                    Node node = nodes.get(key);
-                    if (node == null) {
-                        rows.put(key.toBytes(), null);
-                    } else if (!node.isDirty()) {
-                        rows.put(key.toBytes(), node.getValue().encode());
-                    }
-                }
-            } else {
-                Iterator<byte[]> iterator = dataSource.keys();
-                while (iterator.hasNext()) {
-                    byte[] key = iterator.next();
-                    rows.put(key, this.dataSource.get(key).get());
-                }
-
-                try {
-                    this.dataSource.close();
-                } catch (Exception e) {
-                    LOG.error("Unable to close data source.", e);
-                }
-            }
-
-            kvds.putBatch(rows);
-            this.dataSource = kvds;
-        } finally {
-            lock.unlock();
+        if (this.dataSource == kvds) {
+            return;
         }
+
+        Map<byte[], byte[]> rows = new HashMap<>();
+        if (this.dataSource == null) {
+            for (ByteArrayWrapper key : nodes.keySet()) {
+                Node node = nodes.get(key);
+                if (node == null) {
+                    rows.put(key.toBytes(), null);
+                } else if (!node.isDirty()) {
+                    rows.put(key.toBytes(), node.getValue().encode());
+                }
+            }
+        } else {
+            Iterator<byte[]> iterator = dataSource.keys();
+            while (iterator.hasNext()) {
+                byte[] key = iterator.next();
+                rows.put(key, this.dataSource.get(key).get());
+            }
+
+            try {
+                this.dataSource.close();
+            } catch (Exception e) {
+                LOG.error("Unable to close data source.", e);
+            }
+        }
+
+        kvds.putBatch(rows);
+        this.dataSource = kvds;
     }
 
     public int getSize() {
-        lock.lock();
-        try {
-            return nodes.size();
-        } finally {
-            lock.unlock();
-        }
+        return nodes.size();
     }
 }
