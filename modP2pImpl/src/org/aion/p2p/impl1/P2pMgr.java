@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -51,6 +52,7 @@ import org.slf4j.Logger;
 public final class P2pMgr implements IP2pMgr {
     private static final int DELAY_SHOW_P2P_STATUS = 10; // in seconds
     private static final int DELAY_CLEAR_PEERS = 10; // in seconds
+    private static final int DELAY_SELECT = 100; // in milliseconds
     private static final int DELAY_REQUEST_ACTIVE_NODES = 1; // in seconds
     private static final int PERIOD_UPNP_PORT_MAPPING = 3600000;
     private static final int DELAY_CONNECT_OUTBOUND = 1; // in seconds
@@ -83,6 +85,7 @@ public final class P2pMgr implements IP2pMgr {
     private ServerSocketChannel tcpServer;
     private Selector selector;
     private ScheduledExecutorService scheduledWorkers;
+    private ScheduledExecutorService inboundExecutor;
     private int errTolerance;
     /*
      * The size limit was chosen taking into account that:
@@ -172,6 +175,7 @@ public final class P2pMgr implements IP2pMgr {
             selector = Selector.open();
 
             scheduledWorkers = Executors.newScheduledThreadPool(6);
+            inboundExecutor = Executors.newSingleThreadScheduledExecutor();
 
             tcpServer = ServerSocketChannel.open();
             tcpServer.configureBlocking(false);
@@ -199,9 +203,7 @@ public final class P2pMgr implements IP2pMgr {
 
             tcpServer.register(selector, SelectionKey.OP_ACCEPT);
 
-            Thread thrdIn = new Thread(getInboundInstance(), "p2p-in");
-            thrdIn.setPriority(Thread.NORM_PRIORITY);
-            thrdIn.start();
+            inboundExecutor.scheduleWithFixedDelay(this::checkSelector, DELAY_SELECT, DELAY_SELECT, TimeUnit.MILLISECONDS);
 
             if (p2pLOG.isDebugEnabled()) {
                 this.handlers.forEach(
@@ -410,6 +412,10 @@ public final class P2pMgr implements IP2pMgr {
             scheduledWorkers.shutdownNow();
         }
 
+        if (inboundExecutor != null) {
+            inboundExecutor.shutdownNow();
+        }
+
         for (List<Handler> hdrs : handlers.values()) {
             hdrs.forEach(Handler::shutDown);
         }
@@ -570,13 +576,60 @@ public final class P2pMgr implements IP2pMgr {
         nodeMgr.updateChainInfo(blockNumber, blockHash, blockTD);
     }
 
-    private TaskInbound getInboundInstance() {
-        return new TaskInbound(
-                p2pLOG,
-                surveyLog,
-                this,
-                this.selector,
-                this.start);
+    /**
+     * Not thread safe! Should be used by a single thread at a time. This is why the {@link #inboundExecutor} has a single thread.
+     */
+    private final ByteBuffer readBuf = ByteBuffer.allocate(P2pConstant.MAX_BODY_SIZE);
+
+    private void checkSelector() {
+        Thread.currentThread().setName("p2p-in");
+        try {
+            if (selector.selectNow() != 0) {
+                for (Iterator<SelectionKey> keys = selector.selectedKeys().iterator(); keys.hasNext(); ) {
+                    SelectionKey key = keys.next();
+                    if (key != null && key.isValid()) {
+                        if (key.isAcceptable()) {
+                            ServerSocketChannel channel = (ServerSocketChannel) key.channel();
+                            try {
+                                acceptConnection(channel);
+                            } catch (IOException e) {
+                                p2pLOG.error("Could not accept connection.", e);
+                                ChannelBuffer cb = (ChannelBuffer) key.attachment();
+                                closeSocket((SocketChannel) key.channel(), (cb != null ? cb.getDisplayId() : null) + "-read-msg-exception ", e);
+                                if (cb != null) {
+                                    cb.setClosed();
+                                }
+                            }
+                        }
+
+                        if (key.isReadable()) {
+                            ChannelBuffer cb = (ChannelBuffer) key.attachment();
+                            if (cb == null) {
+                                p2pLOG.error("inbound exception: attachment is null");
+                                continue;
+                            }
+                            try {
+                                readBuffer(key, cb, readBuf);
+                            } catch (IOException e) {
+                                p2pLOG.error("Could not read buffer.", e);
+                                closeSocket((SocketChannel) key.channel(),
+                                    cb.getDisplayId() + "-read-msg-exception ", e);
+                                cb.setClosed();
+                            } catch (NullPointerException npe) {
+                                // TODO: investigate why readBody throw the NPE.
+                                p2pLOG.debug("Parsing msg body failed.", npe);
+                                closeSocket((SocketChannel) key.channel(),
+                                    cb.getDisplayId() + "-read-msg-exception ", npe);
+                                cb.setClosed();
+                            }
+                        }
+                    }
+                    keys.remove();
+                }
+            }
+        } catch (IOException e) {
+            p2pLOG.error("Exception encountered while selecting keys.", e);
+        }
     }
 
     private TaskReceive getReceiveInstance() {
@@ -653,7 +706,7 @@ public final class P2pMgr implements IP2pMgr {
         }
     }
 
-    void acceptConnection(ServerSocketChannel _channel) throws IOException {
+    private void acceptConnection(ServerSocketChannel _channel) throws IOException {
         if (this.nodeMgr.activeNodesSize() >= getMaxActiveNodes()) {
             return;
         }
@@ -687,7 +740,7 @@ public final class P2pMgr implements IP2pMgr {
         }
     }
 
-    void readBuffer(final SelectionKey sk, final ChannelBuffer cb, final ByteBuffer readBuf) throws IOException {
+    private void readBuffer(final SelectionKey sk, final ChannelBuffer cb, final ByteBuffer readBuf) throws IOException {
         readBuf.rewind();
         SocketChannel sc = (SocketChannel) sk.channel();
 
