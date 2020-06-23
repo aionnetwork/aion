@@ -283,7 +283,7 @@ public final class P2pMgr implements IP2pMgr {
 
     public void send(int nodeId, String displayId, final Msg message, Dest peerList) {
         scheduledWorkers.execute(() -> {
-            Thread.currentThread().setName("p2p-out");
+            Thread.currentThread().setName("p2p-out-" + Thread.currentThread().getId());
             long startTime = System.nanoTime();
             process(nodeId, displayId, message, peerList, System.nanoTime());
             long duration = System.nanoTime() - startTime;
@@ -614,7 +614,7 @@ public final class P2pMgr implements IP2pMgr {
     }
 
     private static void receiveMessage(int nodeId, String displayId, byte[] msg, List<Handler> handlers) {
-        Thread.currentThread().setName("p2p-receive");
+        Thread.currentThread().setName("p2p-recv-" + Thread.currentThread().getId());
         for (Handler hlr : handlers) {
             if (hlr == null) {
                 continue;

@@ -327,9 +327,8 @@ public final class SyncMgr {
     /**
      * Requests the bodies associated to the given block headers.
      */
-    @VisibleForTesting
     void requestBodies(int nodeId, String displayId) {
-        Thread.currentThread().setName("sync-gb");
+        Thread.currentThread().setName("sync-gb-" + Thread.currentThread().getId());
         long startTime = System.nanoTime();
 
         List<List<BlockHeader>> forRequests = syncHeaderRequestManager.getHeadersForBodiesRequests(nodeId);
@@ -417,7 +416,7 @@ public final class SyncMgr {
      * to storage and delaying queue population when the predefined capacity is reached.
      */
     private void filterBlocks(final BlocksWrapper downloadedBlocks) {
-        Thread.currentThread().setName("sync-filter");
+        Thread.currentThread().setName("sync-filt-" + Thread.currentThread().getId());
         long currentBest = chain.getBestBlock() == null ? 0L : chain.getBestBlock().getNumber();
         boolean isFarInFuture = downloadedBlocks.firstBlockNumber > currentBest + MAX_STORAGE_DIFF;
         int queueSize = importExecutor.getQueue().size();
