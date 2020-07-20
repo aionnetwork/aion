@@ -53,7 +53,7 @@ public class FvmBenchmark {
                         ByteArrayWrapper.wrap(
                             ByteUtil.stripLeadingZeroes(FvmDataWord.fromBytes(RandomUtils.nextBytes(16)).copyOfData())));
                 }
-                repo.flush();
+                repo.flushTo(db, true);
                 db.flush();
             }
             long t2 = System.nanoTime();
@@ -71,7 +71,7 @@ public class FvmBenchmark {
                             ByteArrayWrapper.wrap(FvmDataWord.fromBytes(RandomUtils.nextBytes(16)).copyOfData()))
                             .toBytes());
                 }
-                repo.flush();
+                repo.flushTo(db, true);
                 db.flush();
             }
             long t4 = System.nanoTime();

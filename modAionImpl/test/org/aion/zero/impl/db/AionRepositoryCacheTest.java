@@ -233,7 +233,7 @@ public class AionRepositoryCacheTest {
         tempCache.saveCode(address, code);
         tempCache.saveVmType(address, InternalVmType.FVM);
         tempCache.addBalance(address, BigInteger.TEN);
-        tempCache.flush();
+        tempCache.flushTo(repository, true);
 
         AionRepositoryCache tracker = (AionRepositoryCache) cache.startTracking();
         assertThat(tracker.hasAccountState(address)).isTrue();
@@ -282,7 +282,7 @@ public class AionRepositoryCacheTest {
         tempCache.saveCode(address, code);
         tempCache.saveVmType(address, InternalVmType.FVM);
         tempCache.addBalance(address, BigInteger.ONE);
-        tempCache.flush();
+        tempCache.flushTo(repository, true);
 
         // update the contract in the cache without flushing
         cache.addBalance(address, BigInteger.ONE);

@@ -64,7 +64,7 @@ public class AionRepositoryImplTest {
 
         RepositoryCache track = repository.startTracking();
         track.addBalance(defaultAccount, BigInteger.valueOf(1));
-        track.flush();
+        track.flushTo(repository, true);
 
         byte[] newRoot = repository.getRoot();
         System.out.println(String.format("original root: %s", ByteUtil.toHexString(originalRoot)));
@@ -85,7 +85,7 @@ public class AionRepositoryImplTest {
         track.saveCode(defaultAccount, defaultAccount.toByteArray());
         track.saveVmType(defaultAccount, InternalVmType.FVM);
 
-        track.flush();
+        track.flushTo(repository, true);
 
         byte[] newRoot = repository.getRoot();
         assertThat(newRoot).isNotEqualTo(originalRoot);
@@ -113,7 +113,7 @@ public class AionRepositoryImplTest {
                 new DataWord(value).toWrapper());
         track.saveVmType(defaultAccount, InternalVmType.FVM);
 
-        track.flush();
+        track.flushTo(repository, true);
 
         byte[] retrievedValue =
                 repository
@@ -145,7 +145,7 @@ public class AionRepositoryImplTest {
         track.saveVmType(defaultAccount, InternalVmType.FVM);
 
         // does not call parent's flush
-        track.flush();
+        track.flushTo(repository, true);
         repository.flush();
 
         /** Verify that the account has been flushed */
@@ -186,7 +186,7 @@ public class AionRepositoryImplTest {
         assertThat(retrievedStorageValue).isEqualTo(new DataWord(value).toWrapper());
 
         // commit changes, then check that the root has updated
-        repoTrack.flush();
+        repoTrack.flushTo(repository, true);
 
         assertThat(repository.getStorageValue(defaultAccount, new DataWord(key).toWrapper()))
                 .isEqualTo(retrievedStorageValue);
@@ -206,7 +206,7 @@ public class AionRepositoryImplTest {
         // now create a new account
         RepositoryCache track = repository.startTracking();
         track.addBalance(FIRST_ACC, BigInteger.ONE);
-        track.flush();
+        track.flushTo(repository, true);
 
         System.out.println("after first account added");
         System.out.println(repository.getWorldState().getTrieDump());
@@ -219,7 +219,7 @@ public class AionRepositoryImplTest {
 
         track = repository.startTracking();
         track.addBalance(SECOND_ACC, BigInteger.TWO);
-        track.flush();
+        track.flushTo(repository, true);
 
         byte[] secondRoot = repository.getRoot();
 
@@ -249,7 +249,7 @@ public class AionRepositoryImplTest {
         byte[] originalRoot = repository.getRoot();
         RepositoryCache track = repository.startTracking();
         track.addBalance(FIRST_ACC, BigInteger.ONE);
-        track.flush();
+        track.flushTo(repository, true);
         byte[] newRoot = repository.getRoot();
         System.out.println("state after add one account");
         System.out.println(repository.getWorldState().getTrieDump());
@@ -259,7 +259,7 @@ public class AionRepositoryImplTest {
 
         track = repository.startTracking();
         track.addBalance(FIRST_ACC, BigInteger.ONE); // total should be 2
-        track.flush();
+        track.flushTo(repository, true);
         assertThat(repository.getBalance(FIRST_ACC)).isEqualTo(BigInteger.TWO);
 
         System.out.println("state after adding balance to FIRST_ACC");
@@ -288,7 +288,7 @@ public class AionRepositoryImplTest {
         RepositoryCache track = repository.startTracking();
         track.addBalance(DOG_ACC, BigInteger.ONE);
         track.addBalance(DOGE_ACC, BigInteger.ONE);
-        track.flush();
+        track.flushTo(repository, true);
 
         final byte[] root = repository.getRoot();
         repository.flush();
@@ -298,7 +298,7 @@ public class AionRepositoryImplTest {
 
         track = repository.startTracking();
         track.addBalance(DOG_ACC, BigInteger.ONE);
-        track.flush();
+        track.flushTo(repository, true);
         System.out.println("trie state after updating balance on one account");
         System.out.println(repository.getWorldState().getTrieDump());
         assertThat(repository.getBalance(DOG_ACC)).isEqualTo(BigInteger.TWO);
@@ -320,7 +320,7 @@ public class AionRepositoryImplTest {
         track.addBalance(account1, BigInteger.ONE);
         track.addBalance(account2, BigInteger.TWO);
         track.addBalance(account3, BigInteger.TEN);
-        track.flush();
+        track.flushTo(repository, true);
         repository.flush();
 
         // get snapshot to root
@@ -336,7 +336,7 @@ public class AionRepositoryImplTest {
         track.addBalance(account1, BigInteger.TWO);
         track.addBalance(account2, BigInteger.TWO);
         track.addBalance(account3, BigInteger.TWO);
-        track.flush();
+        track.flushTo(repository, true);
 
         // check that the values from the repo are larger
         assertThat(repository.getBalance(account1)).isGreaterThan(snapshot.getBalance(account1));
@@ -348,7 +348,7 @@ public class AionRepositoryImplTest {
         track.addBalance(account1, BigInteger.TWO);
         track.addBalance(account2, BigInteger.TWO);
         track.addBalance(account3, BigInteger.TWO);
-        track.flush();
+        track.flushTo(snapshot, true);
 
         // check that the values are again equal
         assertThat(repository.getBalance(account1)).isEqualTo(snapshot.getBalance(account1));
@@ -360,7 +360,7 @@ public class AionRepositoryImplTest {
         track.addBalance(account1, BigInteger.TEN);
         track.addBalance(account2, BigInteger.TEN);
         track.addBalance(account3, BigInteger.TEN);
-        track.flush();
+        track.flushTo(snapshot, true);
 
         // check that the values from the snapshot are larger
         assertThat(repository.getBalance(account1)).isLessThan(snapshot.getBalance(account1));

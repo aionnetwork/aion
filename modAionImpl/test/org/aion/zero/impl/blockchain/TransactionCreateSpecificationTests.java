@@ -90,7 +90,7 @@ public class TransactionCreateSpecificationTests {
         RepositoryCache cache = blockchain.getRepository().startTracking();
         cache.createAccount(contract);
         cache.addBalance(contract, BigInteger.TEN);
-        cache.flush();
+        cache.flushTo(cache.getParent(), true);
 
         // Check assumptions about contract state.
         AccountState contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(contract);
@@ -127,7 +127,7 @@ public class TransactionCreateSpecificationTests {
         RepositoryCache cache = blockchain.getRepository().startTracking();
         cache.createAccount(contract);
         cache.setNonce(contract, BigInteger.TEN);
-        cache.flush();
+        cache.flushTo(cache.getParent(), true);
 
         // Check assumptions about contract state.
         AccountState contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(contract);
@@ -164,7 +164,7 @@ public class TransactionCreateSpecificationTests {
         RepositoryCache cache = blockchain.getRepository().startTracking();
         cache.addStorageRow(contract, ByteArrayWrapper.wrap(RandomUtils.nextBytes(16)), ByteArrayWrapper.wrap(RandomUtils.nextBytes(16)));
         cache.saveVmType(contract, InternalVmType.AVM);
-        cache.flush();
+        cache.flushTo(cache.getParent(), true);
 
         // Check assumptions about contract state.
         AccountState contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(contract);
@@ -204,7 +204,7 @@ public class TransactionCreateSpecificationTests {
         cache.createAccount(contract);
         cache.saveCode(contract, new byte[] {1, 2, 3, 4});
         cache.saveVmType(contract, InternalVmType.AVM);
-        cache.flush();
+        cache.flushTo(cache.getParent(), true);
 
         // Check assumptions about contract state.
         AccountState contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(contract);
@@ -244,7 +244,7 @@ public class TransactionCreateSpecificationTests {
         RepositoryCache cache = blockchain.getRepository().startTracking();
         cache.createAccount(contract);
         cache.addBalance(contract, BigInteger.TEN);
-        cache.flush();
+        cache.flushTo(cache.getParent(), true);
 
         // Check assumptions about contract state.
         AccountState contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(contract);
@@ -279,7 +279,7 @@ public class TransactionCreateSpecificationTests {
         RepositoryCache cache = blockchain.getRepository().startTracking();
         cache.createAccount(contract);
         cache.setNonce(contract, BigInteger.TEN);
-        cache.flush();
+        cache.flushTo(cache.getParent(), true);
 
         // Check assumptions about contract state.
         AccountState contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(contract);
@@ -313,7 +313,7 @@ public class TransactionCreateSpecificationTests {
         RepositoryCache cache = blockchain.getRepository().startTracking();
         cache.addStorageRow(contract, ByteArrayWrapper.wrap(RandomUtils.nextBytes(16)), ByteArrayWrapper.wrap(RandomUtils.nextBytes(16)));
         cache.saveVmType(contract, InternalVmType.AVM);
-        cache.flush();
+        cache.flushTo(cache.getParent(), true);
 
         // Check assumptions about contract state.
         AccountState contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(contract);
@@ -349,7 +349,7 @@ public class TransactionCreateSpecificationTests {
         cache.createAccount(contract);
         cache.saveCode(contract, new byte[] {1, 2, 3, 4});
         cache.saveVmType(contract, InternalVmType.AVM);
-        cache.flush();
+        cache.flushTo(cache.getParent(), true);
 
         // Check assumptions about contract state.
         AccountState contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(contract);
@@ -396,7 +396,7 @@ public class TransactionCreateSpecificationTests {
         RepositoryCache cache = blockchain.getRepository().startTracking();
         cache.createAccount(internalContract);
         cache.addBalance(internalContract, BigInteger.TEN);
-        cache.flush();
+        cache.flushTo(cache.getParent(), true);
 
         // Check assumptions about contract state.
         AccountState contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(internalContract);
@@ -449,7 +449,7 @@ public class TransactionCreateSpecificationTests {
         RepositoryCache cache = blockchain.getRepository().startTracking();
         cache.createAccount(internalContract);
         cache.addBalance(internalContract, BigInteger.TEN);
-        cache.flush();
+        cache.flushTo(cache.getParent(), true);
 
         // Check assumptions about contract state.
         AccountState contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(internalContract);
@@ -502,7 +502,7 @@ public class TransactionCreateSpecificationTests {
         RepositoryCache cache = blockchain.getRepository().startTracking();
         cache.createAccount(internalContract);
         cache.setNonce(internalContract, BigInteger.TEN);
-        cache.flush();
+        cache.flushTo(cache.getParent(), true);
 
         // Check assumptions about contract state.
         AccountState contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(internalContract);
@@ -555,7 +555,7 @@ public class TransactionCreateSpecificationTests {
         RepositoryCache cache = blockchain.getRepository().startTracking();
         cache.createAccount(internalContract);
         cache.setNonce(internalContract, BigInteger.TEN);
-        cache.flush();
+        cache.flushTo(cache.getParent(), true);
 
         // Check assumptions about contract state.
         AccountState contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(internalContract);
@@ -608,7 +608,7 @@ public class TransactionCreateSpecificationTests {
         RepositoryCache cache = blockchain.getRepository().startTracking();
         cache.addStorageRow(internalContract, ByteArrayWrapper.wrap(RandomUtils.nextBytes(16)), ByteArrayWrapper.wrap(RandomUtils.nextBytes(16)));
         cache.saveVmType(internalContract, InternalVmType.AVM);
-        cache.flush();
+        cache.flushTo(cache.getParent(), true);
 
         // Check assumptions about contract state.
         AccountState contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(internalContract);
@@ -663,7 +663,7 @@ public class TransactionCreateSpecificationTests {
         RepositoryCache cache = blockchain.getRepository().startTracking();
         cache.addStorageRow(internalContract, ByteArrayWrapper.wrap(RandomUtils.nextBytes(16)), ByteArrayWrapper.wrap(RandomUtils.nextBytes(16)));
         cache.saveVmType(internalContract, InternalVmType.AVM);
-        cache.flush();
+        cache.flushTo(cache.getParent(), true);
 
         // Check assumptions about contract state.
         AccountState contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(internalContract);
@@ -719,7 +719,7 @@ public class TransactionCreateSpecificationTests {
         cache.createAccount(internalContract);
         cache.saveCode(internalContract, new byte[] {1, 2, 3, 4});
         cache.saveVmType(internalContract, InternalVmType.AVM);
-        cache.flush();
+        cache.flushTo(cache.getParent(), true);
 
         // Check assumptions about contract state.
         AccountState contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(internalContract);
@@ -778,7 +778,7 @@ public class TransactionCreateSpecificationTests {
         cache.createAccount(internalContract);
         cache.saveCode(internalContract, new byte[] {1, 2, 3, 4});
         cache.saveVmType(internalContract, InternalVmType.AVM);
-        cache.flush();
+        cache.flushTo(cache.getParent(), true);
 
         // Check assumptions about contract state.
         AccountState contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(internalContract);
@@ -834,7 +834,7 @@ public class TransactionCreateSpecificationTests {
         RepositoryCache cache = blockchain.getRepository().startTracking();
         cache.createAccount(internalContract);
         cache.addBalance(internalContract, BigInteger.TEN);
-        cache.flush();
+        cache.flushTo(cache.getParent(), true);
 
         // Check assumptions about contract state.
         AccountState contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(internalContract);
@@ -885,7 +885,7 @@ public class TransactionCreateSpecificationTests {
         RepositoryCache cache = blockchain.getRepository().startTracking();
         cache.createAccount(internalContract);
         cache.addBalance(internalContract, BigInteger.TEN);
-        cache.flush();
+        cache.flushTo(cache.getParent(), true);
 
         // Check assumptions about contract state.
         AccountState contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(internalContract);
@@ -936,7 +936,7 @@ public class TransactionCreateSpecificationTests {
         RepositoryCache cache = blockchain.getRepository().startTracking();
         cache.createAccount(internalContract);
         cache.setNonce(internalContract, BigInteger.TEN);
-        cache.flush();
+        cache.flushTo(cache.getParent(), true);
 
         // Check assumptions about contract state.
         AccountState contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(internalContract);
@@ -986,7 +986,7 @@ public class TransactionCreateSpecificationTests {
         RepositoryCache cache = blockchain.getRepository().startTracking();
         cache.createAccount(internalContract);
         cache.setNonce(internalContract, BigInteger.TEN);
-        cache.flush();
+        cache.flushTo(cache.getParent(), true);
 
         // Check assumptions about contract state.
         AccountState contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(internalContract);
@@ -1037,7 +1037,7 @@ public class TransactionCreateSpecificationTests {
         RepositoryCache cache = blockchain.getRepository().startTracking();
         cache.addStorageRow(internalContract, ByteArrayWrapper.wrap(RandomUtils.nextBytes(16)), ByteArrayWrapper.wrap(RandomUtils.nextBytes(16)));
         cache.saveVmType(internalContract, InternalVmType.AVM);
-        cache.flush();
+        cache.flushTo(cache.getParent(), true);
 
         // Check assumptions about contract state.
         AccountState contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(internalContract);
@@ -1088,7 +1088,7 @@ public class TransactionCreateSpecificationTests {
         RepositoryCache cache = blockchain.getRepository().startTracking();
         cache.addStorageRow(internalContract, ByteArrayWrapper.wrap(RandomUtils.nextBytes(16)), ByteArrayWrapper.wrap(RandomUtils.nextBytes(16)));
         cache.saveVmType(internalContract, InternalVmType.AVM);
-        cache.flush();
+        cache.flushTo(cache.getParent(), true);
 
         // Check assumptions about contract state.
         AccountState contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(internalContract);
@@ -1141,7 +1141,7 @@ public class TransactionCreateSpecificationTests {
         cache.createAccount(internalContract);
         cache.saveCode(internalContract, new byte[] {1, 2, 3, 4});
         cache.saveVmType(internalContract, InternalVmType.AVM);
-        cache.flush();
+        cache.flushTo(cache.getParent(), true);
 
         // Check assumptions about contract state.
         AccountState contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(internalContract);
@@ -1194,7 +1194,7 @@ public class TransactionCreateSpecificationTests {
         cache.createAccount(internalContract);
         cache.saveCode(internalContract, new byte[] {1, 2, 3, 4});
         cache.saveVmType(internalContract, InternalVmType.AVM);
-        cache.flush();
+        cache.flushTo(cache.getParent(), true);
 
         // Check assumptions about contract state.
         AccountState contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(internalContract);
@@ -1239,7 +1239,7 @@ public class TransactionCreateSpecificationTests {
         RepositoryCache cache = blockchain.getRepository().startTracking();
         cache.createAccount(fvmContract);
         cache.addBalance(fvmContract, BigInteger.TEN);
-        cache.flush();
+        cache.flushTo(cache.getParent(), true);
 
         // Check assumptions about contract state.
         AccountState contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(fvmContract);
@@ -1274,7 +1274,7 @@ public class TransactionCreateSpecificationTests {
         RepositoryCache cache = blockchain.getRepository().startTracking();
         cache.createAccount(fvmContract);
         cache.setNonce(fvmContract, BigInteger.TEN);
-        cache.flush();
+        cache.flushTo(cache.getParent(), true);
 
         // Check assumptions about contract state.
         AccountState contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(fvmContract);
@@ -1310,7 +1310,7 @@ public class TransactionCreateSpecificationTests {
         cache.addBalance(fvmContract, BigInteger.TEN);
         cache.addStorageRow(fvmContract, ByteArrayWrapper.wrap(RandomUtils.nextBytes(16)), ByteArrayWrapper.wrap(RandomUtils.nextBytes(16)));
         cache.saveVmType(fvmContract, InternalVmType.FVM);
-        cache.flush();
+        cache.flushTo(cache.getParent(), true);
 
         // Check assumptions about contract state.
         AccountState contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(fvmContract);
@@ -1347,7 +1347,7 @@ public class TransactionCreateSpecificationTests {
         cache.createAccount(fvmContract);
         cache.saveCode(fvmContract, new byte[] {1, 2, 3, 4});
         cache.saveVmType(fvmContract, InternalVmType.FVM);
-        cache.flush();
+        cache.flushTo(cache.getParent(), true);
 
         // Check assumptions about contract state.
         AccountState contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(fvmContract);
@@ -1383,7 +1383,7 @@ public class TransactionCreateSpecificationTests {
         RepositoryCache cache = blockchain.getRepository().startTracking();
         cache.createAccount(fvmContract);
         cache.addBalance(fvmContract, BigInteger.TEN);
-        cache.flush();
+        cache.flushTo(cache.getParent(), true);
 
         // Check assumptions about contract state.
         AccountState contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(fvmContract);
@@ -1419,7 +1419,7 @@ public class TransactionCreateSpecificationTests {
         RepositoryCache cache = blockchain.getRepository().startTracking();
         cache.createAccount(fvmContract);
         cache.setNonce(fvmContract, BigInteger.TEN);
-        cache.flush();
+        cache.flushTo(cache.getParent(), true);
 
         // Check assumptions about contract state.
         AccountState contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(fvmContract);
@@ -1455,7 +1455,7 @@ public class TransactionCreateSpecificationTests {
         cache.addBalance(fvmContract, BigInteger.TEN);
         cache.addStorageRow(fvmContract, ByteArrayWrapper.wrap(RandomUtils.nextBytes(16)), ByteArrayWrapper.wrap(RandomUtils.nextBytes(16)));
         cache.saveVmType(fvmContract, InternalVmType.FVM);
-        cache.flush();
+        cache.flushTo(cache.getParent(), true);
 
         // Check assumptions about contract state.
         AccountState contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(fvmContract);
@@ -1492,7 +1492,7 @@ public class TransactionCreateSpecificationTests {
         cache.createAccount(fvmContract);
         cache.saveCode(fvmContract, new byte[] {1, 2, 3, 4});
         cache.saveVmType(fvmContract, InternalVmType.FVM);
-        cache.flush();
+        cache.flushTo(cache.getParent(), true);
 
         // Check assumptions about contract state.
         AccountState contractState = (AccountState) blockchain.getRepository().startTracking().getAccountState(fvmContract);

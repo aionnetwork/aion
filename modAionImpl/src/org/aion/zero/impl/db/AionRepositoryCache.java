@@ -526,16 +526,6 @@ public final class AionRepositoryCache implements RepositoryCache {
         return repository;
     }
 
-    /**
-     * @implNote To maintain intended functionality this method does not call the parent's {@code
-     *     flush()} method. The changes are propagated to the parent through calling the parent's
-     *     {@code updateBatch()} method.
-     */
-    @Override
-    public void flush() {
-        flushTo(repository, true);
-    }
-
     @Override
     public void updateBatch(
             Map<AionAddress, AccountState> accounts,

@@ -152,7 +152,7 @@ public class AvmProviderTest {
     private void addBalance(RepositoryCache repository, AionAddress account, BigInteger amount) {
         RepositoryCache cache = repository.startTracking();
         cache.addBalance(account, amount);
-        cache.flush();
+        cache.flushTo(repository, true);
     }
 
     private Transaction newBalanceTransferTransaction(AionAddress sender, AionAddress recipient, BigInteger value) {
