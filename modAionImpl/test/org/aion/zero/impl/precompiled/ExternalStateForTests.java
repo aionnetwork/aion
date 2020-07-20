@@ -57,7 +57,7 @@ public final class ExternalStateForTests implements IExternalStateForPrecompiled
 
     @Override
     public void commit() {
-        this.repository.flush();
+        this.repository.flushTo(repository, true);
     }
 
     @Override
