@@ -39,7 +39,7 @@ public final class PrecompiledTransactionExecutor {
 
         IExternalStateForPrecompiled externalState =
                 new ExternalStateForPrecompiled(
-                        repository.startTracking(),
+                        repository,
                         blockNumber,
                         isLocalCall,
                         fork032Enabled,
@@ -75,7 +75,7 @@ public final class PrecompiledTransactionExecutor {
                 payMiner(repositoryTracker, blockCoinbase, summary);
                 deleteAccountsMarkedForDeletion(repositoryTracker, summary.getDeletedAccounts(), result);
 
-                repositoryTracker.flush();
+                repositoryTracker.flushTo(repository, true);
             }
 
             // Do any post execution work.

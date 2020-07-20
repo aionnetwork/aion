@@ -99,4 +99,10 @@ public interface RepositoryCache extends Repository {
     void removeStorageRow(AionAddress address, ByteArrayWrapper key);
 
     void flushTo(Repository repo, boolean clearStateAfterFlush);
+
+    /**
+     * Retrieve the parent repository
+     * @return the parent repository
+     */
+    Repository getParent();
 }

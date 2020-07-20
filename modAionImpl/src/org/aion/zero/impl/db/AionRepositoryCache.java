@@ -521,6 +521,11 @@ public final class AionRepositoryCache implements RepositoryCache {
         }
     }
 
+    @Override
+    public Repository getParent() {
+        return repository;
+    }
+
     /**
      * @implNote To maintain intended functionality this method does not call the parent's {@code
      *     flush()} method. The changes are propagated to the parent through calling the parent's
