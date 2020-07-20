@@ -49,7 +49,7 @@ public final class ExternalStateForAvm implements IExternalState, IAvmExternalSt
 
     @Override
     public void commit() {
-        this.repositoryCache.flush();
+        this.repositoryCache.flushTo(repositoryCache, true);
     }
 
     @Override
