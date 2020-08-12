@@ -143,6 +143,11 @@ public interface ChainHolder {
      */
     BigInteger getAccountNonce(AionAddress aionAddress, long blockNumber);
 
+    /**
+     * @param aionAddress a blockchain account address
+     * @return the transaction count of the address in the pendingState
+     */
+    BigInteger getPendingAccountNonce(AionAddress aionAddress);
 
     /**
      * @param aionAddress a blockchain account address

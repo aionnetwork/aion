@@ -170,7 +170,7 @@ public class EthRPCImplTest {
 
 
         // test pending value
-        doReturn(BigInteger.TEN).when(chainHolder).getAccountNonce(eq(address));
+        doReturn(BigInteger.TEN).when(chainHolder).getPendingAccountNonce(eq(address));
         assertEquals(
             BigInteger.TEN,
             RPCTestUtils.executeRequest(
@@ -198,7 +198,7 @@ public class EthRPCImplTest {
                 rpcMethods,
                 BigIntHexStringConverter::decode));
         // test that mock was called as expected
-        Mockito.verify(chainHolder, times(1)).getAccountNonce(any());
+        Mockito.verify(chainHolder, times(1)).getPendingAccountNonce(any());
         Mockito.verify(chainHolder, times(4)).getAccountNonce(any(), anyLong());
     }
 }

@@ -432,7 +432,7 @@ public class RPCMethods implements RPCServerMethods {
         if (blockNumberEnumUnion.blockEnum == BlockEnum.LATEST) { // best block
             res = chainHolder.getAccountNonce(aionAddress, chainHolder.blockNumber());
         } else if (blockNumberEnumUnion.blockEnum == BlockEnum.PENDING) { // pending block
-            res = chainHolder.getAccountNonce(aionAddress);
+            res = chainHolder.getPendingAccountNonce(aionAddress);
         } else if (blockNumberEnumUnion.blockEnum == BlockEnum.EARLIEST) { // genesis block
             res = chainHolder.getAccountNonce(aionAddress, 0L);
         } else {
