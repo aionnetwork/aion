@@ -229,6 +229,11 @@ public class AionChainHolder implements ChainHolder {
     }
 
     @Override
+    public BigInteger getPendingAccountNonce(AionAddress aionAddress) {
+        return this.chain.getPendingState().getNonce(aionAddress);
+    }
+
+    @Override
     public BigInteger getAccountBalance(AionAddress aionAddress) {
         return this.chain.getRepository().getBalance(aionAddress);
     }
