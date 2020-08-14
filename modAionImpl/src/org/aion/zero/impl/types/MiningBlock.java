@@ -455,4 +455,8 @@ public class MiningBlock extends AbstractBlock {
                 .withDifficulty(diff)
                 .build();
     }
+
+    public boolean notSealed() {
+        return Arrays.equals(header.getSolution(), new byte[MiningBlockHeader.SOLUTIONSIZE]) && Arrays.equals(header.getNonce(), ByteUtil.EMPTY_WORD);
+    }
 }

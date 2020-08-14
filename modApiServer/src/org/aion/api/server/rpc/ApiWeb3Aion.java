@@ -2603,7 +2603,7 @@ public class ApiWeb3Aion extends ApiAion {
                 && !JSONObject.NULL.equals(hdrHash)) {
             // Grab copy of best block
             MiningBlock bestBlock = ac.getBlockchain().getCachingMiningBlockTemplate(hexStringToBytes((String) hdrHash));
-            if (bestBlock != null) {
+            if (bestBlock != null && bestBlock.notSealed()) {
                 try {
                     bestBlock.seal(hexStringToBytes(nce + ""), hexStringToBytes(soln + ""));
                 } catch (Exception e) {
