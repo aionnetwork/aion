@@ -456,4 +456,8 @@ public class AionBlock extends AbstractBlock {
                 .withDifficulty(diff)
                 .build();
     }
+
+    public boolean notSealed() {
+        return Arrays.equals(header.getSolution(), new byte[A0BlockHeader.SOLUTIONSIZE]) && Arrays.equals(header.getNonce(), ByteUtil.EMPTY_WORD);
+    }
 }
