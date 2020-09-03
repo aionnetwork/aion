@@ -8,6 +8,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import org.aion.crypto.hash.Blake2b;
 import org.aion.crypto.hash.Blake2bNative;
+import org.aion.crypto.hash.Blake2bSodium;
 import org.aion.util.file.NativeLoader;
 import org.spongycastle.crypto.digests.KeccakDigest;
 import org.spongycastle.util.encoders.Hex;
@@ -35,6 +36,8 @@ public class HashUtil {
 
     public static final byte[] EMPTY_DATA_HASH = h256(EMPTY_BYTE_ARRAY);
 
+    private static boolean beforeSignatureSwap = true;
+
     /**
      * Sets the 256-bit hash type.
      *
@@ -43,6 +46,15 @@ public class HashUtil {
     public static void setType(H256Type type) {
         HashUtil.type = type;
     }
+
+    // AKI-716
+    public static void setAfterSignatureSwap() {
+        beforeSignatureSwap = false;
+    }
+    public static void setBeforeSignatureSwap() {
+        beforeSignatureSwap = true;
+    }
+
 
     /**
      * Computes the 256-bit hash of the given input.
@@ -58,7 +70,7 @@ public class HashUtil {
 
         switch (type) {
             case BLAKE2B_256:
-                return blake256Native(in);
+                return beforeSignatureSwap ? blake256Native(in) : Blake2bSodium.blake256(in);
             case KECCAK_256:
                 return keccak256(in);
             default:

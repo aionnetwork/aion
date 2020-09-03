@@ -49,6 +49,7 @@ import org.aion.base.Bloom;
 import org.aion.base.ConstantUtil;
 import org.aion.base.TransactionTypeRule;
 import org.aion.crypto.AddressSpecs;
+import org.aion.crypto.HashUtil;
 import org.aion.crypto.ed25519.ECKeyEd25519;
 import org.aion.crypto.vrf.VRF_Ed25519;
 import org.aion.db.impl.SystemExitCodes;
@@ -1864,6 +1865,12 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 TransactionTypeRule.allowAVMContractTransaction();
             }
 
+            if (forkUtility.isSignatureSwapForkActive(block.getNumber())) {
+                HashUtil.setAfterSignatureSwap();
+            } else {
+                HashUtil.setBeforeSignatureSwap();
+            }
+
             try {
                 // Booleans moved out here so their meaning is explicit.
                 boolean isLocalCall = false;
@@ -2550,18 +2557,23 @@ public class AionBlockchainImpl implements IAionBlockchain {
         // Note: if block DB corruption, the bestBlock may not match with the indexDB.
         Block bestBlock = repository.getBestBlock();
 
+        // AKI-716
+        if (bestBlock != null && forkUtility.isSignatureSwapForkActive(bestBlock.getNumber())) {
+            HashUtil.setAfterSignatureSwap();
+        }
+
         boolean recovered = true;
         boolean bestBlockShifted = true;
         int countRecoveryAttempts = 0;
 
         // fix the trie if necessary
+        // the best block was updated after recovery attempt
+        // allow 5 recovery attempts
+        // recover only for non-null blocks
         while (bestBlockShifted
-                && // the best block was updated after recovery attempt
-                (countRecoveryAttempts < 5)
-                && // allow 5 recovery attempts
-                bestBlock != null
-                && // recover only for non-null blocks
-                !repository.isValidRoot(bestBlock.getStateRoot())) {
+            && countRecoveryAttempts < 5
+            && bestBlock != null
+            && !repository.isValidRoot(bestBlock.getStateRoot())) {
 
             genLOG.info("Recovery initiated due to corrupt world state at block " + bestBlock.getNumber() + ".");
 
