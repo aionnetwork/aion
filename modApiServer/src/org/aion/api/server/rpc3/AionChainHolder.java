@@ -31,6 +31,7 @@ import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.impl.types.BlockContext;
 import org.aion.zero.impl.types.StakingBlock;
 import org.aion.zero.impl.valid.FutureBlockRule;
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 
 public class AionChainHolder implements ChainHolder {
@@ -41,6 +42,9 @@ public class AionChainHolder implements ChainHolder {
     private final FutureBlockRule futureBlockRule;
     private final Logger logger;
     private final ScheduledExecutorService blockSubmitExecutor;
+    private final AtomicReference<Pair<Long, StakingBlock>> stakingBlockTemplate;
+    private final static long templateRefreshRate = 1000; //ms
+
 
     public AionChainHolder(IAionChain chain,
         AccountManagerInterface accountManager) {
@@ -58,6 +62,7 @@ public class AionChainHolder implements ChainHolder {
         this.futureBlockRule = new FutureBlockRule();
         logger = AionLoggerFactory.getLogger(LogEnum.CONS.name());
         blockSubmitExecutor = Executors.newSingleThreadScheduledExecutor();
+        stakingBlockTemplate = new AtomicReference<>(null);
     }
 
     @Override
@@ -149,12 +154,23 @@ public class AionChainHolder implements ChainHolder {
     public byte[] submitSeed(byte[] newSeed, byte[] signingPublicKey, byte[] coinBase) {
         if (!isUnityForkEnabled()) throw new UnsupportedOperationException();
         else {
-            StakingBlock blockTemplate =
-                    this.chain.getStakingBlockTemplate(newSeed, signingPublicKey, coinBase);
-            if (blockTemplate == null) {
-                return ByteUtil.EMPTY_BYTE_ARRAY;
-            } else {
+            Pair<Long, StakingBlock> template = stakingBlockTemplate.get();
+            StakingBlock blockTemplate = template == null ? null : template.getRight();
+            if (blockTemplate != null
+                && Arrays.equals(blockTemplate.getSeed(), newSeed)
+                && Arrays.equals(blockTemplate.getHeader().getSigningPublicKey(), signingPublicKey)
+                && blockTemplate.getCoinbase().equals(new AionAddress(coinBase))
+                && System.currentTimeMillis() <= template.getLeft() + templateRefreshRate) {
                 return blockTemplate.getHeader().getMineHash();
+            } else {
+                blockTemplate = this.chain.getStakingBlockTemplate(newSeed, signingPublicKey, coinBase);
+                stakingBlockTemplate.set(Pair.of(System.currentTimeMillis(), blockTemplate));
+
+                if (blockTemplate == null) {
+                    return ByteUtil.EMPTY_BYTE_ARRAY;
+                } else {
+                    return blockTemplate.getHeader().getMineHash();
+                }
             }
         }
     }
