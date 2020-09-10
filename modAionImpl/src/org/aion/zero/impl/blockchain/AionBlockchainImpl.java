@@ -2845,7 +2845,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                             // clear the index entry and prune side-chain blocks
                             repository.redoIndexWithoutSideChains(block);
                             long t1 = System.currentTimeMillis();
-                            result = tryToConnectAndFetchSummary(new BlockWrapper(block));
+                            result = tryToConnectAndFetchSummary(new BlockWrapper(block, false, true, false, false));
                             long t2 = System.currentTimeMillis();
                             LOG.info("<import-status: hash = " + block.getShortHash() + ", number = " + block.getNumber()
                                     + ", txs = " + block.getTransactionsList().size() + ", result = " + result.getLeft()
