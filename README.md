@@ -18,6 +18,10 @@ This repository contains the main (Java) kernel implementation and releases for 
 
 ## Getting Started
 
+### Blockchain node concept
+
+* To understand what is blockchain kernel: [Node overview](https://developer.theoan.com/docs/custom-kits/nodes/overview)
+
 ### Developers
 If you're interested in building Open Applications, powered by Aion:
 * Visit the Developer site of The Open Application Network : [developer.theoan.com](https://developer.theoan.com)
@@ -46,10 +50,6 @@ To keep up to date and stay connected with current progress and development, rea
 [Aion on Twitter](https://twitter.com/Aion_OAN)  
 [Aion Blog](https://blog.aion.network/)
 
-
-## Join the Team
-
-If you are interested in being part of the Aion project, check out our available positions and apply [here](https://theoan.humi.ca/job-board)! 
 
 ## License
 
