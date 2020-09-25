@@ -8,7 +8,11 @@ import static org.aion.crypto.HashUtil.h256;
 import static org.aion.util.biginteger.BIUtil.isMoreThan;
 import static org.aion.util.conversions.Hex.toHexString;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.EnumMap;
+import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
@@ -2706,6 +2710,12 @@ public class AionBlockchainImpl implements IAionBlockchain {
     public void redoMainChainImport(long startHeight, AionGenesis genesis, Logger LOG) {
         lock.lock();
 
+        Map<AionAddress, Integer> stakerFoundBlockCnt = new HashMap<>();
+        Map<AionAddress, BigInteger> stakerPortion = new HashMap<>();
+        BigInteger totalStakings = ZERO;
+        int resetStakingBlockCnt = 2000;
+        long fromBlock = 0;
+
         try {
             // determine the parameters of the rebuild
             Block block = repository.getBestBlock();
@@ -2755,6 +2765,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
                     long start = System.currentTimeMillis();
 
+                    BufferedWriter bw = new BufferedWriter(new FileWriter("staking_perform"));
+
                     // import in increments of 10k blocks
                     while (currentBlock <= topBlockNumber) {
                         block = getBlockByNumber(currentBlock);
@@ -2762,6 +2774,78 @@ public class AionBlockchainImpl implements IAionBlockchain {
                             LOG.error("The main chain block at level {} is missing from the database. Cannot continue importing stored blocks.", currentBlock);
                             fail = true;
                             break;
+                        }
+
+                        if (block.getHeader().getSealType().equals(BlockSealType.SEAL_POS_BLOCK)) {
+
+                            if (fromBlock == 0) {
+                                fromBlock = block.getNumber();
+                            }
+
+                            Block parent = getParent(block.getHeader());
+
+                            AionAddress signingAddress = new AionAddress(AddressSpecs.computeA0Address(((StakingBlockHeader)block.getHeader()).getSigningPublicKey()));
+                            BigInteger stakes = ZERO;
+                            try {
+                                stakes = getStakingContractHelper().getEffectiveStake(signingAddress, block.getCoinbase(), parent);
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+
+                            Integer cnt = stakerFoundBlockCnt.get(signingAddress);
+                            if (cnt == null) {
+                                stakerFoundBlockCnt.putIfAbsent(signingAddress, 1);
+                                stakerPortion.putIfAbsent(signingAddress, stakes);
+                            } else {
+                                cnt += 1;
+                                stakerFoundBlockCnt.put(signingAddress, cnt);
+                                BigInteger stake = stakerPortion.get(signingAddress);
+                                stakerPortion.put(signingAddress, stake.add(stakes));
+                            }
+
+                            if (--resetStakingBlockCnt == 0) {
+
+                                LOG.info("from block#" + fromBlock);
+
+                                bw.write("from block#" + fromBlock);
+                                bw.newLine();
+
+                                for (Entry<AionAddress, Integer> e : stakerFoundBlockCnt.entrySet()) {
+                                    Integer c = e.getValue();
+                                    BigInteger avgStake = stakerPortion.get(e.getKey()).divide(BigInteger.valueOf(c));
+                                    stakerPortion.put(e.getKey(), avgStake);
+                                    totalStakings = totalStakings.add(avgStake);
+                                }
+
+                                BigInteger finalTotalStakings = totalStakings;
+                                stakerPortion.entrySet().stream().sorted(Map.Entry.comparingByValue()).forEach( e -> {
+                                    float actual = (float) ((float)stakerFoundBlockCnt.get(e.getKey()) / 2000.0 * 100);
+
+                                    BigInteger stake = stakerPortion.get(e.getKey());
+                                    float expect = (float) (stake.multiply(BigInteger.valueOf(10000)).divide(
+                                        finalTotalStakings).floatValue() / 100.0);
+                                    try {
+                                        bw.write(e.getKey() + " expect: " + String.format("%.2f",expect) + "%"
+                                            + " actual: " + String.format("%.2f", actual) + "%"
+                                            + " perform: " + String.format("%.2f",  ((actual / expect) - 1.0) * 100)  + "%");
+                                        bw.newLine();
+                                    } catch (IOException ex) {
+                                        ex.printStackTrace();
+                                    }
+                                });
+                                try {
+                                    bw.newLine();
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+
+
+                                resetStakingBlockCnt = 2000;
+                                stakerFoundBlockCnt.clear();
+                                stakerPortion.clear();
+                                totalStakings = ZERO;
+                                fromBlock = block.getNumber() + 2;
+                            }
                         }
 
                         try {
@@ -2840,6 +2924,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
                         currentBlock++;
                     }
+
+                    bw.close();
                     LOG.info("Import from " + startHeight + " to " + topBlockNumber + " completed in " + (System.currentTimeMillis() - start) + " ms time.");
                 }
 
@@ -2860,6 +2946,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 }
             }
             LOG.info("Importing stored blocks COMPLETE.");
+        } catch (IOException e) {
+            e.printStackTrace();
         } finally {
             lock.unlock();
         }
