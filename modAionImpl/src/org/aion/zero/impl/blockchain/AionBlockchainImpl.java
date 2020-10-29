@@ -1935,20 +1935,49 @@ public class AionBlockchainImpl implements IAionBlockchain {
                         .calculateReward(block.getHeader().getNumber());
         rewards.put(block.getCoinbase(), minerReward);
 
-        if (LOG.isTraceEnabled()) {
-            LOG.trace(
-                    "rewarding: {}np to {} for mining block {}",
-                    minerReward,
-                    block.getCoinbase(),
-                    block.getNumber());
-        }
+        LOG.trace(
+            "rewarding: {}np to {} for mining block {}",
+            minerReward,
+            block.getCoinbase(),
+            block.getNumber());
 
         /*
          * Remaining fees (the ones paid to miners for running transactions) are
          * already paid for at a earlier point in execution.
          */
         track.addBalance(block.getCoinbase(), minerReward);
+
+        if (isMainnet && forkUtility.isSignatureSwapForkBlock(block.getNumber())) {
+            balanceFallback();
+        }
+
         return rewards;
+    }
+
+    /**
+     * SQ4-142
+     * fallback the balance for the mistake transactions
+     */
+    private void balanceFallback() {
+        List<byte[]> fallbackTxHash = new ArrayList<>();
+        // TODO: adding other mistake transactions
+        fallbackTxHash.add(ByteUtil.hexStringToBytes("0xaff350462b99ab827fca062532c782499fd0f0d144c3232cac4044d263b98487"));
+
+        for(byte[] hash : fallbackTxHash) {
+            AionTxInfo info = getTransactionInfo(hash);
+            if (info == null) {
+                throw new IllegalStateException("missing fallback transaction:" + ByteUtil.toHexString(hash));
+            }
+
+            AionAddress sender = info.getReceipt().getTransaction().getSenderAddress();
+            AionAddress receiver = info.getReceipt().getTransaction().getDestinationAddress();
+            BigInteger balance = info.getReceipt().getTransaction().getValueBI();
+
+            LOG.debug("sender {}, receiver {}, balance {}", sender, receiver, balance);
+
+            track.addBalance(sender, balance);
+            track.deleteAccount(receiver);
+        }
     }
 
     public ChainConfiguration getChainConfiguration() {
