@@ -26,7 +26,8 @@ public enum TxResponse {
     INVALID_TX_BEACONHASH(22, true, "Invalid transaction beacon hash"),
     CACHED_TIMEOUT(23, false, "Transaction dropped due to the transaction cache timeout"),
     TXPOOL_TIMEOUT(24, false, "Transaction dropped due to the transaction pool timeout"),
-    CACHED_ACCOUNTMAX(25, false, "Transaction dropped due to the cache account reach max");
+    CACHED_ACCOUNTMAX(25, false, "Transaction dropped due to the cache account reach max"),
+    INVALID_TX_DESTINATION(26, true, "Transaction destination address is invalid");
 
 
     private final int val;

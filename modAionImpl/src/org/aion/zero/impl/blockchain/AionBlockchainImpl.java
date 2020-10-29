@@ -1727,10 +1727,11 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 Map<AionAddress, BigInteger> nonceCache = new HashMap<>();
 
                 boolean unityForkEnabled = forkUtility.isUnityForkActive(block.getNumber());
+                boolean signatureSwapForkEnabled = forkUtility.isSignatureSwapForkActive(block.getNumber());
                 if (txs.parallelStream()
                         .anyMatch(
                                 tx ->
-                                    TXValidator.validateTx(tx, unityForkEnabled).isFail()
+                                    TXValidator.validateTx(tx, unityForkEnabled, signatureSwapForkEnabled).isFail()
                                                 || !TransactionTypeValidator.isValid(tx)
                                                 || !beaconHashValidator.validateTxForBlock(tx, block))) {
                     LOG.error("Some transactions in the block are invalid");
@@ -1738,7 +1739,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                     for (AionTransaction tx : txs) {
                         TX_LOG.debug(
                                 "Tx valid ["
-                                        + TXValidator.validateTx(tx, unityForkEnabled).isSuccess()
+                                        + TXValidator.validateTx(tx, unityForkEnabled, signatureSwapForkEnabled).isSuccess()
                                         + "]. Type valid ["
                                         + TransactionTypeValidator.isValid(tx)
                                         + "]\n"
@@ -2400,6 +2401,11 @@ public class AionBlockchainImpl implements IAionBlockchain {
     @Override
     public boolean isUnityForkEnabledAtNextBlock() {
         return forkUtility.isUnityForkActive(bestBlockNumber.get() + 1);
+    }
+
+    @Override
+    public boolean isSignatureSwapForkEnabledAtNextBlock() {
+        return forkUtility.isSignatureSwapForkActive(bestBlockNumber.get() + 1);
     }
 
     @Override

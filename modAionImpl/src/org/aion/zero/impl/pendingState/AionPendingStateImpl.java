@@ -19,8 +19,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import org.aion.rlp.RLP;
-import org.aion.rlp.SharedRLPList;
 import org.aion.txpool.Constant.TXPOOL_PROPERTY;
 import org.aion.txpool.v1.TxPoolV1;
 import org.aion.util.types.ByteArrayWrapper;
@@ -240,7 +238,7 @@ public final class AionPendingStateImpl implements IPendingState {
     }
 
     private TxResponse validateTx(AionTransaction tx) {
-        TxResponse response = TXValidator.validateTx(tx, blockchain.isUnityForkEnabledAtNextBlock());
+        TxResponse response = TXValidator.validateTx(tx, blockchain.isUnityForkEnabledAtNextBlock(), blockchain.isSignatureSwapForkEnabledAtNextBlock());
         if (response.isFail()) {
             return response;
         }

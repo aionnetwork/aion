@@ -53,4 +53,6 @@ public interface UnityChain {
     boolean isUnityForkEnabledAtNextBlock();
 
     BigInteger calculateBlockRewards(long block_number);
+
+    boolean isSignatureSwapForkEnabledAtNextBlock();
 }

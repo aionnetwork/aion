@@ -1,5 +1,7 @@
 package org.aion.zero.impl.valid;
 
+import static org.aion.precompiled.ContractInfo.isPrecompiledContract;
+import static org.aion.util.types.AddressUtils.ZERO_ADDRESS;
 import static org.aion.zero.impl.vm.common.TxNrgRule.isValidNrgContractCreate;
 import static org.aion.zero.impl.vm.common.TxNrgRule.isValidNrgContractCreateAfterUnity;
 import static org.aion.zero.impl.vm.common.TxNrgRule.isValidNrgTx;
@@ -11,6 +13,8 @@ import org.aion.base.AionTransaction;
 import org.aion.crypto.ISignature;
 import org.aion.crypto.SignatureFac;
 import org.aion.log.LogEnum;
+import org.aion.precompiled.type.PrecompiledContract;
+import org.aion.types.AionAddress;
 import org.aion.util.types.DataWord;
 import org.aion.util.types.ByteArrayWrapper;
 import org.aion.util.types.Hash256;
@@ -27,18 +31,33 @@ public class TXValidator {
     private static final Map<ByteArrayWrapper, TxResponse> cache =
             Collections.synchronizedMap(new LRUMap<>(4096));
 
-    public static TxResponse validateTx(AionTransaction tx, boolean unityForkEnabled) {
+    public static TxResponse validateTx(AionTransaction tx, boolean unityForkEnabled, boolean signatureSwapForkEnabled) {
         TxResponse valid = cache.get(ByteArrayWrapper.wrap(tx.getTransactionHash()));
         if (valid != null) {
             return valid;
         } else {
-            if (unityForkEnabled) {
+            if (signatureSwapForkEnabled) {
+                if (isValidAfterSignatureSwap(tx)) {
+                    valid = isValidAfterUnity(tx);
+                } else {
+                    LOG.error("invalid tx destination!");
+                    valid = TxResponse.INVALID_TX_DESTINATION;
+                }
+            } else if (unityForkEnabled) {
                 valid = isValidAfterUnity(tx);
             } else {
                 valid = isValid0(tx);
             }
             cache.put(ByteArrayWrapper.wrap(tx.getTransactionHash()), valid);
             return valid;
+        }
+    }
+
+    private static boolean isValidAfterSignatureSwap(AionTransaction tx) {
+        if (isPrecompiledContract(tx.getDestinationAddress()) || tx.getDestinationAddress().equals(ZERO_ADDRESS)) {
+            return true;
+        } else {
+            return tx.getDestinationAddress().toByteArray()[0] == (byte)0xa0;
         }
     }
 

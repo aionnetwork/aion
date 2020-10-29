@@ -491,8 +491,9 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
             long currTimeSeconds) {
 
         boolean unityForkEnabled = forkUtility.isUnityForkActive(parent.getNumber() + 1);
+        boolean signatureSwapForkEnabled = forkUtility.isSignatureSwapForkActive(parent.getNumber() + 1);
         for (AionTransaction tx : txs) {
-            if (TXValidator.validateTx(tx, unityForkEnabled).isFail()) {
+            if (TXValidator.validateTx(tx, unityForkEnabled, signatureSwapForkEnabled).isFail()) {
                 throw new InvalidParameterException("invalid transaction input! " + tx.toString());
             }
         }
@@ -508,8 +509,9 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
         long currTimeSeconds) {
 
         boolean unityForkEnabled = forkUtility.isUnityForkActive(parent.getNumber() + 1);
+        boolean signatureSwapForkEnabled = forkUtility.isSignatureSwapForkActive(parent.getNumber() + 1);
         for (AionTransaction tx : txs) {
-            if (TXValidator.validateTx(tx, unityForkEnabled).isFail()) {
+            if (TXValidator.validateTx(tx, unityForkEnabled, signatureSwapForkEnabled).isFail()) {
                 throw new InvalidParameterException("invalid transaction input! " + tx.toString());
             }
         }
