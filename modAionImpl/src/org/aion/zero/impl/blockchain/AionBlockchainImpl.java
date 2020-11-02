@@ -1959,10 +1959,14 @@ public class AionBlockchainImpl implements IAionBlockchain {
      * fallback the balance for the mistake transactions
      */
     private void balanceFallback() {
-        List<byte[]> fallbackTxHash = new ArrayList<>();
-        // TODO: adding other mistake transactions
-        fallbackTxHash.add(ByteUtil.hexStringToBytes("0xaff350462b99ab827fca062532c782499fd0f0d144c3232cac4044d263b98487"));
+        List<byte[]> fallbackTxHash = CfgAion.inst().getFork().getFallbackTx();
 
+        if (fallbackTxHash == null) {
+            LOG.debug("no fallback transaction");
+            return;
+        }
+
+        int accountDeleted = 0;
         for(byte[] hash : fallbackTxHash) {
             AionTxInfo info = getTransactionInfo(hash);
             if (info == null) {
@@ -1975,9 +1979,30 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
             LOG.debug("sender {}, receiver {}, balance {}", sender, receiver, balance);
 
-            track.addBalance(sender, balance);
-            track.deleteAccount(receiver);
+            AccountState stateReceiver = track.getAccountState(receiver);
+            if (stateReceiver == null) {
+                throw new IllegalStateException("missing receiver's state of the fallback transaction: " + receiver);
+            }
+
+            if (stateReceiver.isDeleted()) {
+                throw new IllegalStateException("the receiver's state has been deleted: " + receiver);
+            }
+
+            if (stateReceiver.getBalance().compareTo(balance) >= 0) {
+                track.addBalance(sender, balance);
+                track.addBalance(receiver, balance.negate());
+            } else {
+                throw new IllegalStateException("the receiver state of the balance cannot be negative: " + receiver);
+            }
+
+            if (stateReceiver.getBalance().equals(ZERO)) {
+                track.deleteAccount(receiver);
+                accountDeleted++;
+                LOG.debug("deletedAccount: {}", receiver);
+            }
         }
+
+        LOG.debug("fallback transactions: {}, account deleted: {}", fallbackTxHash.size(), accountDeleted);
     }
 
     public ChainConfiguration getChainConfiguration() {
