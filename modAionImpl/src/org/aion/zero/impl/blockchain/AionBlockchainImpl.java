@@ -1947,7 +1947,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
          */
         track.addBalance(block.getCoinbase(), minerReward);
 
-        if (isMainnet && forkUtility.isSignatureSwapForkBlock(block.getNumber())) {
+        if (forkUtility.isSignatureSwapForkBlock(block.getNumber())) {
             balanceFallback();
         }
 
