@@ -1,5 +1,6 @@
 package org.aion.zero.impl.config;
 
+import java.util.List;
 import java.util.Properties;
 
 public class CfgFork {
@@ -10,11 +11,18 @@ public class CfgFork {
 
     private static Properties forkProperties = new Properties();
 
-    public void setProperties(Properties properties) {
-        forkProperties = properties;
+    private List<byte[]> fallbackTx;
+
+    public void setProtocolUpgradeSettings(Properties _properties, List<byte[]> _fallbackTx) {
+        forkProperties = _properties;
+        fallbackTx = _fallbackTx;
     }
 
     public Properties getProperties() {
         return forkProperties;
+    }
+
+    public List<byte[]> getFallbackTx() {
+        return fallbackTx;
     }
 }

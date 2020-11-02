@@ -25,7 +25,7 @@ public class AionBlockchainImplTest {
         CfgAion cfg = CfgAion.inst();
         Properties p = new Properties();
         p.put("fork1.0", String.valueOf(Long.MAX_VALUE));
-        cfg.getFork().setProperties(p);
+        cfg.getFork().setProtocolUpgradeSettings(p, null);
         this.blockchain = null;
     }
 
@@ -34,7 +34,7 @@ public class AionBlockchainImplTest {
         CfgAion cfg = CfgAion.inst();
         Properties p = new Properties();
         p.put("fork1.0", "1");
-        cfg.getFork().setProperties(p);
+        cfg.getFork().setProtocolUpgradeSettings(p, null);
 
         StandaloneBlockchain.Bundle bundle =
             new StandaloneBlockchain.Builder()
@@ -55,7 +55,7 @@ public class AionBlockchainImplTest {
         CfgAion cfg = CfgAion.inst();
         Properties p = new Properties();
         p.put("fork1.0", "2");
-        cfg.getFork().setProperties(p);
+        cfg.getFork().setProtocolUpgradeSettings(p, null);
 
         StandaloneBlockchain.Bundle bundle =
             new StandaloneBlockchain.Builder()
@@ -79,7 +79,7 @@ public class AionBlockchainImplTest {
         CfgAion cfg = CfgAion.inst();
         Properties p = new Properties();
         p.put("fork1.0", "4");
-        cfg.getFork().setProperties(p);
+        cfg.getFork().setProtocolUpgradeSettings(p, null);
 
         StandaloneBlockchain.Bundle bundle =
             new StandaloneBlockchain.Builder()

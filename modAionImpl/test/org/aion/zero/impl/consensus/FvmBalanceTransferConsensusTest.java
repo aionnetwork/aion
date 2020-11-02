@@ -258,7 +258,7 @@ public class FvmBalanceTransferConsensusTest {
         Properties properties = new Properties();
         properties.put("fork0.3.2", "0");
         CfgAion cfg = CfgAion.inst();
-        cfg.getFork().setProperties(properties);
+        cfg.getFork().setProtocolUpgradeSettings(properties, null);
 
         BigInteger amount = BigInteger.TEN.pow(12).add(BigInteger.valueOf(293_865));
         BigInteger initialBalance = getBalance(new AionAddress(SENDER_ADDR));
@@ -328,7 +328,7 @@ public class FvmBalanceTransferConsensusTest {
         Properties properties = new Properties();
         properties.put("fork0.3.2", "0");
         CfgAion cfg = CfgAion.inst();
-        cfg.getFork().setProperties(properties);
+        cfg.getFork().setProtocolUpgradeSettings(properties, null);
 
         BigInteger initialBalance = getBalance(new AionAddress(SENDER_ADDR));
         assertThat(initialBalance).isEqualTo(SENDER_BALANCE);

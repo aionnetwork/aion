@@ -8,7 +8,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 import java.util.UUID;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLOutputFactory;
@@ -19,7 +18,9 @@ import org.aion.log.LogEnum;
 import org.aion.log.LogLevel;
 import org.aion.zero.impl.SystemExitCodes;
 import org.aion.zero.impl.types.AionGenesis;
+import org.aion.zero.impl.types.ForkPropertyLoader;
 import org.aion.zero.impl.types.GenesisBlockLoader;
+import org.aion.zero.impl.types.ProtocolUpgradeSettings;
 
 /** @author chris */
 public final class CfgAion {
@@ -188,19 +189,21 @@ public final class CfgAion {
             return;
         }
 
-        Properties properties = new Properties();
-        try (FileInputStream fis =
-                (forkFile == null)
-                        ? new FileInputStream(
-                                System.getProperty("user.dir")
-                                        + "/"
-                                        + networkName
-                                        + "/config"
-                                        + CfgFork.FORK_PROPERTIES_PATH)
-                        : new FileInputStream(forkFile)) {
+        ProtocolUpgradeSettings protocolSettings;
+        try {
+            if (forkFile == null) {
+                String path = System.getProperty("user.dir")
+                    + "/"
+                    + networkName
+                    + "/config"
+                    + CfgFork.FORK_PROPERTIES_PATH;
 
-            properties.load(fis);
-            this.getFork().setProperties(properties);
+                protocolSettings = ForkPropertyLoader.loadJSON(path);
+            } else {
+                protocolSettings = ForkPropertyLoader.loadJSON(forkFile.getPath());
+            }
+
+            this.getFork().setProtocolUpgradeSettings(protocolSettings.upgrade, protocolSettings.fallbackTransactionHash);
         } catch (Exception e) {
             System.out.println(
                     "<error on-parsing-fork-properties msg="
@@ -208,10 +211,6 @@ public final class CfgAion {
                             + ">, no protocol been updated.");
         }
     }
-
-    //    public void setForkProperties(String networkName) {
-    //        setForkProperties(networkName, null);
-    //    }
 
     public void dbFromXML() {
         File cfgFile = getInitialConfigFile();
