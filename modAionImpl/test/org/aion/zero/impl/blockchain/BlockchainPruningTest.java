@@ -266,8 +266,8 @@ public class BlockchainPruningTest {
         sideParent = mainBlock;
 
         // Generate random transactions for all accounts to add them to the state.
-        List<AionTransaction> mcTxs = BlockchainTestUtils.generateTransactions(1_000, txUsers, chain.getRepository(), mainParent);
-        List<AionTransaction> scTxs = BlockchainTestUtils.generateTransactions(1_000, txUsers, chain.getRepository(), sideParent);
+        List<AionTransaction> mcTxs = BlockchainTestUtils.generateTransactions(1_000, txUsers, chain.getRepository(), mainParent, false);
+        List<AionTransaction> scTxs = BlockchainTestUtils.generateTransactions(1_000, txUsers, chain.getRepository(), sideParent, false);
 
         mainBlock = BlockchainTestUtils.generateNextStakingBlock(chain, mainParent, mcTxs, otherStakers.get(0));
         sideBlock = BlockchainTestUtils.generateNextStakingBlock(chain, sideParent, scTxs, otherStakers.get(0));
@@ -291,8 +291,8 @@ public class BlockchainPruningTest {
         // Add blocks with transactions for mainStakers and mainUsers.
         for (int j = 0; j < 4; j++) {
             // Add transactions for frequent users.
-            mcTxs = BlockchainTestUtils.generateTransactions(1_000, mainUsers, chain.getRepository(), mainParent);
-            scTxs = BlockchainTestUtils.generateTransactions(1_000, mainUsers, chain.getRepository(), sideParent);
+            mcTxs = BlockchainTestUtils.generateTransactions(1_000, mainUsers, chain.getRepository(), mainParent, false);
+            scTxs = BlockchainTestUtils.generateTransactions(1_000, mainUsers, chain.getRepository(), sideParent, false);
 
             // Seal the block with a frequent staker.
             if (mainParent instanceof MiningBlock && sideParent instanceof MiningBlock) {
@@ -349,8 +349,8 @@ public class BlockchainPruningTest {
         verifyEffectiveSelfStake(mainStakers, chain, sideBlock, expectedStake);
 
         // Add transactions for infrequent users.
-        mcTxs = BlockchainTestUtils.generateTransactions(10, otherUsers, chain.getRepository(), mainParent);
-        scTxs = BlockchainTestUtils.generateTransactions(10, otherUsers, chain.getRepository(), sideParent);
+        mcTxs = BlockchainTestUtils.generateTransactions(10, otherUsers, chain.getRepository(), mainParent, false);
+        scTxs = BlockchainTestUtils.generateTransactions(10, otherUsers, chain.getRepository(), sideParent, false);
 
         // Seal the block with an infrequent staker.
         mainBlock = BlockchainTestUtils.generateNextStakingBlock(chain, mainParent, mcTxs, otherStakers.get(0));

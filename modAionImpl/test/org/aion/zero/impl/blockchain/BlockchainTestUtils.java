@@ -56,11 +56,16 @@ public class BlockchainTestUtils {
 
     public static List<AionTransaction> generateTransactions(
             int maxSize, List<ECKey> accounts, AionRepositoryImpl repo) {
-        return generateTransactions(maxSize, accounts, repo, repo.getBlockStore().getBestBlock());
+        return generateTransactions(maxSize, accounts, repo, repo.getBlockStore().getBestBlock(), false);
     }
 
-    public static List<AionTransaction> generateTransactions(int maxSize, List<ECKey> accounts, AionRepositoryImpl repository, Block block) {
-        int size = rand.nextInt(maxSize);
+    public static List<AionTransaction> generateTransactions(
+        int maxSize, List<ECKey> accounts, AionRepositoryImpl repo, boolean invalidReceiver) {
+        return generateTransactions(maxSize, accounts, repo, repo.getBlockStore().getBestBlock(), invalidReceiver);
+    }
+
+    public static List<AionTransaction> generateTransactions(int maxSize, List<ECKey> accounts, AionRepositoryImpl repository, Block block, boolean invalidReceiver) {
+        int size = invalidReceiver ? maxSize : rand.nextInt(maxSize);
 
         if (size == 0) {
             return Collections.emptyList();
@@ -81,7 +86,7 @@ public class BlockchainTestUtils {
 
                 // generate a random Aion account address
                 byte[] aionBytes = HashUtil.h256(accountNonce.toByteArray());
-                aionBytes[0] = (byte) 0xa0; // the Aion prefix
+                aionBytes[0] = invalidReceiver ? (byte) 0xa1 : (byte) 0xa0; // the Aion prefix
                 AionAddress destAddr = new AionAddress(aionBytes);
                 AionTransaction newTx =
                         AionTransaction.create(

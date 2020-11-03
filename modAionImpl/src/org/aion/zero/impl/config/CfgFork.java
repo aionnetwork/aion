@@ -1,5 +1,6 @@
 package org.aion.zero.impl.config;
 
+import com.google.common.annotations.VisibleForTesting;
 import java.util.List;
 import java.util.Properties;
 
@@ -24,5 +25,10 @@ public class CfgFork {
 
     public List<byte[]> getFallbackTx() {
         return fallbackTx;
+    }
+
+    @VisibleForTesting
+    public void setFallbackTx(List<byte[]> _fallbackTx) {
+        fallbackTx = _fallbackTx;
     }
 }

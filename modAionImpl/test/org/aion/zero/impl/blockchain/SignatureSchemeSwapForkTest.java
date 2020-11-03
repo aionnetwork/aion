@@ -6,6 +6,7 @@ import static org.aion.zero.impl.blockchain.BlockchainTestUtils.generateAccounts
 
 import java.io.IOException;
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -18,6 +19,7 @@ import org.aion.crypto.ECKey;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.log.LogLevel;
+import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.types.Block;
 import org.aion.types.AionAddress;
 import org.aion.zero.impl.core.ImportResult;
@@ -57,6 +59,8 @@ public class SignatureSchemeSwapForkTest {
     @After
     public void tearDown() {
         AvmTestConfig.clearConfigurations();
+        // Reset the fallback
+        CfgAion.inst().getFork().setFallbackTx(null);
     }
 
     @Test
@@ -118,6 +122,100 @@ public class SignatureSchemeSwapForkTest {
         // import block5SignatureSchemeSwapStaking on blockchain
         result = blockchain.tryToConnectAndFetchSummary(block5SignatureSchemeSwapStaking);
         assertThat(result.getLeft()).isEqualTo(ImportResult.IMPORTED_BEST);
+
+        // create next mining block
+        Block block6Mining = BlockchainTestUtils.generateNextMiningBlock(blockchain, blockchain.getBestBlock(), Collections.emptyList());
+        // import block6Mining on blockchain
+        result = blockchain.tryToConnectAndFetchSummary(block6Mining);
+        assertThat(result.getLeft()).isEqualTo(ImportResult.IMPORTED_BEST);
+
+        // create next staking block
+        Block block7Staking = BlockchainTestUtils.generateNextStakingBlock(blockchain, blockchain.getBestBlock(),
+            Collections.emptyList(), stakers.get(0));
+        // import block7Staking on blockchain
+        result = blockchain.tryToConnectAndFetchSummary(block7Staking);
+        assertThat(result.getLeft()).isEqualTo(ImportResult.IMPORTED_BEST);
+    }
+
+    @Test
+    public void testSigatureSchemeSwapForkWithFallbackTransaction()
+        throws ClassNotFoundException, InstantiationException, IllegalAccessException, IOException {
+
+        // setup Unity fork and AVM
+        long unityForkBlock = 2;
+        long signatureSwapForkBlockHeight = unityForkBlock + 3;
+
+        setupAVM(unityForkBlock);
+
+        TestResourceProvider resourceProvider = TestResourceProvider.initializeAndCreateNewProvider(
+            AvmPathManager.getPathOfProjectRootDirectory());
+
+        // setup an identical blockchains
+        StandaloneBlockchain blockchain = setupIdenticalBlockchain(unityForkBlock, signatureSwapForkBlockHeight);
+
+        // create block with staker registry
+        Block blockWithRegistry = BlockchainTestUtils.generateNextMiningBlockWithStakerRegistry(blockchain, blockchain.getGenesis(), resourceProvider, stakingRegistryOwner);
+        // import block on firstChain
+        Pair<ImportResult, AionBlockSummary> result = blockchain.tryToConnectAndFetchSummary(blockWithRegistry);
+        assertThat(result.getLeft()).isEqualTo(ImportResult.IMPORTED_BEST);
+        assertThat(result.getRight().getReceipts().get(0).isSuccessful()).isTrue();
+        assertThat(result.getRight().getReceipts().get(0).getLogInfoList()).isNotEmpty();
+        assertThat(result.getRight().getReceipts().get(0).getEnergyUsed()).isEqualTo(1_225_655L);
+
+        // set the staking contract address in the staking genesis
+        AionTransaction deploy = blockWithRegistry.getTransactionsList().get(0);
+        AionAddress contract = TxUtil
+            .calculateContractAddress(deploy.getSenderAddress().toByteArray(), deploy.getNonceBI());
+        blockchain.getGenesis().setStakingContractAddress(contract);
+
+        // create Unity block with stakers
+        Block block2Unity = BlockchainTestUtils.generateNextMiningBlockWithStakers(blockchain, blockchain.getBestBlock(), resourceProvider, stakers, MIN_SELF_STAKE);
+        // import block2Unity on blockchain
+        result = blockchain.tryToConnectAndFetchSummary(block2Unity);
+        assertThat(result.getLeft()).isEqualTo(ImportResult.IMPORTED_BEST);
+        verifyReceipts(result.getRight().getReceipts(), 3, true);
+
+        // create staking block
+        Block block3Staking = BlockchainTestUtils.generateNextStakingBlock(blockchain, blockchain.getBestBlock(),
+            Collections.emptyList(), stakers.get(0));
+        assertThat(block3Staking).isNotNull();
+        // import block3Staking on blockchain
+        result = blockchain.tryToConnectAndFetchSummary(block3Staking);
+        assertThat(result.getLeft()).isEqualTo(ImportResult.IMPORTED_BEST);
+
+
+        // create an invalid transaction for the hardfork fallback.
+        List<AionTransaction> fallbackTx = BlockchainTestUtils.generateTransactions(1, accounts, blockchain.getRepository(), true);
+        List<byte[]> fallbackTxHash = new ArrayList<>();
+        for (AionTransaction a : fallbackTx) {
+            fallbackTxHash.add(a.getTransactionHash());
+        }
+
+        // cracking the config settings
+        CfgAion.inst().getFork().setFallbackTx(fallbackTxHash);
+
+        // create next mining block
+        Block block4Mining = BlockchainTestUtils.generateNextMiningBlock(blockchain, blockchain.getBestBlock(), fallbackTx);
+        // import block4Mining on blockchain
+        result = blockchain.tryToConnectAndFetchSummary(block4Mining);
+        assertThat(result.getLeft()).isEqualTo(ImportResult.IMPORTED_BEST);
+
+        // Check the transaction has been processed
+        assertThat(fallbackTx.get(0).getValueBI().equals(blockchain.getRepository().getBalance(fallbackTx.get(0).getDestinationAddress())));
+        BigInteger senderBalance = blockchain.getRepository().getBalance(fallbackTx.get(0).getSenderAddress());
+
+        // create the first signatureSchemeSwap block
+        Block block5SignatureSchemeSwapStaking = BlockchainTestUtils.generateNextStakingBlock(blockchain, blockchain.getBestBlock(),
+            Collections.emptyList(), stakers.get(0));
+        assertThat(block5SignatureSchemeSwapStaking).isNotNull();
+        // import block5SignatureSchemeSwapStaking on blockchain
+        result = blockchain.tryToConnectAndFetchSummary(block5SignatureSchemeSwapStaking);
+        assertThat(result.getLeft()).isEqualTo(ImportResult.IMPORTED_BEST);
+
+        // Check the invalid account has been fallbacked
+        assertThat( blockchain.getRepository().getAccountState(fallbackTx.get(0).getDestinationAddress()) == null);
+        BigInteger senderBalanceNew = blockchain.getRepository().getBalance(fallbackTx.get(0).getSenderAddress());
+        assertThat(senderBalanceNew.equals(senderBalance.add(fallbackTx.get(0).getValueBI())));
 
         // create next mining block
         Block block6Mining = BlockchainTestUtils.generateNextMiningBlock(blockchain, blockchain.getBestBlock(), Collections.emptyList());
