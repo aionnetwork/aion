@@ -179,7 +179,7 @@ public class BlockConstants implements IBlockConstants {
         return ENERGY_LOWER_BOUND;
     }
 
-    public long getExpectedBlockTime() {
+    public static long getExpectedBlockTime() {
         return EXPECTED_BLOCK_TIME;
     }
 

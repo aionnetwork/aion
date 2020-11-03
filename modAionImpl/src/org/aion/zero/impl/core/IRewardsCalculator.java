@@ -10,5 +10,7 @@ import java.math.BigInteger;
  */
 @FunctionalInterface
 public interface IRewardsCalculator {
-    BigInteger calculateReward(long blkNum);
+    BigInteger fixedRewardsAfterUnity = BigInteger.valueOf(4_500_000_000_000_000_000L);
+
+    BigInteger calculateReward(long blkNumOrTimeSpan);
 }
