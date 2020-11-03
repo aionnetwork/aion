@@ -19,11 +19,13 @@ import org.aion.crypto.ECKey;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.log.LogLevel;
-import org.aion.zero.impl.config.CfgAion;
-import org.aion.zero.impl.types.Block;
 import org.aion.types.AionAddress;
+import org.aion.zero.impl.config.CfgAion;
+import org.aion.zero.impl.core.IRewardsCalculator;
 import org.aion.zero.impl.core.ImportResult;
+import org.aion.zero.impl.core.RewardsCalculatorAfterSignatureSchemeSwap;
 import org.aion.zero.impl.types.AionBlockSummary;
+import org.aion.zero.impl.types.Block;
 import org.aion.zero.impl.vm.AvmPathManager;
 import org.aion.zero.impl.vm.AvmTestConfig;
 import org.aion.zero.impl.vm.TestResourceProvider;
@@ -229,6 +231,126 @@ public class SignatureSchemeSwapForkTest {
         // import block7Staking on blockchain
         result = blockchain.tryToConnectAndFetchSummary(block7Staking);
         assertThat(result.getLeft()).isEqualTo(ImportResult.IMPORTED_BEST);
+    }
+
+    @Test
+    public void testSigatureSchemeSwapForkBlockRewards()
+        throws ClassNotFoundException, InstantiationException, IllegalAccessException, IOException {
+
+        // setup Unity fork and AVM
+        long unityForkBlock = 2;
+        long signatureSwapForkBlockHeight = unityForkBlock + 3;
+
+        setupAVM(unityForkBlock);
+
+        TestResourceProvider resourceProvider = TestResourceProvider.initializeAndCreateNewProvider(
+            AvmPathManager.getPathOfProjectRootDirectory());
+
+        // setup an identical blockchains
+        StandaloneBlockchain blockchain = setupIdenticalBlockchain(unityForkBlock, signatureSwapForkBlockHeight);
+
+        // create block with staker registry
+        Block blockWithRegistry = BlockchainTestUtils.generateNextMiningBlockWithStakerRegistry(blockchain, blockchain.getGenesis(), resourceProvider, stakingRegistryOwner);
+        // import block on firstChain
+        Pair<ImportResult, AionBlockSummary> result = blockchain.tryToConnectAndFetchSummary(blockWithRegistry);
+        assertThat(result.getLeft()).isEqualTo(ImportResult.IMPORTED_BEST);
+        assertThat(result.getRight().getReceipts().get(0).isSuccessful()).isTrue();
+        assertThat(result.getRight().getReceipts().get(0).getLogInfoList()).isNotEmpty();
+        assertThat(result.getRight().getReceipts().get(0).getEnergyUsed()).isEqualTo(1_225_655L);
+
+        // set the staking contract address in the staking genesis
+        AionTransaction deploy = blockWithRegistry.getTransactionsList().get(0);
+        AionAddress contract = TxUtil
+            .calculateContractAddress(deploy.getSenderAddress().toByteArray(), deploy.getNonceBI());
+        blockchain.getGenesis().setStakingContractAddress(contract);
+
+        // create Unity block with stakers
+        Block block2Unity = BlockchainTestUtils.generateNextMiningBlockWithStakers(blockchain, blockchain.getBestBlock(), resourceProvider, stakers, MIN_SELF_STAKE);
+        // import block2Unity on blockchain
+        result = blockchain.tryToConnectAndFetchSummary(block2Unity);
+        assertThat(result.getLeft()).isEqualTo(ImportResult.IMPORTED_BEST);
+        verifyReceipts(result.getRight().getReceipts(), 3, true);
+
+        // create staking block
+        Block block3Staking = BlockchainTestUtils.generateNextStakingBlock(blockchain, blockchain.getBestBlock(),
+            Collections.emptyList(), stakers.get(0));
+        assertThat(block3Staking).isNotNull();
+        // import block3Staking on blockchain
+        result = blockchain.tryToConnectAndFetchSummary(block3Staking);
+        assertThat(result.getLeft()).isEqualTo(ImportResult.IMPORTED_BEST);
+
+
+        // create next mining block
+        Block block4Mining = BlockchainTestUtils.generateNextMiningBlock(blockchain, blockchain.getBestBlock(), Collections.emptyList());
+        // import block4Mining on blockchain
+        result = blockchain.tryToConnectAndFetchSummary(block4Mining);
+        assertThat(result.getLeft()).isEqualTo(ImportResult.IMPORTED_BEST);
+
+        // create the first signatureSchemeSwap block
+        Block block5SignatureSchemeSwapStaking = BlockchainTestUtils.generateNextStakingBlock(blockchain, blockchain.getBestBlock(),
+            Collections.emptyList(), stakers.get(0));
+        assertThat(block5SignatureSchemeSwapStaking).isNotNull();
+
+        // Check the balance of the blockProducer
+        AionAddress blockProducer = block5SignatureSchemeSwapStaking.getCoinbase();
+        BigInteger balance = blockchain.getRepository().getBalance(blockProducer);
+
+        // import block5SignatureSchemeSwapStaking on blockchain
+        result = blockchain.tryToConnectAndFetchSummary(block5SignatureSchemeSwapStaking);
+        assertThat(result.getLeft()).isEqualTo(ImportResult.IMPORTED_BEST);
+
+        // Check the block producer receive the correct balance (4.5 AION)
+        BigInteger newBalance = blockchain.getRepository().getBalance(blockProducer);
+        assertThat(newBalance).isEqualTo(balance.add(IRewardsCalculator.fixedRewardsAfterUnity));
+
+        // create next mining block
+        Block block6Mining = BlockchainTestUtils.generateNextMiningBlock(blockchain, blockchain.getBestBlock(), Collections.emptyList(), block5SignatureSchemeSwapStaking.getTimestamp() + 1);
+
+        // Check the balance of the blockProducer
+        blockProducer = block6Mining.getCoinbase();
+        balance = blockchain.getRepository().getBalance(blockProducer);
+
+        // import block6Mining on blockchain
+        result = blockchain.tryToConnectAndFetchSummary(block6Mining);
+        assertThat(result.getLeft()).isEqualTo(ImportResult.IMPORTED_BEST);
+
+        // Check the block producer receive the correct balance by the rewards adjustment calculator
+        newBalance = blockchain.getRepository().getBalance(blockProducer);
+        long timeSpan = block6Mining.getTimestamp() - block5SignatureSchemeSwapStaking.getTimestamp();
+        assertThat(newBalance).isEqualTo(balance.add(RewardsCalculatorAfterSignatureSchemeSwap.calculateReward(timeSpan)));
+
+        // create next staking block
+        Block block7Staking = BlockchainTestUtils.generateNextStakingBlock(blockchain, blockchain.getBestBlock(),
+            Collections.emptyList(), stakers.get(1));
+
+        // Check the balance of the blockProducer
+        assert block7Staking != null;
+        blockProducer = block7Staking.getCoinbase();
+        balance = blockchain.getRepository().getBalance(blockProducer);
+
+        // import block7Staking on blockchain
+        result = blockchain.tryToConnectAndFetchSummary(block7Staking);
+        assertThat(result.getLeft()).isEqualTo(ImportResult.IMPORTED_BEST);
+
+        // Check the block producer receive the correct balance (4.5 AION)
+        newBalance = blockchain.getRepository().getBalance(blockProducer);
+        assertThat(newBalance).isEqualTo(balance.add(IRewardsCalculator.fixedRewardsAfterUnity));
+
+        // create next mining block
+        Block block8Mining = BlockchainTestUtils.generateNextMiningBlock(blockchain, blockchain.getBestBlock(), Collections.emptyList(), block7Staking.getTimestamp() + 71);
+
+        // Check the balance of the blockProducer
+        blockProducer = block8Mining.getCoinbase();
+        balance = blockchain.getRepository().getBalance(blockProducer);
+
+        // import block6Mining on blockchain
+        result = blockchain.tryToConnectAndFetchSummary(block8Mining);
+        assertThat(result.getLeft()).isEqualTo(ImportResult.IMPORTED_BEST);
+
+        // Check the block producer receive the correct balance by the rewards adjustment calculator
+        newBalance = blockchain.getRepository().getBalance(blockProducer);
+        timeSpan = block8Mining.getTimestamp() - block7Staking.getTimestamp();
+        assertThat(newBalance).isEqualTo(balance.add(RewardsCalculatorAfterSignatureSchemeSwap.calculateReward(timeSpan)));
     }
 
     private StandaloneBlockchain setupIdenticalBlockchain(long unityForkBlock,

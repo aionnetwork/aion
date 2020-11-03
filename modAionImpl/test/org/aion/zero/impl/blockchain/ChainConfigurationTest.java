@@ -4,6 +4,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.Mockito.when;
 
 import java.math.BigInteger;
+import org.aion.zero.impl.core.IRewardsCalculator;
 import org.aion.zero.impl.types.MiningBlockHeader;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -160,13 +161,23 @@ public class ChainConfigurationTest {
                 .getRewardsCalculatorBeforeSignatureSchemeSwap(true)
                 .calculateReward(header.getNumber());
 
-        assertThat(blockRewardAfterUnityFork).isEqualTo(new BigInteger("4500000000000000000"));
+        assertThat(blockRewardAfterUnityFork).isEqualTo(IRewardsCalculator.fixedRewardsAfterUnity);
 
         BigInteger blockRewardAfterUnityForkPlusOne =
             config
                 .getRewardsCalculatorBeforeSignatureSchemeSwap(true)
                 .calculateReward(header.getNumber() + 1);
 
-        assertThat(blockRewardAfterUnityForkPlusOne).isEqualTo(new BigInteger("4500000000000000000"));
+        assertThat(blockRewardAfterUnityForkPlusOne).isEqualTo(IRewardsCalculator.fixedRewardsAfterUnity);
+
+        BigInteger StakingBlockRewardAfterSignatureSchemeSwapActive =
+            config.getRewardsCalculatorAfterSignatureSchemeSwap(false).calculateReward(header.getNumber());
+
+        assertThat(StakingBlockRewardAfterSignatureSchemeSwapActive).isEqualTo(IRewardsCalculator.fixedRewardsAfterUnity);
+
+        BigInteger MiningBlockRewardAfterSignatureSchemeSwapActive =
+            config.getRewardsCalculatorAfterSignatureSchemeSwap(false).calculateReward(10);
+
+        assertThat(MiningBlockRewardAfterSignatureSchemeSwapActive).isEqualTo(IRewardsCalculator.fixedRewardsAfterUnity);
     }
 }
