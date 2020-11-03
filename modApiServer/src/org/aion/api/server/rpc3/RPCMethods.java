@@ -127,8 +127,7 @@ public class RPCMethods implements RPCServerMethods {
             return null; // occurs if the requested block does not exist in the db
         } else {
             final BigInteger blkReward =
-                    chainHolder.calculateReward(
-                            block.getHeader().getNumber()); // get the block reward
+                    chainHolder.calculateReward(block); // get the block reward
             final BigInteger totalDiff =
                     chainHolder.getTotalDifficultyByHash(
                             block.getHash()); // get the total difficulty

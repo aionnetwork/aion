@@ -4,6 +4,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -16,6 +17,7 @@ import org.aion.base.AccountState;
 import org.aion.crypto.ECKey;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.aion.zero.impl.core.IRewardsCalculator;
 import org.aion.zero.impl.types.Block;
 import org.aion.zero.impl.types.BlockHeader.Seal;
 import org.aion.types.AionAddress;
@@ -90,11 +92,27 @@ public class AionChainHolder implements ChainHolder {
     }
 
     @Override
-    public BigInteger calculateReward(Long number) {
-        return ((AionBlockchainImpl) this.chain.getAionHub().getBlockchain())
+    public BigInteger calculateReward(Block block) {
+        Objects.requireNonNull(block);
+
+        if (chain.getAionHub().isForkSignatureSwapActive(block.getNumber())) {
+            boolean isMiningBlock = block.getHeader().getSealType().equals(Seal.PROOF_OF_WORK);
+            IRewardsCalculator calculator =
+                ((AionBlockchainImpl)chain.getBlockchain()).getChainConfiguration().getRewardsCalculatorAfterSignatureSchemeSwap(isMiningBlock);
+            if (isMiningBlock) {
+                Block parent = chain.getBlockchain().getBlockByHash(block.getParentHash());
+                Objects.requireNonNull(parent);
+
+                return calculator.calculateReward(block.getTimestamp() - parent.getTimestamp());
+            } else {
+                return calculator.calculateReward(block.getNumber());
+            }
+        } else {
+            return ((AionBlockchainImpl)chain.getBlockchain())
                 .getChainConfiguration()
-                .getRewardsCalculator(isUnityForkEnabled())
-                .calculateReward(number);
+                .getRewardsCalculatorBeforeSignatureSchemeSwap(chain.getAionHub().isForkUnityActive(block.getNumber()))
+                .calculateReward(block.getNumber());
+        }
     }
 
     @Override

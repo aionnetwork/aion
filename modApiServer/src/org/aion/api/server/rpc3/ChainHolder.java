@@ -51,10 +51,10 @@ public interface ChainHolder {
 
     /**
      * Calculates the block reward at the block number.
-     * @param number a block number
+     * @param block the block
      * @return the block reward
      */
-    BigInteger calculateReward(Long number);
+    BigInteger calculateReward(Block block);
 
     /**
      * Checks whether the unity fork has been enabled

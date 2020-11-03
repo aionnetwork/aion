@@ -48,6 +48,8 @@ import org.aion.base.AionTxReceipt;
 import org.aion.base.Bloom;
 import org.aion.base.ConstantUtil;
 import org.aion.base.TransactionTypeRule;
+import org.aion.base.db.Repository;
+import org.aion.base.db.RepositoryCache;
 import org.aion.crypto.AddressSpecs;
 import org.aion.crypto.HashUtil;
 import org.aion.crypto.ed25519.ECKeyEd25519;
@@ -60,11 +62,6 @@ import org.aion.evtmgr.impl.evt.EventBlock;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.log.LogUtil;
-import org.aion.zero.impl.types.Block;
-import org.aion.zero.impl.types.BlockHeader;
-import org.aion.zero.impl.types.BlockHeader.Seal;
-import org.aion.base.db.Repository;
-import org.aion.base.db.RepositoryCache;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
@@ -77,6 +74,7 @@ import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.FastImportResult;
 import org.aion.zero.impl.core.IDifficultyCalculator;
 import org.aion.zero.impl.core.ImportResult;
+import org.aion.zero.impl.core.RewardsCalculatorAfterSignatureSchemeSwap;
 import org.aion.zero.impl.core.energy.AbstractEnergyStrategyLimit;
 import org.aion.zero.impl.core.energy.EnergyStrategies;
 import org.aion.zero.impl.db.AionRepositoryImpl;
@@ -88,7 +86,10 @@ import org.aion.zero.impl.trie.TrieNodeResult;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.types.AionGenesis;
 import org.aion.zero.impl.types.AionTxInfo;
+import org.aion.zero.impl.types.Block;
 import org.aion.zero.impl.types.BlockContext;
+import org.aion.zero.impl.types.BlockHeader;
+import org.aion.zero.impl.types.BlockHeader.Seal;
 import org.aion.zero.impl.types.BlockIdentifier;
 import org.aion.zero.impl.types.GenesisStakingBlock;
 import org.aion.zero.impl.types.MiningBlock;
@@ -1255,11 +1256,19 @@ public class AionBlockchainImpl implements IAionBlockchain {
         }
 
         // derive base block reward
-        BigInteger baseBlockReward =
+        BigInteger baseBlockReward;
+        if (forkUtility.isSignatureSwapForkActive(block.getNumber())) {
+            baseBlockReward =
+                RewardsCalculatorAfterSignatureSchemeSwap
+                    .calculateReward(block.getTimestamp() - parentHdr.getTimestamp());
+        } else {
+            baseBlockReward =
                 this.chainConfiguration
-                        .getRewardsCalculator(forkUtility.isUnityForkActive(block.getHeader().getNumber()))
-                        .calculateReward(block.getHeader().getNumber());
+                    .getRewardsCalculatorBeforeSignatureSchemeSwap(forkUtility.isUnityForkActive(block.getNumber()))
+                    .calculateReward(block.getNumber());
+        }
         return new BlockContext(block, baseBlockReward, totalTransactionFee);
+
     }
     
     private BigInteger calculateFirstPoSDifficultyAtBlock(Block block) {
@@ -1929,10 +1938,26 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private Map<AionAddress, BigInteger> addReward(Block block) {
 
         Map<AionAddress, BigInteger> rewards = new HashMap<>();
-        BigInteger minerReward =
-                this.chainConfiguration
-                        .getRewardsCalculator(forkUtility.isUnityForkActive(block.getHeader().getNumber()))
-                        .calculateReward(block.getHeader().getNumber());
+
+        BigInteger minerReward;
+        boolean isSignatureSwapForkActive = forkUtility.isSignatureSwapForkActive(block.getNumber());
+
+        if (forkUtility.isSignatureSwapForkActive(block.getNumber())) {
+            if (block.getHeader().getSealType().equals(Seal.PROOF_OF_WORK)) {
+                minerReward =
+                    RewardsCalculatorAfterSignatureSchemeSwap.calculateReward(
+                        block.getTimestamp() - getParent(block.getHeader()).getTimestamp());
+            } else {
+                minerReward =
+                    chainConfiguration.getRewardsCalculatorAfterSignatureSchemeSwap(false).calculateReward(block.getNumber());
+            }
+        } else {
+            minerReward =
+                chainConfiguration
+                    .getRewardsCalculatorBeforeSignatureSchemeSwap(forkUtility.isUnityForkActive(block.getNumber()))
+                    .calculateReward(block.getNumber());
+        }
+
         rewards.put(block.getCoinbase(), minerReward);
 
         LOG.trace(
@@ -2465,9 +2490,28 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     @Override
     public BigInteger calculateBlockRewards(long block_number) {
-        return chainConfiguration
-                .getRewardsCalculator(forkUtility.isUnityForkActive(block_number))
+
+        if (forkUtility.isSignatureSwapForkActive(block_number)) {
+            Block b = getBlockByNumber(block_number);
+            if (b == null) {
+                return ZERO;
+            }
+
+            if (b.getHeader().getSealType().equals(Seal.PROOF_OF_WORK)) {
+                Block parent = getParent(b.getHeader());
+                if (parent == null) {
+                    throw new NullPointerException("Cannot find the parent block by hash:" + ByteUtil.toHexString(b.getParentHash()));
+                }
+
+                return RewardsCalculatorAfterSignatureSchemeSwap.calculateReward(b.getTimestamp() - parent.getTimestamp());
+            } else {
+                return chainConfiguration.getRewardsCalculatorAfterSignatureSchemeSwap(false).calculateReward(block_number);
+            }
+        } else {
+            return chainConfiguration
+                .getRewardsCalculatorBeforeSignatureSchemeSwap(forkUtility.isUnityForkActive(block_number))
                 .calculateReward(block_number);
+        }
     }
 
     /**

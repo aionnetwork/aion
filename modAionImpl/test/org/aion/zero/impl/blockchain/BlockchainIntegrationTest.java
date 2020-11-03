@@ -6,24 +6,24 @@ import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collections;
 import org.aion.base.AionTransaction;
+import org.aion.base.AionTxReceipt;
 import org.aion.base.ConstantUtil;
+import org.aion.base.InternalVmType;
 import org.aion.base.TransactionTypes;
 import org.aion.base.TxUtil;
+import org.aion.base.db.Repository;
 import org.aion.crypto.ECKey;
 import org.aion.log.AionLoggerFactory;
-import org.aion.zero.impl.types.Block;
-import org.aion.zero.impl.core.ImportResult;
-import org.aion.base.InternalVmType;
-import org.aion.base.db.Repository;
 import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.types.AddressUtils;
-import org.aion.zero.impl.types.BlockContext;
+import org.aion.zero.impl.core.ImportResult;
 import org.aion.zero.impl.db.ContractInformation;
+import org.aion.zero.impl.types.AionBlockSummary;
+import org.aion.zero.impl.types.Block;
+import org.aion.zero.impl.types.BlockContext;
 import org.aion.zero.impl.types.MiningBlock;
 import org.aion.zero.impl.types.MiningBlockHeader;
-import org.aion.zero.impl.types.AionBlockSummary;
-import org.aion.base.AionTxReceipt;
 import org.aion.zero.impl.vm.AvmTestConfig;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.After;
@@ -351,10 +351,9 @@ public class BlockchainIntegrationTest {
         assertThat(bc.getRepository().getBalance(beneficiary)).isEqualTo(context.baseBlockReward);
 
         // check that the correct amount was calculated
-        assertThat(
-                        configuration
-                                .getRewardsCalculator(false)
-                                .calculateReward(context.block.getHeader().getNumber()))
-                .isEqualTo(context.baseBlockReward);
+        assertThat(configuration
+            .getRewardsCalculatorBeforeSignatureSchemeSwap(false)
+            .calculateReward(context.block.getHeader().getNumber()))
+            .isEqualTo(context.baseBlockReward);
     }
 }
