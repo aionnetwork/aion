@@ -32,6 +32,7 @@ import org.aion.zero.impl.vm.TestResourceProvider;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class SignatureSchemeSwapForkTest {
@@ -385,6 +386,7 @@ public class SignatureSchemeSwapForkTest {
     }
 
     @Test
+    @Ignore // We ignore this test due to the FVM contract deploy is not disable in ver1.6
     public void testRejectFvmContractDeploy()
         throws ClassNotFoundException, InstantiationException, IllegalAccessException, IOException {
 

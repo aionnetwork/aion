@@ -45,7 +45,7 @@ dependencies {
     compile project(':modCrypto')
 
     compile project(':modAionImpl')
-    compile files("${rootProject.projectDir}/lib/fastvm-df76ffb.jar")
+    compile files("${rootProject.projectDir}/lib/fastvm-c7d37c5.jar")
     compile project(':modEvtMgr')
     compile project(':modEvtMgrImpl')
     compile project(':3rdParty.libnzmq')

@@ -53,7 +53,7 @@ dependencies {
     compile project(':modEvtMgrImpl')
     compile project(':modPrecompiled')
     compile project(':modTxPool')
-    compile files("${rootProject.projectDir}/lib/fastvm-df76ffb.jar")
+    compile files("${rootProject.projectDir}/lib/fastvm-c7d37c5.jar")
     compile 'org.json:json:20180813'
     compile 'info.picocli:picocli:4.0.0'
     compile files("${rootProject.projectDir}/lib/aion-types-22a3be9.jar")

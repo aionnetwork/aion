@@ -12,7 +12,7 @@ dependencies {
     compile project(':modP2p')
     compile project(':3rdParty.libnzmq')
     compile 'org.slf4j:slf4j-api:1.7.25'
-    compile files("${rootProject.projectDir}/lib/fastvm-df76ffb.jar")
+    compile files("${rootProject.projectDir}/lib/fastvm-c7d37c5.jar")
     
     testCompile 'junit:junit:4.12'
     testCompile 'org.hamcrest:hamcrest-all:1.3'
