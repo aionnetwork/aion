@@ -38,7 +38,7 @@ public final class RewardsCalculatorAfterSignatureSchemeSwap {
     }
 
     public static BigInteger calculateReward(long timeSpan) {
-        if (timeSpan == 0) {
+        if (timeSpan <= 0) {
             return BigInteger.ZERO;
         }
 
