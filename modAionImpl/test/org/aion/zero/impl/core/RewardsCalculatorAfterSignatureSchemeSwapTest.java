@@ -7,6 +7,12 @@ import org.junit.Test;
 public class RewardsCalculatorAfterSignatureSchemeSwapTest {
 
     @Test
+    public void RewardsCalculatorTimespanMinusOneTest() {
+        Assert.assertEquals(BigInteger.ZERO,
+            RewardsCalculatorAfterSignatureSchemeSwap.calculateReward(-1));
+    }
+
+    @Test
     public void RewardsCalculatorTimespanZeroTest() {
         Assert.assertEquals(BigInteger.ZERO,
             RewardsCalculatorAfterSignatureSchemeSwap.calculateReward(0));

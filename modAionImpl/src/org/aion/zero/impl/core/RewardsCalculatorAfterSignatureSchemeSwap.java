@@ -12,8 +12,8 @@ import org.aion.zero.impl.api.BlockConstants;
 public final class RewardsCalculatorAfterSignatureSchemeSwap {
 
     final static BigInteger[] rewardsAdjustTable;
-    // 95% of the mining block time-span will be in 70 secs
-    final static int capping = 70;
+    // 99% of the mining block time-span will fall into 125 secs under the time-span attack under 0.4 hashing power
+    final static int capping = 125;
 
     static {
         rewardsAdjustTable = new BigInteger[capping];
