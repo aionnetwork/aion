@@ -1970,7 +1970,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
         for(byte[] hash : rollbackTxHash) {
             AionTxInfo info = getTransactionInfo(hash);
             if (info == null) {
-                throw new IllegalStateException("missing rollback transaction:" + ByteUtil.toHexString(hash));
+                throw new IllegalStateException("the database missing the rollback transaction:" + ByteUtil.toHexString(hash) + "\n"
+                + "Please re-sync your database.");
             }
 
             AionAddress sender = info.getReceipt().getTransaction().getSenderAddress();
