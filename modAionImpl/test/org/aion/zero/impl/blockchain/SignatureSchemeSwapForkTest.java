@@ -60,7 +60,7 @@ public class SignatureSchemeSwapForkTest {
     public void tearDown() {
         AvmTestConfig.clearConfigurations();
         // Reset the fallback
-        CfgAion.inst().getFork().setFallbackTx(null);
+        CfgAion.inst().getFork().setRollbackTx(null);
     }
 
     @Test
@@ -192,7 +192,7 @@ public class SignatureSchemeSwapForkTest {
         }
 
         // cracking the config settings
-        CfgAion.inst().getFork().setFallbackTx(fallbackTxHash);
+        CfgAion.inst().getFork().setRollbackTx(fallbackTxHash);
 
         // create next mining block
         Block block4Mining = BlockchainTestUtils.generateNextMiningBlock(blockchain, blockchain.getBestBlock(), fallbackTx);

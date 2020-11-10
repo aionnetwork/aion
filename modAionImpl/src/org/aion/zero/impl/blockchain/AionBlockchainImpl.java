@@ -1948,7 +1948,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         track.addBalance(block.getCoinbase(), minerReward);
 
         if (forkUtility.isSignatureSwapForkBlock(block.getNumber())) {
-            balanceFallback();
+            balanceRollback();
         }
 
         return rewards;
@@ -1956,21 +1956,21 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     /**
      * SQ4-142
-     * fallback the balance for the mistake transactions
+     * Rollback the balance for the mistake transactions
      */
-    private void balanceFallback() {
-        List<byte[]> fallbackTxHash = CfgAion.inst().getFork().getFallbackTx();
+    private void balanceRollback() {
+        List<byte[]> rollbackTxHash = CfgAion.inst().getFork().getRollbackTx();
 
-        if (fallbackTxHash == null) {
-            LOG.debug("no fallback transaction");
+        if (rollbackTxHash == null) {
+            LOG.debug("no rollback transaction");
             return;
         }
 
         int accountDeleted = 0;
-        for(byte[] hash : fallbackTxHash) {
+        for(byte[] hash : rollbackTxHash) {
             AionTxInfo info = getTransactionInfo(hash);
             if (info == null) {
-                throw new IllegalStateException("missing fallback transaction:" + ByteUtil.toHexString(hash));
+                throw new IllegalStateException("missing rollback transaction:" + ByteUtil.toHexString(hash));
             }
 
             AionAddress sender = info.getReceipt().getTransaction().getSenderAddress();
@@ -1981,7 +1981,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
             AccountState stateReceiver = track.getAccountState(receiver);
             if (stateReceiver == null) {
-                throw new IllegalStateException("missing receiver's state of the fallback transaction: " + receiver);
+                throw new IllegalStateException("missing receiver's state of the rollback transaction: " + receiver);
             }
 
             if (stateReceiver.isDeleted()) {
@@ -2002,7 +2002,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             }
         }
 
-        LOG.debug("fallback transactions: {}, account deleted: {}", fallbackTxHash.size(), accountDeleted);
+        LOG.debug("rollback transactions: {}, account deleted: {}", rollbackTxHash.size(), accountDeleted);
     }
 
     public ChainConfiguration getChainConfiguration() {

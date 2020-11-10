@@ -12,23 +12,23 @@ public class CfgFork {
 
     private static Properties forkProperties = new Properties();
 
-    private List<byte[]> fallbackTx;
+    private List<byte[]> rollbackTx;
 
-    public void setProtocolUpgradeSettings(Properties _properties, List<byte[]> _fallbackTx) {
+    public void setProtocolUpgradeSettings(Properties _properties, List<byte[]> _rollback) {
         forkProperties = _properties;
-        fallbackTx = _fallbackTx;
+        rollbackTx = _rollback;
     }
 
     public Properties getProperties() {
         return forkProperties;
     }
 
-    public List<byte[]> getFallbackTx() {
-        return fallbackTx;
+    public List<byte[]> getRollbackTx() {
+        return rollbackTx;
     }
 
     @VisibleForTesting
-    public void setFallbackTx(List<byte[]> _fallbackTx) {
-        fallbackTx = _fallbackTx;
+    public void setRollbackTx(List<byte[]> _rollback) {
+        rollbackTx = _rollback;
     }
 }

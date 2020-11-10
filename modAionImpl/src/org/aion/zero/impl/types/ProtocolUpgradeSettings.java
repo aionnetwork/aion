@@ -7,7 +7,7 @@ import java.util.Properties;
 import org.aion.util.bytes.ByteUtil;
 
 /**
- * The protocol upgrade configure class, including the protocol upgrade block number and the fallback
+ * The protocol upgrade configure class, including the protocol upgrade block number and the rollback
  * transaction hashes (we fallback the transaction at the 1.6 upgrade).
  *
  * @author Jay Tseng
@@ -15,16 +15,16 @@ import org.aion.util.bytes.ByteUtil;
 public final class ProtocolUpgradeSettings {
 
     public final Properties upgrade;
-    public final List<byte[]> fallbackTransactionHash;
+    public final List<byte[]> rollbackTransactionHash;
 
     /**
      * The constructor method constructed by the loader class
      * @param upgradeMap the protocol upgrade settings for the kernel version
-     * @param fallback the fallback transaction setup (for 1.6 upgrade)
+     * @param rollback the rollback transaction setup (for 1.6 upgrade)
      */
-    public ProtocolUpgradeSettings(Properties upgradeMap, List<byte[]> fallback) {
+    public ProtocolUpgradeSettings(Properties upgradeMap, List<byte[]> rollback) {
         upgrade = upgradeMap;
-        fallbackTransactionHash = fallback;
+        rollbackTransactionHash = rollback;
     }
 
     @Override
@@ -38,7 +38,7 @@ public final class ProtocolUpgradeSettings {
         }
 
         builder.append("  fallback transaction hash:\n");
-        for (byte[] hash : fallbackTransactionHash) {
+        for (byte[] hash : rollbackTransactionHash) {
             builder.append("    ").append(ByteUtil.toHexString(hash)).append("\n");
         }
 

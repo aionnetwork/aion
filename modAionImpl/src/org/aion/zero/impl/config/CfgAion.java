@@ -203,7 +203,7 @@ public final class CfgAion {
                 protocolSettings = ForkPropertyLoader.loadJSON(forkFile.getPath());
             }
 
-            this.getFork().setProtocolUpgradeSettings(protocolSettings.upgrade, protocolSettings.fallbackTransactionHash);
+            this.getFork().setProtocolUpgradeSettings(protocolSettings.upgrade, protocolSettings.rollbackTransactionHash);
         } catch (Exception e) {
             System.out.println(
                     "<error on-parsing-fork-properties msg="

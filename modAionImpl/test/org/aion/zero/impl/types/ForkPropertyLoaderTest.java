@@ -19,14 +19,14 @@ public class ForkPropertyLoaderTest {
         Assert.assertEquals("5371168", settings.upgrade.getProperty("fork1.3"));
         Assert.assertEquals("6235961", settings.upgrade.getProperty("fork1.6"));
 
-        Assert.assertEquals(2, settings.fallbackTransactionHash.size());
+        Assert.assertEquals(2, settings.rollbackTransactionHash.size());
         Assert.assertArrayEquals(
                 ByteUtil.hexStringToBytes(
                         "0xaff350462b99ab827fca062532c782499fd0f0d144c3232cac4044d263b98487"),
-                settings.fallbackTransactionHash.get(0));
+                settings.rollbackTransactionHash.get(0));
         Assert.assertArrayEquals(
                 ByteUtil.hexStringToBytes(
                         "0x1111111111111111111111111111111111111111111111111111111111111111"),
-                settings.fallbackTransactionHash.get(1));
+                settings.rollbackTransactionHash.get(1));
     }
 }
