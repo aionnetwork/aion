@@ -7,6 +7,7 @@ import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import javax.xml.stream.XMLInputFactory;
@@ -14,8 +15,11 @@ import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
+import org.aion.crypto.HashUtil;
 import org.aion.log.LogEnum;
 import org.aion.log.LogLevel;
+import org.aion.util.bytes.ByteUtil;
+import org.aion.util.types.Hash256;
 import org.aion.zero.impl.SystemExitCodes;
 import org.aion.zero.impl.types.AionGenesis;
 import org.aion.zero.impl.types.ForkPropertyLoader;
@@ -203,12 +207,52 @@ public final class CfgAion {
                 protocolSettings = ForkPropertyLoader.loadJSON(forkFile.getPath());
             }
 
+            if (!rollbackTxHashCheck(networkName, protocolSettings.rollbackTransactionHash)) {
+                throw new Exception("The rollback transactions in the fork.properties file doesn't pass the check. Please do not modify the fork.properties file in mainnet and amity");
+            }
+
             this.getFork().setProtocolUpgradeSettings(protocolSettings.upgrade, protocolSettings.rollbackTransactionHash);
         } catch (Exception e) {
             System.out.println(
                     "<error on-parsing-fork-properties msg="
                             + e.getLocalizedMessage()
                             + ">, no protocol been updated.");
+            System.exit(SystemExitCodes.INITIALIZATION_ERROR);
+        }
+    }
+
+    /**
+     * To confirm the rollback transaction settings is same as our expectation.
+     * @param network the network name
+     * @param rollbackTransactionHash the rollback transaction hashes
+     * @return boolean value
+     */
+    private static boolean rollbackTxHashCheck(String network, List<byte[]> rollbackTransactionHash) {
+        if (network.equals("mainnet")) {
+            if (rollbackTransactionHash == null) {
+                return false;
+            }
+
+            byte[] checkSum = ByteUtil.hexStringToBytes("3847722355e5a6b009519439c2a680ae7fdca72a80e2771bdc47d29f89563f92");
+            byte[][] totalHash = new byte[rollbackTransactionHash.size()][Hash256.BYTES];
+            totalHash = rollbackTransactionHash.toArray(totalHash);
+
+            byte[] check = HashUtil.blake256(ByteUtil.merge(totalHash));
+
+            return Arrays.equals(check, checkSum);
+        } else if (network.equals("amity")) {
+            if (rollbackTransactionHash == null) {
+                return false;
+            }
+
+            byte[] checkSum = ByteUtil.hexStringToBytes("5d02f1ff81407ab52a14459039e5dd267bcacabfb80e9a8fae6f47fd65f06052");
+            byte[][] totalHash = new byte[rollbackTransactionHash.size()][Hash256.BYTES];
+            totalHash = rollbackTransactionHash.toArray(totalHash);
+
+            byte[] check = HashUtil.blake256(ByteUtil.merge(totalHash));
+            return Arrays.equals(check, checkSum);
+        } else {
+            return true;
         }
     }
 
