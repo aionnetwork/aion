@@ -7,7 +7,7 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import org.aion.equihash.OptimizedEquiValidator;
-import org.aion.zero.impl.core.RewardsCalculatorAfterSignatureSchemeSwap;
+import org.aion.zero.impl.core.TimeVaryingRewardsCalculator;
 import org.aion.zero.impl.types.BlockHeader.Seal;
 import org.aion.zero.impl.core.RewardsCalculatorAfterUnity;
 import org.aion.zero.impl.core.UnityBlockDiffCalculator;
@@ -95,7 +95,7 @@ public class ChainConfiguration {
 
         this.rewardsCalculatorAfterUnity = RewardsCalculatorAfterUnity::calculateReward;
 
-        this.rewardsCalculatorAfterSignatureSchemeSwap = RewardsCalculatorAfterSignatureSchemeSwap::calculateReward;
+        this.rewardsCalculatorAfterSignatureSchemeSwap = TimeVaryingRewardsCalculator::calculateReward;
 
         unityDifficultyCalculator = unityCalc::calcDifficulty;
     }

@@ -9,7 +9,7 @@ import org.aion.zero.impl.api.BlockConstants;
  *
  * Adjusted_block_rewards = block_rewards_after_unity * (slope * time-span / block target time + 1 - slope)
  */
-public final class RewardsCalculatorAfterSignatureSchemeSwap {
+public final class TimeVaryingRewardsCalculator {
 
     final static BigInteger[] rewardsAdjustTable;
     // 99% of the mining block time-span will fall into 125 secs under the time-span attack under 0.4 hashing power

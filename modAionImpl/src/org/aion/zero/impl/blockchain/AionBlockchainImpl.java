@@ -74,7 +74,7 @@ import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.FastImportResult;
 import org.aion.zero.impl.core.IDifficultyCalculator;
 import org.aion.zero.impl.core.ImportResult;
-import org.aion.zero.impl.core.RewardsCalculatorAfterSignatureSchemeSwap;
+import org.aion.zero.impl.core.TimeVaryingRewardsCalculator;
 import org.aion.zero.impl.core.energy.AbstractEnergyStrategyLimit;
 import org.aion.zero.impl.core.energy.EnergyStrategies;
 import org.aion.zero.impl.db.AionRepositoryImpl;
@@ -1259,7 +1259,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         BigInteger baseBlockReward;
         if (forkUtility.isSignatureSwapForkActive(block.getNumber())) {
             baseBlockReward =
-                RewardsCalculatorAfterSignatureSchemeSwap
+                TimeVaryingRewardsCalculator
                     .calculateReward(block.getTimestamp() - parentHdr.getTimestamp());
         } else {
             baseBlockReward =
@@ -1945,7 +1945,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         if (forkUtility.isSignatureSwapForkActive(block.getNumber())) {
             if (block.getHeader().getSealType().equals(Seal.PROOF_OF_WORK)) {
                 minerReward =
-                    RewardsCalculatorAfterSignatureSchemeSwap.calculateReward(
+                    TimeVaryingRewardsCalculator.calculateReward(
                         block.getTimestamp() - getParent(block.getHeader()).getTimestamp());
             } else {
                 minerReward =
@@ -2503,7 +2503,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                     throw new NullPointerException("Cannot find the parent block by hash:" + ByteUtil.toHexString(b.getParentHash()));
                 }
 
-                return RewardsCalculatorAfterSignatureSchemeSwap.calculateReward(b.getTimestamp() - parent.getTimestamp());
+                return TimeVaryingRewardsCalculator.calculateReward(b.getTimestamp() - parent.getTimestamp());
             } else {
                 return chainConfiguration.getRewardsCalculatorAfterSignatureSchemeSwap(false).calculateReward(block_number);
             }

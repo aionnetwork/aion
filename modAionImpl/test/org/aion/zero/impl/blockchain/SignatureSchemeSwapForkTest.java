@@ -23,7 +23,7 @@ import org.aion.types.AionAddress;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.IRewardsCalculator;
 import org.aion.zero.impl.core.ImportResult;
-import org.aion.zero.impl.core.RewardsCalculatorAfterSignatureSchemeSwap;
+import org.aion.zero.impl.core.TimeVaryingRewardsCalculator;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.types.Block;
 import org.aion.zero.impl.vm.AvmPathManager;
@@ -317,7 +317,7 @@ public class SignatureSchemeSwapForkTest {
         // Check the block producer receive the correct balance by the rewards adjustment calculator
         newBalance = blockchain.getRepository().getBalance(blockProducer);
         long timeSpan = block6Mining.getTimestamp() - block5SignatureSchemeSwapStaking.getTimestamp();
-        assertThat(newBalance).isEqualTo(balance.add(RewardsCalculatorAfterSignatureSchemeSwap.calculateReward(timeSpan)));
+        assertThat(newBalance).isEqualTo(balance.add(TimeVaryingRewardsCalculator.calculateReward(timeSpan)));
 
         // create next staking block
         Block block7Staking = BlockchainTestUtils.generateNextStakingBlock(blockchain, blockchain.getBestBlock(),
@@ -350,7 +350,7 @@ public class SignatureSchemeSwapForkTest {
         // Check the block producer receive the correct balance by the rewards adjustment calculator
         newBalance = blockchain.getRepository().getBalance(blockProducer);
         timeSpan = block8Mining.getTimestamp() - block7Staking.getTimestamp();
-        assertThat(newBalance).isEqualTo(balance.add(RewardsCalculatorAfterSignatureSchemeSwap.calculateReward(timeSpan)));
+        assertThat(newBalance).isEqualTo(balance.add(TimeVaryingRewardsCalculator.calculateReward(timeSpan)));
     }
 
     private StandaloneBlockchain setupIdenticalBlockchain(long unityForkBlock,
