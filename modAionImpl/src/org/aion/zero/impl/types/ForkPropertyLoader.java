@@ -38,6 +38,7 @@ public class ForkPropertyLoader {
                 JSONObject mapper = new JSONObject(json);
 
                 Properties upgrade = new Properties();
+                List<byte[]> rollbackTx = null;
                 if (mapper.has("fork")) {
                     JSONArray array = mapper.getJSONArray("fork");
                     for (int i=0 ; i<array.length() ; i++) {
@@ -51,34 +52,42 @@ public class ForkPropertyLoader {
                             throw new IOException("the block number must be numerical");
                         }
                         upgrade.put("fork" + ver, block);
-                    }
-                }
 
-                List<byte[]> fallbackTx = new ArrayList<>();
-                if (mapper.has("fallbackTx")) {
-                    JSONArray array = mapper.getJSONArray("fallbackTx");
-                    for (int i=0 ; i<array.length() ; i++) {
-                        String txHash = array.getString(i);
-                        Objects.requireNonNull(txHash);
-
-                        if (!isAlphaNumeric.matcher(txHash).matches())
-                            throw new IOException("the fallback transaction hash must be hex or numerical");
-
-                        byte[] hash = ByteUtil.hexStringToBytes(txHash);
-                        if (hash.length != 32) {
-                            throw new IOException("the fallback transaction hash must be 32 bytes");
+                        if (ver.equals("1.6")) {
+                            rollbackTx = parseRollbackTx(object);
                         }
-
-                        fallbackTx.add(hash);
                     }
                 }
-
-                return new ProtocolUpgradeSettings(upgrade, fallbackTx);
+                return new ProtocolUpgradeSettings(upgrade, rollbackTx);
             } catch (IOException | JSONException e) {
                 throw new IOException(e);
             }
         } else {
             throw new IOException(String.format("fork property file not found at %s", filePath));
         }
+    }
+
+    private static List<byte[]> parseRollbackTx(JSONObject object) throws IOException {
+        JSONArray txArray = object.getJSONArray("rollbackTx");
+        if (txArray == null) {
+            return null;
+        }
+        List<byte[]> list = new ArrayList<>();
+        for (int i=0 ; i<txArray.length() ; i++) {
+            String txHash = txArray.getString(i);
+            Objects.requireNonNull(txHash);
+
+            if (!isAlphaNumeric.matcher(txHash).matches())
+                throw new IOException("the rollbackTx transaction hash must be hex or numerical");
+
+            byte[] hash = ByteUtil.hexStringToBytes(txHash);
+            if (hash.length != 32) {
+                throw new IOException("the rollbackTx transaction hash must be 32 bytes");
+            }
+
+            list.add(hash);
+        }
+
+        return list;
     }
 }
