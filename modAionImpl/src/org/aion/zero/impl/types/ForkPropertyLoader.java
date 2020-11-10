@@ -58,7 +58,13 @@ public class ForkPropertyLoader {
                         }
                     }
                 }
-                return new ProtocolUpgradeSettings(upgrade, rollbackTx);
+
+                boolean forTest = false;
+                if (mapper.has("forTest")) {
+                    forTest = mapper.getBoolean("forTest");
+                }
+
+                return new ProtocolUpgradeSettings(upgrade, rollbackTx, forTest);
             } catch (IOException | JSONException e) {
                 throw new IOException(e);
             }

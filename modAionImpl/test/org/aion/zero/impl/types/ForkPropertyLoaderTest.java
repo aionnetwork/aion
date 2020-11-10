@@ -6,7 +6,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 public class ForkPropertyLoaderTest {
-    String filePath = "./test_resources/fork.properties.json";
+    String filePath = "./test_resources/fork.properties";
 
     @Test
     public void loaderTest() throws IOException {

@@ -16,15 +16,16 @@ public final class ProtocolUpgradeSettings {
 
     public final Properties upgrade;
     public final List<byte[]> rollbackTransactionHash;
-
+    public final boolean forTest;
     /**
      * The constructor method constructed by the loader class
      * @param upgradeMap the protocol upgrade settings for the kernel version
      * @param rollback the rollback transaction setup (for 1.6 upgrade)
      */
-    public ProtocolUpgradeSettings(Properties upgradeMap, List<byte[]> rollback) {
+    public ProtocolUpgradeSettings(Properties upgradeMap, List<byte[]> rollback, boolean _forTest) {
         upgrade = upgradeMap;
         rollbackTransactionHash = rollback;
+        forTest = _forTest;
     }
 
     @Override
@@ -41,6 +42,8 @@ public final class ProtocolUpgradeSettings {
         for (byte[] hash : rollbackTransactionHash) {
             builder.append("    ").append(ByteUtil.toHexString(hash)).append("\n");
         }
+
+        builder.append(" for test:").append(forTest ? "true": "false").append("\n");
 
         // footer
         builder.append("]");

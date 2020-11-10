@@ -207,7 +207,7 @@ public final class CfgAion {
                 protocolSettings = ForkPropertyLoader.loadJSON(forkFile.getPath());
             }
 
-            if (!rollbackTxHashCheck(networkName, protocolSettings.rollbackTransactionHash)) {
+            if (!protocolSettings.forTest && !rollbackTxHashCheck(networkName, protocolSettings.rollbackTransactionHash)) {
                 throw new Exception("The rollback transactions in the fork.properties file doesn't pass the check. Please do not modify the fork.properties file in mainnet and amity");
             }
 
