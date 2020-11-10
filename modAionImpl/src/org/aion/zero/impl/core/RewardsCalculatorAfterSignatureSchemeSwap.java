@@ -39,7 +39,7 @@ public final class RewardsCalculatorAfterSignatureSchemeSwap {
 
     public static BigInteger calculateReward(long timeSpan) {
         if (timeSpan <= 0) {
-            return BigInteger.ZERO;
+            throw new IllegalStateException("The block timespan should be at least 1 sec.");
         }
 
         return rewardsAdjustTable[timeSpan > capping ? capping-1: (int) (timeSpan - 1)];

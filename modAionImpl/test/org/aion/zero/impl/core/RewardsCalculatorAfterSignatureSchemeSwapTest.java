@@ -1,21 +1,18 @@
 package org.aion.zero.impl.core;
 
-import java.math.BigInteger;
 import org.junit.Assert;
 import org.junit.Test;
 
 public class RewardsCalculatorAfterSignatureSchemeSwapTest {
 
-    @Test
+    @Test (expected = IllegalStateException.class)
     public void RewardsCalculatorTimespanMinusOneTest() {
-        Assert.assertEquals(BigInteger.ZERO,
-            RewardsCalculatorAfterSignatureSchemeSwap.calculateReward(-1));
+        RewardsCalculatorAfterSignatureSchemeSwap.calculateReward(-1);
     }
 
-    @Test
+    @Test (expected = IllegalStateException.class)
     public void RewardsCalculatorTimespanZeroTest() {
-        Assert.assertEquals(BigInteger.ZERO,
-            RewardsCalculatorAfterSignatureSchemeSwap.calculateReward(0));
+        RewardsCalculatorAfterSignatureSchemeSwap.calculateReward(0);
     }
 
     @Test
