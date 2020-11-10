@@ -1940,8 +1940,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
         Map<AionAddress, BigInteger> rewards = new HashMap<>();
 
         BigInteger minerReward;
-        boolean isSignatureSwapForkActive = forkUtility.isSignatureSwapForkActive(block.getNumber());
-
         if (forkUtility.isSignatureSwapForkActive(block.getNumber())) {
             if (block.getHeader().getSealType().equals(Seal.PROOF_OF_WORK)) {
                 minerReward =
