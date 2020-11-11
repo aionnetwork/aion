@@ -91,7 +91,7 @@ pipeline {
             steps {
                 timeout(20) {
                     dir('FunctionalTests') {
-                        checkout scm: [$class: 'GitSCM', userRemoteConfigs: [[url: 'https://github.com/aionnetwork/node_test_harness.git']], branches: [[name: '764b12d']]], poll: false
+                        checkout scm: [$class: 'GitSCM', userRemoteConfigs: [[url: 'https://github.com/aionnetwork/node_test_harness.git']], branches: [[name: 'c92875f']]], poll: false
                     }
 
                     sh('cp pack/oan.tar.bz2 FunctionalTests/Tests')
@@ -111,7 +111,7 @@ pipeline {
 	    }
 
 	    steps {
-                timeout(time: 4, unit: 'HOURS') {
+                timeout(time: 12, unit: 'HOURS') {
                     dir('pack') {
                         sh('tar xvf oan.tar.bz2')
                         echo "Start amity sync test..."
@@ -130,7 +130,7 @@ pipeline {
             }
 
             steps {
-                timeout(time: 12, unit: 'HOURS') {
+                timeout(time: 24, unit: 'HOURS') {
                     dir('pack') {
                         echo "Start mainnet sync test..."
                         sh('./oan/aion.sh e port=${P2P_PORT} log GEN=ERROR SYNC=ERROR CONS=ERROR DB=ERROR API=ERROR dev fs')
