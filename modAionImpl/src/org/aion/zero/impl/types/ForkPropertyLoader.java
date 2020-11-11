@@ -74,7 +74,7 @@ public class ForkPropertyLoader {
     }
 
     private static List<byte[]> parseRollbackTx(JSONObject object) throws IOException {
-        JSONArray txArray = object.getJSONArray("rollbackTx");
+        JSONArray txArray = object.optJSONArray("rollbackTx");
         if (txArray == null) {
             return null;
         }
