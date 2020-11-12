@@ -10,8 +10,8 @@ public class P2pConstant {
             RECV_BUFFER_SIZE = 8192 * 1024, //
             SEND_BUFFER_SIZE = 8192 * 1024, //
 
-            // max p2p in package capped at 1.
-            READ_MAX_RATE = 1,
+            // max p2p in package capped at 2.
+            READ_MAX_RATE = 2,
 
             // max p2p in package capped for tx broadcast.
             READ_MAX_RATE_TXBC = 20;
