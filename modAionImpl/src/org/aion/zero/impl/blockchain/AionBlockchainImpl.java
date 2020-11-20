@@ -200,7 +200,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private final boolean storeInternalTransactions;
     //TODO : [unity] find the proper number for chaching the template.
     final Map<ByteArrayWrapper, StakingBlock> stakingBlockTemplate = Collections.synchronizedMap(new LRUMap<>(64));
-    final Map<ByteArrayWrapper, MiningBlock> miningBlockTemplate = Collections.synchronizedMap(new LRUMap<>(64));
+    final Map<ByteArrayWrapper, MiningBlock> miningBlockTemplate = Collections.synchronizedMap(new LRUMap<>(3));
 
     private SelfNodeStatusCallback callback;
     private BestBlockImportCallback bestBlockCallback;

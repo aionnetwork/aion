@@ -113,7 +113,7 @@ public class AionBlockchainImplTest {
         connectResult = blockchain.tryToConnectAndFetchSummary(block3a);
         assertEquals(ImportResult.IMPORTED_BEST, connectResult.getLeft());
 
-        assertEquals(4, blockchain.miningBlockTemplate.size());
+        assertEquals(3, blockchain.miningBlockTemplate.size());
 
         // Chain will be branched after import the block3b and the template will be cleaned.
         MiningBlock block3b = blockchain.createBlockAndBlockTemplate(block2b, new ArrayList<>(), false, block2b.getTimestamp() + 1);
