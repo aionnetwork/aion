@@ -153,6 +153,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     public final ForkUtility forkUtility;
     public final BeaconHashValidator beaconHashValidator;
     private final boolean isMainnet;
+    private boolean isAmity;
 
     /**
      * Chain configuration class, because chain configuration may change dependant on the block
@@ -260,6 +261,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
                     }
                 } : new ChainConfiguration(),
             eventMgr);
+
+        isAmity = cfgAion.getNetwork().equals("amity");
     }
 
     /**
@@ -1940,7 +1943,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         Map<AionAddress, BigInteger> rewards = new HashMap<>();
 
         BigInteger minerReward;
-        if (forkUtility.isSignatureSwapForkActive(block.getNumber())) {
+        if (forkUtility.isSignatureSwapForkActive(block.getNumber()) || isAmityRewardException(block.getNumber())) {
             if (block.getHeader().getSealType().equals(Seal.PROOF_OF_WORK)) {
                 minerReward =
                     TimeVaryingRewardsCalculator.calculateReward(
@@ -1970,11 +1973,29 @@ public class AionBlockchainImpl implements IAionBlockchain {
          */
         track.addBalance(block.getCoinbase(), minerReward);
 
-        if (forkUtility.isSignatureSwapForkBlock(block.getNumber())) {
+        if ((isMainnet && forkUtility.isSignatureSwapForkBlock(block.getNumber())) || isAmityRollbackException(block.getNumber())) {
             balanceRollback();
         }
 
         return rewards;
+    }
+
+    /**
+     * Hot-fix for amity network in 1.6.1
+     * @param blockNumber
+     * @return
+     */
+    private boolean isAmityRewardException(long blockNumber) {
+        return isAmity && forkUtility.isSignatureSwapForkBlock(blockNumber - 1);
+    }
+
+    /**
+     * Hot-fix for amity network in 1.6.1
+     * @param blockNumber
+     * @return
+     */
+    private boolean isAmityRollbackException(long blockNumber) {
+        return isAmity && forkUtility.isSignatureSwapForkBlock(blockNumber + 1);
     }
 
     /**
