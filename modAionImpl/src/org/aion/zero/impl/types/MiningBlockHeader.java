@@ -135,16 +135,6 @@ public final class MiningBlockHeader implements BlockHeader {
         this.solution = builder.solution;
         this.nonce = builder.nonce;
     }
-    
-    /**
-     * Returns a new header that is identical to this one, except with a different timestamp
-     */    
-    public MiningBlockHeader updateTimestamp(long newTimestamp) {
-        return Builder.newInstance()
-                .withHeader(this)
-                .withTimestamp(newTimestamp)
-                .build();
-    }
 
     public byte[] getSolution() {
         return solution.clone();

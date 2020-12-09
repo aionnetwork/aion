@@ -128,7 +128,9 @@ public class AionPoW {
                                                 || now - lastUpdate.get() > 10000) {
                                             createNewBlockTemplate();
                                         } else {
-                                            updateTimestamp(TimeUnit.MILLISECONDS.toSeconds(now));
+                                            if (TimeUnit.MILLISECONDS.toSeconds(now) == latestBlockTemplate.getTimestamp() + 1) {
+                                                createNewBlockTemplate();
+                                            }
                                         }
                                     } catch (InterruptedException e) {
                                         break;
@@ -274,20 +276,6 @@ public class AionPoW {
                 lastUpdate.set(System.currentTimeMillis());
                 latestBlockTemplate = newBlock;
             }
-        }
-    }
-
-    /** Creates a new block template. */
-    private synchronized void updateTimestamp(long systemTime) {
-        if (!shutDown.get() && systemTime > latestBlockTemplate.getTimestamp()) {
-            MiningBlockHeader newHeader = latestBlockTemplate.getHeader().updateTimestamp(systemTime);
-            MiningBlock newBlock = new MiningBlock(newHeader, latestBlockTemplate.getTransactionsList());
-            
-            EventConsensus ev = new EventConsensus(EventConsensus.CALLBACK.ON_BLOCK_TEMPLATE);
-            ev.setFuncArgs(Collections.singletonList(newBlock));
-            eventMgr.newEvent(ev);
-
-            latestBlockTemplate = newBlock;
         }
     }
 
