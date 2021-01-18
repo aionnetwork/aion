@@ -1,60 +1,84 @@
 containers:
-  n1:
-    image: aionnetwork/aion:latest
+
+  jm01:
+    #image: aionnetwork/aion-staging:1.6-rc-attacker
+    image: aionnetwork/aion-staging:1.6-rc
     #image: aionnetwork/aion:0.4.0.1-e8d3c4390
     command: "./aion.sh -n custom"
     volumes:
-      "<Absolute project path>/blockade/node1": "/aion/custom"
-      #e.g. "/home/jay/workspace/release/aion/blockade/node1": "/aion/custom"
-    expose: [30303, 8545]
+      "/home/aion/jayTest/blockade/nodejm1/custom": "/oan/custom"
+      "/home/aion/jayTest/blockade/nodejm1/networks": "/oan/networks/custom"
+    expose: [30303, 8545, 8547]
     ports:
       3001: 30303
       9001: 8545
+      9011: 8547
 
-  n2:
-    image: aionnetwork/aion:latest
-    #image: aionnetwork/aion:0.4.0.1-e8d3c4390
+  jm02:
+    image: aionnetwork/aion-staging:1.6-rc
     command: "./aion.sh -n custom"
     volumes:
-      "<Absolute project path>/blockade/node2": "/aion/custom"
+      "/home/aion/jayTest/blockade/nodejm2/custom": "/oan/custom"
+      "/home/aion/jayTest/blockade/nodejm2/networks": "/oan/networks/custom"
     expose: [30303, 8545]
     ports:
       3002: 30303
       9002: 8545
 
-  n3:
-    image: aionnetwork/aion:latest
-    #image: aionnetwork/aion:0.4.0.1-e8d3c4390
-    command: "./aion.sh -n custom"
-    volumes:
-      "<Absolute project path>/blockade/node3": "/aion/custom"
-    expose: [30303, 8545]
-    ports:
-      3003: 30303
-      9003: 8545
+  #jm03:
+  #  image: aionnetwork/aion-staging:1.6-CP34
+  #  command: "./aion.sh -n custom"
+  #  volumes:
+  #    "/home/aion/jayTest/blockade/nodejm3/custom": "/oan/custom"
+  #    "/home/aion/jayTest/blockade/nodejm3/networks": "/oan/networks/custom"
+  #  expose: [30303, 8545]
+  #  ports:
+  #    3003: 30303
+  #    9003: 8545
 
-  n4:
-    image: aionnetwork/aion:latest
-    #image: aionnetwork/aion:0.4.0.1-e8d3c4390
+  js01:
+    image: aionnetwork/aion-staging:1.6-rc
     command: "./aion.sh -n custom"
     volumes:
-      "<Absolute project path>/blockade/node4": "/aion/custom"
+      "/home/aion/jayTest/blockade/nodejs1/custom": "/oan/custom"
+      "/home/aion/jayTest/blockade/nodejs1/networks": "/oan/networks/custom"
     expose: [30303, 8545]
     ports:
       3004: 30303
       9004: 8545
 
-# aion rust unity kernel settings
-#  n5:
-#    image: unity
-#    command: "./aion"
-#    volumes:
-#      "/path/to/aionr-unity/blockade/node5": "/root/.aion"
-#    expose: [30303, 8545, 8008]
-#    ports:
-#      3005: 30303
-#      8001: 8008
-#      9005: 8545
+  js02:
+    image: aionnetwork/aion-staging:1.6-rc
+    command: "./aion.sh -n custom"
+    volumes:
+      "/home/aion/jayTest/blockade/nodejs2/custom": "/oan/custom"
+      "/home/aion/jayTest/blockade/nodejs2/networks": "/oan/networks/custom"
+    expose: [30303, 8545]
+    ports:
+      3005: 30303
+      9005: 8545
+
+  js03:
+    image: aionnetwork/aion-staging:1.6-rc
+    command: "./aion.sh -n custom"
+    volumes:
+      "/home/aion/jayTest/blockade/nodejs3/custom": "/oan/custom"
+      "/home/aion/jayTest/blockade/nodejs3/networks": "/oan/networks/custom"
+    expose: [30303, 8545]
+    ports:
+      3006: 30303
+      9006: 8545
+
+  js04:
+    image: aionnetwork/aion-staging:1.6-rc
+    command: "./aion.sh -n custom"
+    volumes:
+      "/home/aion/jayTest/blockade/nodejs4/custom": "/oan/custom"
+      "/home/aion/jayTest/blockade/nodejs4/networks": "/oan/networks/custom"
+    expose: [30303, 8545]
+    ports:
+      3007: 30303
+      9007: 8545
 
 #network:
 #  flaky: 30%
