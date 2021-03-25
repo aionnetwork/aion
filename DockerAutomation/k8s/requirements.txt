@@ -36,7 +36,7 @@ PyJWT==1.7.1
 pylint==1.9.4
 python-dateutil==2.7.5
 pyxdg==0.26
-PyYAML==3.13
+PyYAML==5.4
 requests==2.21.0
 requests-oauthlib==1.2.0
 rsa==4.0
