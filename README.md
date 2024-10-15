@@ -41,19 +41,19 @@ If you're interested in being a validator on the Aion networks, refer to our [Va
 If you're interested in interacting with dApps and _using_ Aion, refer to our [Aion Desktop Wallet Docs](https://docs-aion.theoan.com/docs/wallets)
 
 ## FAQ
-**1. Where can I store my Aion?**
+**1. Where can I store my Aion?**  
 We recommend using either the desktop wallet or the web-based Aion Wallet; more information can be found in “Docs” (link at top of page).
 
-**3. Where can I stake my Aion?**
+**3. Where can I stake my Aion?**  
 You can use the original staking interface which has support for staking pool operators, or the web-based Aion Wallet.
 
-**4. Where can I check on a transaction on The Open Application Network?**
+**4. Where can I check on a transaction on The Open Application Network?**  
 You can visit either the web-based Aion Wallet or the Aion Dashboard to view a transaction on the network.
 
-**5. Where can I see the current network performance of The Open Application Network?**
+**5. Where can I see the current network performance of The Open Application Network?**  
 You can visit the Aion Dashboard to see how the Open Application Network is performing.
 
-**6. What should I do if the desktop wallet or the web based wallet are not functioning properly?**
+**6. What should I do if the desktop wallet or the web based wallet are not functioning properly?**  
 First check in with the community on the community subreddit. If the community is not able to assist then you can submit a ticket through the service desk located here.
 
 **7. The Open Application Network is currently providing support to help maintain the network; where can I see the funds that The Open Application Network has mined or received as a stake reward?**
