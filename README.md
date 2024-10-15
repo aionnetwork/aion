@@ -42,34 +42,34 @@ If you're interested in interacting with dApps and _using_ Aion, refer to our [A
 
 ## FAQ
 **1. Where can I store my Aion?**  
-We recommend using either the desktop wallet or the web-based Aion Wallet; more information can be found in “Docs” (link at top of page).
+We recommend using the web-based [Aion Wallet](https://my-aion.theoan.com/); more information can be found in [“Docs”]([link at top of page](https://docs-aion.theoan.com/docs)).
 
 **3. Where can I stake my Aion?**  
-You can use the original staking interface which has support for staking pool operators, or the web-based Aion Wallet.
+You can use the original [staking interface](https://staking.theoan.com/staking) which has support for staking pool operators, or the web-based [Aion Wallet](https://my-aion.theoan.com/).
 
 **4. Where can I check on a transaction on The Open Application Network?**  
-You can visit either the web-based Aion Wallet or the Aion Dashboard to view a transaction on the network.
+You can visit either the web-based [Aion Wallet](https://my-aion.theoan.com/) or the [Aion Dashboard](https://mainnet.theoan.com/#/dashboard) to view a transaction on the network.
 
 **5. Where can I see the current network performance of The Open Application Network?**  
-You can visit the Aion Dashboard to see how the Open Application Network is performing.
+You can visit the [Aion Dashboard](https://mainnet.theoan.com/#/dashboard) to see how the Open Application Network is performing.
 
 **6. What should I do if the desktop wallet or the web based wallet are not functioning properly?**  
-First check in with the community on the community subreddit. If the community is not able to assist then you can submit a ticket through the service desk located here.
+First check in with the community on the community subreddit. If the community is not able to assist then you can submit a ticket through the service desk located [here](https://helpdesk.theoan.com/).
 
 **7. The Open Application Network is currently providing support to help maintain the network; where can I see the funds that The Open Application Network has mined or received as a stake reward?**  
-All funds mined or rewarded for staking that the foundation receives are burned to this address: 0x0000000000000000000000000000000000000000000000000000000000000000 users can check the totals burned via the Aion Dashboard here.
+All funds mined or rewarded for staking that the foundation receives are burned to this address: 0x0000000000000000000000000000000000000000000000000000000000000000 users can check the totals burned via the Aion Dashboard [here](https://mainnet.theoan.com/#/account/0000000000000000000000000000000000000000000000000000000000000000).
 
 **8. What is the total circulating supply of Aion?**  
 To view the current total circulating supply of Aion you can use the Aion Watch tool located here.
 
 **9. Which networks are supported?**  
-The Mainnet and the Amity Testnetwork are both supported. To view the dashboards for these networks use these links: Mainnet | Amity
+The Mainnet and the Amity Testnetwork are both supported. To view the dashboards for these networks use these links: [Mainnet](https://mainnet.theoan.com/#/dashboard) | [Amity](https://amity.theoan.com/#/dashboard)
 
 **10. How can I export a list of my transactions?**  
-If you would like to download a copy of your transaction history you can use mainnet.theoan.com and search for your public address. In the bottom right of your screen is a “Download this Account” button which will allow you to select a date range and download a .csv file containing your transactions.
+If you would like to download a copy of your transaction history you can use https://mainnet.theoan.com and search for your public address. In the bottom right of your screen is a “Download this Account” button which will allow you to select a date range and download a .csv file containing your transactions.
 
 **11. Where can I access a copy of The OAN and Aion Brand Guidelines?**  
-The OAN and Aion Brand Guidelines can be located here they can be used by the community to create brand aligned content.
+The OAN and Aion Brand Guidelines can be located [here](https://aion.theoan.com/wp-content/uploads/sites/2/2021/05/The-OAN-and-Aion-Brand-Guidelines.pdf) they can be used by the community to create brand aligned content.
 
 **12. My Ledger doesn’t seem to be recognized with applications in the Chrome Browser (Staking Interface or Wallet)**  
 When using your Ledger hardware wallet with Aion installed to access an account VIA the Chrome browser, users will need to enable the Aion contract on their Ledger device. This can be done by selecting: Aion > Setting > enable Contract.
@@ -83,8 +83,8 @@ In order to undelegate your Aion:
 – Your balance will be updated after a lock-up period of 8640 blocks (approximately 24 hours)
 – Ensure the amount follows this format: 999,999,999.999999999
 – If you are using a ledger, please ensure that your firmware is up to date.
-– If you are using the desktop interface, ensure that you are using the latest version
-– For more information view this guide
+– If you are using the desktop interface, ensure that you are using the [latest version](https://github.com/aionnetwork/aion_staking_interface/releases/tag/0.10.0)
+– For more information view this [guide](https://docs-aion.theoan.com/docs/staking-and-earning)
 
 **15. What happened to the swap process to convert ERC-20 Aion to the mainnet?**  
 As of January 31, 2022 swapping from ERC20 to Aion mainnet is no longer supported. The original Aion token swap from Ethereum to Aion was completed on December 10, 2018. However, in order to support the community members who missed the original swap deadline a manual process was available, this process has now been retired. 
