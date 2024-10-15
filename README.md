@@ -56,28 +56,28 @@ You can visit the Aion Dashboard to see how the Open Application Network is perf
 **6. What should I do if the desktop wallet or the web based wallet are not functioning properly?**  
 First check in with the community on the community subreddit. If the community is not able to assist then you can submit a ticket through the service desk located here.
 
-**7. The Open Application Network is currently providing support to help maintain the network; where can I see the funds that The Open Application Network has mined or received as a stake reward?**
+**7. The Open Application Network is currently providing support to help maintain the network; where can I see the funds that The Open Application Network has mined or received as a stake reward?**  
 All funds mined or rewarded for staking that the foundation receives are burned to this address: 0x0000000000000000000000000000000000000000000000000000000000000000 users can check the totals burned via the Aion Dashboard here.
 
-**8. What is the total circulating supply of Aion?**
+**8. What is the total circulating supply of Aion?**  
 To view the current total circulating supply of Aion you can use the Aion Watch tool located here.
 
-**9. Which networks are supported?**
+**9. Which networks are supported?**  
 The Mainnet and the Amity Testnetwork are both supported. To view the dashboards for these networks use these links: Mainnet | Amity
 
-**10. How can I export a list of my transactions?**
+**10. How can I export a list of my transactions?**  
 If you would like to download a copy of your transaction history you can use mainnet.theoan.com and search for your public address. In the bottom right of your screen is a “Download this Account” button which will allow you to select a date range and download a .csv file containing your transactions.
 
-**11. Where can I access a copy of The OAN and Aion Brand Guidelines?**
+**11. Where can I access a copy of The OAN and Aion Brand Guidelines?**  
 The OAN and Aion Brand Guidelines can be located here they can be used by the community to create brand aligned content.
 
-**12. My Ledger doesn’t seem to be recognized with applications in the Chrome Browser (Staking Interface or Wallet)**
+**12. My Ledger doesn’t seem to be recognized with applications in the Chrome Browser (Staking Interface or Wallet)**  
 When using your Ledger hardware wallet with Aion installed to access an account VIA the Chrome browser, users will need to enable the Aion contract on their Ledger device. This can be done by selecting: Aion > Setting > enable Contract.
 
-**13. What happened to the Aiwa chrome extension wallet?**
+**13. What happened to the Aiwa chrome extension wallet?**  
 Aiwa was owned and operated by a third-party organization called BlockX Labs, Aiwa was funded by a community grant during its lifespan. However, BlockX Labs is now reorganizing and will no longer support Aiwa. Usage of Aiwa has decreased significantly with other tools such as the web based wallet now available so the decision was made to deprecate it. 
 
-**14. I am unable to undelegate my staked Aion**
+**14. I am unable to undelegate my staked Aion**  
 In order to undelegate your Aion:
 – You must have a sufficient Aion balance to perform the undelegation transaction (a minimum of 0.02 Aion is required for the transaction fee)
 – Your balance will be updated after a lock-up period of 8640 blocks (approximately 24 hours)
@@ -86,7 +86,7 @@ In order to undelegate your Aion:
 – If you are using the desktop interface, ensure that you are using the latest version
 – For more information view this guide
 
-**15. What happened to the swap process to convert ERC-20 Aion to the mainnet?**
+**15. What happened to the swap process to convert ERC-20 Aion to the mainnet?**  
 As of January 31, 2022 swapping from ERC20 to Aion mainnet is no longer supported. The original Aion token swap from Ethereum to Aion was completed on December 10, 2018. However, in order to support the community members who missed the original swap deadline a manual process was available, this process has now been retired. 
 
 ### Community Channels
