@@ -63,7 +63,7 @@ All funds mined or rewarded for staking that the foundation receives are burned 
 To view the current total circulating supply of Aion you can use the Aion Watch tool located here.
 
 **9. Which networks are supported?**  
-The Mainnet and the Amity Testnetwork are both supported. To view the dashboards for these networks use these links: [Mainnet](https://mainnet.theoan.com/#/dashboard) | [Amity](https://amity.theoan.com/#/dashboard)
+The Mainnet and the Amity Testnetwork are both supported. To view the dashboards for these networks use these links: [Mainnet](https://mainnet.theoan.com/#/dashboard) 
 
 **10. How can I export a list of my transactions?**  
 If you would like to download a copy of your transaction history you can use https://mainnet.theoan.com and search for your public address. In the bottom right of your screen is a “Download this Account” button which will allow you to select a date range and download a .csv file containing your transactions.
