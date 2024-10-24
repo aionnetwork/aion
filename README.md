@@ -54,7 +54,7 @@ You can visit either the web-based [Aion Wallet](https://my-aion.theoan.com/) or
 You can visit the [Aion Dashboard](https://mainnet.theoan.com/#/dashboard) to see how the Open Application Network is performing.
 
 **6. What should I do if the desktop wallet or the web based wallet are not functioning properly?**  
-First check in with the community on the community subreddit. If the community is not able to assist then you can submit a ticket through the service desk located [here](https://helpdesk.theoan.com/).
+First check in with the community on the community subreddit. If the community is not able to assist then you can submit a ticket through [Github](https://github.com/aionnetwork/aion/issues).
 
 **7. The Open Application Network is currently providing support to help maintain the network; where can I see the funds that The Open Application Network has mined or received as a stake reward?**  
 All funds mined or rewarded for staking that the foundation receives are burned to this address: 0x0000000000000000000000000000000000000000000000000000000000000000 users can check the totals burned via the Aion Dashboard [here](https://mainnet.theoan.com/#/account/0000000000000000000000000000000000000000000000000000000000000000).
