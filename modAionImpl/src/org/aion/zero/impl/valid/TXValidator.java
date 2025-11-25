@@ -54,7 +54,8 @@ public class TXValidator {
     }
 
     private static boolean isValidAfterSignatureSwap(AionTransaction tx) {
-        if (isPrecompiledContract(tx.getDestinationAddress()) || tx.getDestinationAddress().equals(ZERO_ADDRESS)) {
+        if (tx.getDestinationAddress() == null
+             || isPrecompiledContract(tx.getDestinationAddress()) || tx.getDestinationAddress().equals(ZERO_ADDRESS)) {
             return true;
         } else {
             return tx.getDestinationAddress().toByteArray()[0] == (byte)0xa0;
